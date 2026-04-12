@@ -1,13 +1,13 @@
-import { View, Text, StyleSheet } from 'react-native';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import AppText from '../../components/AppText';
+import Button from '../../components/Button';
 
-export default function WelcomeScreen() {
+export default function WelcomeScreen({ navigation }) {
   return (
-    <View style={styles.container}>
-      <Text>Welcome</Text>
-    </View>
+    <ScreenWrapper>
+      <AppText variant="xxl">Friction Maxxing</AppText>
+      <AppText variant="caption">yes, you need a maze to stop opening instagram</AppText>
+      <Button label="Let's go" onPress={() => navigation.navigate('HowItWorks')} />
+    </ScreenWrapper>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-});
