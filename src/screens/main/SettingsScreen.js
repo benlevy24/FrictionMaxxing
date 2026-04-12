@@ -30,8 +30,7 @@ export default function SettingsScreen() {
   const [blockedApps, setBlockedApps] = useState(DEFAULT_BLOCKED_APPS);
   const [games, setGames] = useState(DEFAULT_GAMES);
   const [notifications, setNotifications] = useState({
-    dailyRecap: true,
-    milestones: true,
+    milestones: false,
   });
 
   function toggleApp(id) {
@@ -118,18 +117,11 @@ export default function SettingsScreen() {
         </Section>
 
         {/* Notifications */}
-        <Section title="notifications">
-          <SettingRow
-            emoji="📅"
-            label="daily recap"
-            sublabel="end-of-day summary of your interceptions"
-            value={notifications.dailyRecap}
-            onToggle={() => toggleNotification('dailyRecap')}
-          />
+        <Section title="notifications" subtitle="off by default — this app is about using your phone less">
           <SettingRow
             emoji="🏆"
             label="milestone alerts"
-            sublabel="when you hit walk-away milestones"
+            sublabel="notify when you hit a walk-away milestone"
             value={notifications.milestones}
             onToggle={() => toggleNotification('milestones')}
           />
