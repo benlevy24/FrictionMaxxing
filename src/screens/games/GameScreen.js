@@ -3,8 +3,8 @@ import { View, StyleSheet } from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
 import Button from '../../components/Button';
-import Card from '../../components/Card';
 import MilestoneModal from '../../components/MilestoneModal';
+import { pickRandomGame } from '../../games/registry';
 import {
   checkMilestone,
   getMilestoneMessage,
@@ -26,6 +26,12 @@ const MOCK_INTERCEPTION = {
   appLabel: 'Instagram',
   appEmoji: '📸',
 };
+
+// Mock enabled games — will come from AsyncStorage settings in task #16
+const MOCK_ENABLED_GAMES = ['tictactoe', 'maze', 'hangman', 'math'];
+
+// Pick a random game for this session (stable for the lifetime of this screen mount)
+const selectedGame = pickRandomGame(MOCK_ENABLED_GAMES);
 
 // Mock walk-away counts — will come from AsyncStorage in task #16
 const MOCK_WALK_AWAY_TOTAL = 4;
@@ -72,28 +78,22 @@ export default function GameScreen({ navigation }) {
   return (
     <ScreenWrapper style={styles.wrapper}>
 
-      {/* Playing state — game placeholder, replaced per-game in tasks #12–15 */}
+      {/* Playing state — renders whichever game was randomly selected */}
       {gameState === STATE.PLAYING && (
-        <View style={styles.centered}>
-          <AppText variant="xxl" style={styles.appEmoji}>{appEmoji}</AppText>
-          <AppText variant="caption" style={styles.interceptedLabel}>
-            really? {appLabel}? okay fine. beat this first.
-          </AppText>
-          <Card style={styles.gamePlaceholder}>
-            <AppText variant="subheading" style={styles.placeholderText}>
-              🎮 game goes here
+        <View style={styles.playing}>
+          <View style={styles.gameHeader}>
+            <AppText variant="xxl" style={styles.appEmoji}>{appEmoji}</AppText>
+            <AppText variant="caption" style={styles.interceptedLabel}>
+              really? {appLabel}? okay fine. beat this first.
             </AppText>
-            <AppText variant="caption">
-              (individual games built in tasks #12–15)
-            </AppText>
-          </Card>
-          {/* Dev shortcut to skip to decision screen */}
-          <Button
-            label="(dev) complete game"
-            variant="ghost"
-            onPress={handleGameComplete}
-            style={styles.devBtn}
-          />
+          </View>
+          <View style={styles.gameArea}>
+            <selectedGame.component
+              onComplete={handleGameComplete}
+              gameLabel={selectedGame.label}
+              gameEmoji={selectedGame.emoji}
+            />
+          </View>
         </View>
       )}
 
@@ -154,6 +154,16 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     paddingHorizontal: spacing.lg,
   },
+  playing: {
+    flex: 1,
+  },
+  gameHeader: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
   appEmoji: {
     fontSize: 56,
   },
@@ -161,18 +171,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  gamePlaceholder: {
-    width: '100%',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.xl,
-  },
-  placeholderText: {
-    color: colors.textSub,
-  },
-  devBtn: {
-    opacity: 0.4,
-    marginTop: spacing.md,
+  gameArea: {
+    flex: 1,
   },
   winEmoji: {
     fontSize: 56,
