@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
@@ -11,62 +11,68 @@ import {
   TOTAL_MILESTONES,
   APP_MILESTONES,
 } from '../../utils/streak';
+import {
+  getSettings,
+  getEvents,
+  recordEvent,
+} from '../../utils/storage';
 import { colors, spacing } from '../../theme';
 
 // Game flow states
 const STATE = {
-  PLAYING: 'playing',       // game in progress
-  DECISION: 'decision',     // game beaten — open anyway or walk away?
-  DONE: 'done',             // user made their choice
+  LOADING:  'loading',   // fetching settings
+  PLAYING:  'playing',   // game in progress
+  DECISION: 'decision',  // game beaten — open anyway or walk away?
+  DONE:     'done',      // user made their choice
 };
 
-// Mock interception context — in production this comes from the Screen Time extension (task #22)
+// Mock interception context — replaced by Screen Time extension in task #22
 const MOCK_INTERCEPTION = {
-  appId: 'instagram',
+  appId:    'instagram',
   appLabel: 'Instagram',
   appEmoji: '📸',
 };
 
-// Mock enabled games — will come from AsyncStorage settings in task #16
-const MOCK_ENABLED_GAMES = ['tictactoe', 'maze', 'hangman', 'math'];
-
-// Pick a random game for this session (stable for the lifetime of this screen mount)
-const selectedGame = pickRandomGame(MOCK_ENABLED_GAMES);
-
-// Mock walk-away counts — will come from AsyncStorage in task #16
-const MOCK_WALK_AWAY_TOTAL = 4;
-const MOCK_WALK_AWAY_APP = 1;
-
 export default function GameScreen({ navigation }) {
-  const [gameState, setGameState] = useState(STATE.PLAYING);
+  const [gameState, setGameState] = useState(STATE.LOADING);
+  const [selectedGame, setSelectedGame] = useState(null);
   const [milestone, setMilestone] = useState(null);
 
-  const { appLabel, appEmoji } = MOCK_INTERCEPTION;
+  const { appId, appLabel, appEmoji } = MOCK_INTERCEPTION;
+
+  // Load enabled games from settings, then pick a random game
+  useEffect(() => {
+    getSettings().then((s) => {
+      const game = pickRandomGame(s.enabledGames);
+      setSelectedGame(game);
+      setGameState(STATE.PLAYING);
+    });
+  }, []);
 
   function handleGameComplete() {
     setGameState(STATE.DECISION);
   }
 
-  function handleWalkAway() {
-    // TODO (task #16): persist walk-away counts to AsyncStorage
-    const newTotal = MOCK_WALK_AWAY_TOTAL + 1;
-    const newAppCount = MOCK_WALK_AWAY_APP + 1;
+  async function handleWalkAway() {
+    // Record event + check milestones against real counts
+    await recordEvent({ appId, appLabel, appEmoji, gameCompleted: true, walkedAway: true });
 
+    const events = await getEvents();
+    const newTotal    = events.filter((e) => e.walkedAway).length;
+    const newAppCount = events.filter((e) => e.walkedAway && e.appId === appId).length;
+
+    const appHit   = checkMilestone(newAppCount, APP_MILESTONES);
     const totalHit = checkMilestone(newTotal, TOTAL_MILESTONES);
-    const appHit = checkMilestone(newAppCount, APP_MILESTONES);
 
-    if (appHit) {
-      setMilestone(getMilestoneMessage(appHit, appLabel));
-    } else if (totalHit) {
-      setMilestone(getMilestoneMessage(totalHit));
-    }
+    if (appHit)        setMilestone(getMilestoneMessage(appHit, appLabel));
+    else if (totalHit) setMilestone(getMilestoneMessage(totalHit));
 
     setGameState(STATE.DONE);
   }
 
-  function handleOpenAnyway() {
-    // TODO (task #22): dismiss Screen Time overlay to open the app
-    // For now, just close the game screen
+  async function handleOpenAnyway() {
+    await recordEvent({ appId, appLabel, appEmoji, gameCompleted: true, walkedAway: false });
+    // TODO (task #22): dismiss Screen Time overlay
     navigation.goBack();
   }
 
@@ -78,8 +84,13 @@ export default function GameScreen({ navigation }) {
   return (
     <ScreenWrapper style={styles.wrapper}>
 
-      {/* Playing state — renders whichever game was randomly selected */}
-      {gameState === STATE.PLAYING && (
+      {/* Loading — brief, just fetching local settings */}
+      {gameState === STATE.LOADING && (
+        <View style={styles.centered} />
+      )}
+
+      {/* Playing state */}
+      {gameState === STATE.PLAYING && selectedGame && (
         <View style={styles.playing}>
           <View style={styles.gameHeader}>
             <AppText variant="xxl" style={styles.appEmoji}>{appEmoji}</AppText>
@@ -124,7 +135,7 @@ export default function GameScreen({ navigation }) {
         </View>
       )}
 
-      {/* Done state — waiting for milestone modal or nav */}
+      {/* Done state */}
       {gameState === STATE.DONE && !milestone && (
         <View style={styles.centered}>
           <AppText variant="xxl">🧘</AppText>

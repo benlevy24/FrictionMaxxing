@@ -5,6 +5,12 @@
 //   3. That's it. GameScreen picks from this list automatically.
 
 import PlaceholderGame from './PlaceholderGame';
+import TicTacToeGame from './TicTacToeGame';
+import ConfusingMazeGame from './ConfusingMazeGame';
+import ObscureHangmanGame from './ObscureHangmanGame';
+import AnnoyingMathGame from './AnnoyingMathGame';
+import StroopGame from './StroopGame';
+import PongGame from './PongGame';
 
 // Each entry shape:
 // {
@@ -18,25 +24,37 @@ export const GAMES = [
     id: 'tictactoe',
     label: 'Unbeatable Tic Tac Toe',
     emoji: '❌',
-    component: PlaceholderGame,  // replaced in task #12
+    component: TicTacToeGame,
   },
   {
     id: 'maze',
     label: 'Confusing Maze',
     emoji: '🌀',
-    component: PlaceholderGame,  // replaced in task #13
+    component: ConfusingMazeGame,
   },
   {
     id: 'hangman',
     label: 'Obscure Hangman',
     emoji: '🪢',
-    component: PlaceholderGame,  // replaced in task #14
+    component: ObscureHangmanGame,
   },
   {
     id: 'math',
     label: 'Annoying Math',
     emoji: '🔢',
-    component: PlaceholderGame,  // replaced in task #15
+    component: AnnoyingMathGame,
+  },
+  {
+    id: 'stroop',
+    label: 'Stroop Test',
+    emoji: '🎨',
+    component: StroopGame,
+  },
+  {
+    id: 'pong',
+    label: 'Unfair Pong',
+    emoji: '🏓',
+    component: PongGame,
   },
 ];
 

@@ -1,33 +1,46 @@
+import { useState, useCallback } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
+import {
+  getSettings,
+  getEvents,
+  computeStreak,
+  deriveTodayStats,
+  ALL_APPS,
+} from '../../utils/storage';
 import { colors, spacing, radius } from '../../theme';
 
-// Placeholder data — will be replaced by AsyncStorage in task #16
-const MOCK_BLOCKED_APPS = [
-  { id: 'instagram', label: 'Instagram', emoji: '📸' },
-  { id: 'tiktok', label: 'TikTok', emoji: '🎵' },
-  { id: 'youtube', label: 'YouTube', emoji: '▶️' },
-  { id: 'x', label: 'X / Twitter', emoji: '🐦' },
-  { id: 'facebook', label: 'Facebook', emoji: '👍' },
-  { id: 'snapchat', label: 'Snapchat', emoji: '👻' },
-  { id: 'reddit', label: 'Reddit', emoji: '🤖' },
-];
-
-const MOCK_TODAY = {
-  intercepted: 14,
-  completed: 9,
-  skipped: 5,
-};
-
-const MOCK_STREAK = 4;
-
 export default function HomeScreen({ navigation }) {
+  const [loading, setLoading] = useState(true);
+  const [today, setToday]     = useState({ intercepted: 0, completed: 0, skipped: 0 });
+  const [streak, setStreak]   = useState({ current: 0, best: 0 });
+  const [blockedApps, setBlockedApps] = useState([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      async function load() {
+        const [settings, events] = await Promise.all([getSettings(), getEvents()]);
+        if (!active) return;
+        setToday(deriveTodayStats(events));
+        setStreak(computeStreak(events));
+        setBlockedApps(ALL_APPS.filter((a) => settings.blockedApps.includes(a.id)));
+        setLoading(false);
+      }
+      load();
+      return () => { active = false; };
+    }, [])
+  );
+
+  if (loading) return <ScreenWrapper />;
+
   const completionRate =
-    MOCK_TODAY.intercepted > 0
-      ? Math.round((MOCK_TODAY.completed / MOCK_TODAY.intercepted) * 100)
+    today.intercepted > 0
+      ? Math.round((today.completed / today.intercepted) * 100)
       : 0;
 
   return (
@@ -37,27 +50,35 @@ export default function HomeScreen({ navigation }) {
         {/* Header */}
         <View style={styles.header}>
           <AppText variant="xxl">today</AppText>
-          <AppText variant="caption">you've been annoyed {MOCK_TODAY.intercepted} times</AppText>
+          <AppText variant="caption">
+            {today.intercepted === 0
+              ? 'no interceptions yet today 🤞'
+              : `you've been annoyed ${today.intercepted} time${today.intercepted !== 1 ? 's' : ''}`}
+          </AppText>
         </View>
 
         {/* Streak */}
-        <Card style={styles.streakCard}>
+        <Card style={[styles.streakCard, streak.current > 0 && styles.streakCardActive]}>
           <View style={styles.streakRow}>
             <View>
               <AppText variant="caption">current streak</AppText>
               <AppText variant="xxl" style={styles.streakNumber}>
-                {MOCK_STREAK} 🔥
+                {streak.current} {streak.current > 0 ? '🔥' : '✨'}
               </AppText>
-              <AppText variant="caption">days without giving up</AppText>
+              <AppText variant="caption">
+                {streak.current === 0
+                  ? 'no streak — clean so far'
+                  : `consecutive day${streak.current !== 1 ? 's' : ''} intercepted`}
+              </AppText>
             </View>
           </View>
         </Card>
 
         {/* Today's stats */}
         <View style={styles.statsRow}>
-          <StatBox label="intercepted" value={MOCK_TODAY.intercepted} emoji="🚧" />
-          <StatBox label="completed" value={MOCK_TODAY.completed} emoji="✅" />
-          <StatBox label="rage-quit" value={MOCK_TODAY.skipped} emoji="🏳️" />
+          <StatBox label="intercepted" value={today.intercepted} emoji="🚧" />
+          <StatBox label="completed"   value={today.completed}   emoji="✅" />
+          <StatBox label="rage-quit"   value={today.skipped}     emoji="🏳️" />
         </View>
 
         {/* Completion rate */}
@@ -81,7 +102,7 @@ export default function HomeScreen({ navigation }) {
             />
           </View>
           <View style={styles.appChips}>
-            {MOCK_BLOCKED_APPS.map((app) => (
+            {blockedApps.map((app) => (
               <View key={app.id} style={styles.chip}>
                 <AppText variant="sm">{app.emoji} {app.label}</AppText>
               </View>
@@ -115,6 +136,9 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   streakCard: {
+    borderColor: colors.border,
+  },
+  streakCardActive: {
     borderColor: colors.primary,
   },
   streakRow: {

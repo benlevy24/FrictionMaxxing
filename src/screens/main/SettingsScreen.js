@@ -1,58 +1,72 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { View, ScrollView, Switch, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
 import Card from '../../components/Card';
+import {
+  getSettings,
+  saveSettings,
+  clearAllData,
+  ALL_APPS,
+  DEFAULT_ENABLED_GAMES,
+} from '../../utils/storage';
+import { GAMES } from '../../games/registry';
 import { colors, spacing, radius } from '../../theme';
 
-// Mock state — will be persisted via AsyncStorage in task #16
-const DEFAULT_BLOCKED_APPS = [
-  { id: 'instagram', label: 'Instagram', emoji: '📸', enabled: true },
-  { id: 'tiktok', label: 'TikTok', emoji: '🎵', enabled: true },
-  { id: 'youtube', label: 'YouTube', emoji: '▶️', enabled: true },
-  { id: 'x', label: 'X / Twitter', emoji: '🐦', enabled: true },
-  { id: 'facebook', label: 'Facebook', emoji: '👍', enabled: true },
-  { id: 'snapchat', label: 'Snapchat', emoji: '👻', enabled: true },
-  { id: 'reddit', label: 'Reddit', emoji: '🤖', enabled: true },
-  { id: 'threads', label: 'Threads', emoji: '🧵', enabled: false },
-  { id: 'linkedin', label: 'LinkedIn', emoji: '💼', enabled: false },
-  { id: 'pinterest', label: 'Pinterest', emoji: '📌', enabled: false },
-];
-
-const DEFAULT_GAMES = [
-  { id: 'tictactoe', label: 'Unbeatable Tic Tac Toe', emoji: '❌', enabled: true },
-  { id: 'maze', label: 'Confusing Maze', emoji: '🌀', enabled: true },
-  { id: 'hangman', label: 'Obscure Hangman', emoji: '🪢', enabled: true },
-  { id: 'math', label: 'Annoying Math', emoji: '🔢', enabled: true },
-];
-
 export default function SettingsScreen() {
-  const [blockedApps, setBlockedApps] = useState(DEFAULT_BLOCKED_APPS);
-  const [games, setGames] = useState(DEFAULT_GAMES);
-  const [notifications, setNotifications] = useState({
-    milestones: false,
-  });
+  const [loading, setLoading]       = useState(true);
+  const [blockedApps, setBlockedApps] = useState([]);
+  const [enabledGames, setEnabledGames] = useState(DEFAULT_ENABLED_GAMES);
+  const [notifications, setNotifications] = useState({ milestones: false });
 
-  function toggleApp(id) {
-    setBlockedApps((prev) =>
-      prev.map((app) => (app.id === id ? { ...app, enabled: !app.enabled } : app))
-    );
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      getSettings().then((s) => {
+        if (!active) return;
+        // Build a full list of all apps with enabled flag from settings
+        setBlockedApps(
+          ALL_APPS.map((app) => ({ ...app, enabled: s.blockedApps.includes(app.id) }))
+        );
+        setEnabledGames(s.enabledGames);
+        setLoading(false);
+      });
+      return () => { active = false; };
+    }, [])
+  );
+
+  async function toggleApp(id) {
+    const target = blockedApps.find((a) => a.id === id);
+    const willDisable = target?.enabled;
+    const enabledCount = blockedApps.filter((a) => a.enabled).length;
+
+    if (willDisable && enabledCount === 1) {
+      Alert.alert('at least one app must be blocked', 'otherwise what are we even doing here');
+      return;
+    }
+
+    const next = blockedApps.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a));
+    setBlockedApps(next);
+    await saveSettings({ blockedApps: next.filter((a) => a.enabled).map((a) => a.id) });
   }
 
-  function toggleGame(id) {
-    const enabled = games.filter((g) => g.enabled);
-    const target = games.find((g) => g.id === id);
-    if (target.enabled && enabled.length === 1) {
+  async function toggleGame(id) {
+    const enabledCount = enabledGames.filter((g) => g === id).length > 0
+      ? enabledGames.length
+      : enabledGames.length;
+    const isEnabled = enabledGames.includes(id);
+
+    if (isEnabled && enabledGames.length === 1) {
       Alert.alert('at least one game must be enabled', 'otherwise what are we even doing here');
       return;
     }
-    setGames((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, enabled: !g.enabled } : g))
-    );
-  }
 
-  function toggleNotification(key) {
-    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
+    const next = isEnabled
+      ? enabledGames.filter((g) => g !== id)
+      : [...enabledGames, id];
+    setEnabledGames(next);
+    await saveSettings({ enabledGames: next });
   }
 
   function handleResetStats() {
@@ -64,8 +78,12 @@ export default function SettingsScreen() {
         {
           text: 'reset everything',
           style: 'destructive',
-          onPress: () => {
-            // TODO (task #16): clear AsyncStorage stats keys
+          onPress: async () => {
+            await clearAllData();
+            // Reload settings to defaults
+            const s = await getSettings();
+            setBlockedApps(ALL_APPS.map((a) => ({ ...a, enabled: s.blockedApps.includes(a.id) })));
+            setEnabledGames(s.enabledGames);
             Alert.alert('done', 'stats wiped. fresh start.');
           },
         },
@@ -73,8 +91,10 @@ export default function SettingsScreen() {
     );
   }
 
-  const activeAppCount = blockedApps.filter((a) => a.enabled).length;
-  const activeGameCount = games.filter((g) => g.enabled).length;
+  const activeAppCount  = blockedApps.filter((a) => a.enabled).length;
+  const activeGameCount = enabledGames.length;
+
+  if (loading) return <ScreenWrapper />;
 
   return (
     <ScreenWrapper>
@@ -85,10 +105,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Blocked apps */}
-        <Section
-          title="blocked apps"
-          subtitle={`${activeAppCount} active`}
-        >
+        <Section title="blocked apps" subtitle={`${activeAppCount} active`}>
           {blockedApps.map((app) => (
             <SettingRow
               key={app.id}
@@ -101,29 +118,29 @@ export default function SettingsScreen() {
         </Section>
 
         {/* Games */}
-        <Section
-          title="games"
-          subtitle={`${activeGameCount} in rotation`}
-        >
-          {games.map((game) => (
+        <Section title="games" subtitle={`${activeGameCount} in rotation`}>
+          {GAMES.map((game) => (
             <SettingRow
               key={game.id}
               emoji={game.emoji}
               label={game.label}
-              value={game.enabled}
+              value={enabledGames.includes(game.id)}
               onToggle={() => toggleGame(game.id)}
             />
           ))}
         </Section>
 
         {/* Notifications */}
-        <Section title="notifications" subtitle="off by default — this app is about using your phone less">
+        <Section
+          title="notifications"
+          subtitle="off by default — this app is about using your phone less"
+        >
           <SettingRow
             emoji="🏆"
             label="milestone alerts"
             sublabel="notify when you hit a walk-away milestone"
             value={notifications.milestones}
-            onToggle={() => toggleNotification('milestones')}
+            onToggle={() => setNotifications((p) => ({ ...p, milestones: !p.milestones }))}
           />
         </Section>
 
@@ -149,9 +166,7 @@ function Section({ title, subtitle, children }) {
         <AppText variant="subheading">{title}</AppText>
         {subtitle && <AppText variant="caption">{subtitle}</AppText>}
       </View>
-      <Card style={styles.sectionCard}>
-        {children}
-      </Card>
+      <Card style={styles.sectionCard}>{children}</Card>
     </View>
   );
 }
@@ -175,25 +190,11 @@ function SettingRow({ emoji, label, sublabel, value, onToggle }) {
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingBottom: spacing.xxl,
-    gap: spacing.lg,
-  },
-  header: {
-    marginTop: spacing.xl,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-  },
-  sectionCard: {
-    padding: 0,
-    overflow: 'hidden',
-  },
+  scroll:         { paddingBottom: spacing.xxl, gap: spacing.lg },
+  header:         { marginTop: spacing.xl },
+  section:        { gap: spacing.sm },
+  sectionHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  sectionCard:    { padding: 0, overflow: 'hidden' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -203,23 +204,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  rowEmoji: {
-    width: 28,
-    textAlign: 'center',
-  },
-  rowText: {
-    flex: 1,
-    gap: 2,
-  },
-  destructiveRow: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    gap: spacing.xs,
-  },
-  destructiveLabel: {
-    color: colors.danger,
-  },
-  destructiveSub: {
-    color: colors.textDisabled,
-  },
+  rowEmoji:         { width: 28, textAlign: 'center' },
+  rowText:          { flex: 1, gap: 2 },
+  destructiveRow:   { paddingVertical: spacing.md, paddingHorizontal: spacing.md, gap: spacing.xs },
+  destructiveLabel: { color: colors.danger },
+  destructiveSub:   { color: colors.textDisabled },
 });
