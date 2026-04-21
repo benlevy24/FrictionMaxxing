@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FrictionMaxxing — Icon Concepts</title>
+  <style>
+    body {
+      background: #0d0d0d;
+      color: #eee;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 48px 32px;
+    }
+    h1 { color: #EF4444; margin-bottom: 4px; }
+    .page-sub { color: #666; margin-top: 0; margin-bottom: 48px; font-size: 14px; }
+    h2 { color: #aaa; font-size: 15px; font-weight: 500; border-bottom: 1px solid #222; padding-bottom: 8px; margin-bottom: 32px; margin-top: 48px; }
+    .row { display: flex; gap: 48px; flex-wrap: wrap; align-items: flex-start; }
+    .swatch { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .swatch .name { font-size: 15px; font-weight: 700; color: #EF4444; }
+    .swatch .desc { font-size: 12px; color: #666; text-align: center; max-width: 200px; line-height: 1.5; }
+    svg { border-radius: 22.5%; display: block; }
+  </style>
+</head>
+<body>
+  <h1>FrictionMaxxing — Crimson</h1>
+  <p class="page-sub">Pick one from each section</p>
+
+  <!--
+    PADLOCK GEOMETRY (all four variations share the same base):
+    Body: x=108, y=260, w=296, h=210 → right=404, bottom=470
+    Grid lines: x=207, x=305 (vertical) | y=330, y=400 (horizontal)
+
+    Cell centers (with 12px padding from all grid lines / body edges):
+      TL=(158,295)  TM=(256,295)  TR=(354,295)
+      ML=(158,365)  MM=(256,365)  MR=(354,365)
+      BL=(158,435)  BM=(256,435)  BR=(354,435)
+
+    X arms: ±12px from center (diagonal), stroke-width=10  → visual reach ≈ 17px, safe in 20px half-cell
+    O radius: 16, stroke-width=8                           → outer edge 20px from center, safe in 25px half-cell
+
+    Winning diagonal: TL(158,295) → MM(256,365) → BR(354,435) — mathematically collinear ✓
+    Extended line: (130,275) → (382,455)   [34px beyond each outer X center along unit vec (0.814,0.581)]
+  -->
+
+  <h2>#1 — PADLOCK</h2>
+  <div class="row">
+
+    <!-- SHARED DEFS as inline SVG template — rendered 4 times with different winning treatments -->
+
+    <!-- A: thin white line, rotated slightly CW -->
+    <div class="swatch">
+      <svg width="220" height="220" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <rect width="512" height="512" fill="#1A0505"/>
+        <!-- Shackle -->
+        <path d="M 168 272 L 168 182 A 88 88 0 0 1 344 182 L 344 272" fill="none" stroke="#EF4444" stroke-width="40" stroke-linecap="round"/>
+        <!-- Body -->
+        <rect x="108" y="260" width="296" height="210" rx="30" fill="#2D1515" stroke="#EF4444" stroke-width="7"/>
+        <!-- Grid lines -->
+        <line x1="207" y1="270" x2="207" y2="460" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="305" y1="270" x2="305" y2="460" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="118" y1="330" x2="394" y2="330" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="118" y1="400" x2="394" y2="400" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <!-- X diagonal: TL(158,295), MM(256,365), BR(354,435) · arm=12, sw=10 -->
+        <line x1="146" y1="283" x2="170" y2="307" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="170" y1="283" x2="146" y2="307" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="244" y1="353" x2="268" y2="377" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="268" y1="353" x2="244" y2="377" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="342" y1="423" x2="366" y2="447" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="366" y1="423" x2="342" y2="447" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <!-- O's: TR(354,295), ML(158,365), BM(256,435) · r=16, sw=8 -->
+        <circle cx="354" cy="295" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+        <circle cx="158" cy="365" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+        <circle cx="256" cy="435" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+        <!-- Winning line: white, slightly steeper (CW) pivot around center (256,365) -->
+        <line x1="128" y1="268" x2="384" y2="462" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.92"/>
+      </svg>
+      <div class="name">A — White line (CW)</div>
+      <div class="desc">Thin white over X's, rotated slightly clockwise</div>
+    </div>
+
+    <!-- B: circles around winning X's + white lines connecting them -->
+    <div class="swatch">
+      <svg width="220" height="220" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <rect width="512" height="512" fill="#1A0505"/>
+        <path d="M 168 272 L 168 182 A 88 88 0 0 1 344 182 L 344 272" fill="none" stroke="#EF4444" stroke-width="40" stroke-linecap="round"/>
+        <rect x="108" y="260" width="296" height="210" rx="30" fill="#2D1515" stroke="#EF4444" stroke-width="7"/>
+        <line x1="207" y1="270" x2="207" y2="460" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="305" y1="270" x2="305" y2="460" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="118" y1="330" x2="394" y2="330" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="118" y1="400" x2="394" y2="400" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <!-- X diagonal -->
+        <line x1="146" y1="283" x2="170" y2="307" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="170" y1="283" x2="146" y2="307" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="244" y1="353" x2="268" y2="377" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="268" y1="353" x2="244" y2="377" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="342" y1="423" x2="366" y2="447" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="366" y1="423" x2="342" y2="447" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <!-- O's -->
+        <circle cx="354" cy="295" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+        <circle cx="158" cy="365" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+        <circle cx="256" cy="435" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+        <!-- White circles around winning X's (r=32 — generous ring) -->
+        <circle cx="158" cy="295" r="32" fill="none" stroke="#ffffff" stroke-width="5" opacity="0.88"/>
+        <circle cx="256" cy="365" r="32" fill="none" stroke="#ffffff" stroke-width="5" opacity="0.88"/>
+        <circle cx="354" cy="435" r="32" fill="none" stroke="#ffffff" stroke-width="5" opacity="0.88"/>
+        <!--
+          White lines between circles, stopping at circle edges (r=32, unit=(0.814,0.581)):
+          TL→MM: start=(158+26,295+19)=(184,314)  end=(256-26,365-19)=(230,346)
+          MM→BR: start=(256+26,365+19)=(282,384)  end=(354-26,435-19)=(328,416)
+        -->
+        <line x1="184" y1="314" x2="230" y2="346" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+        <line x1="282" y1="384" x2="328" y2="416" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+      </svg>
+      <div class="name">B — Circles + lines</div>
+      <div class="desc">Ring around each winning X, lines thread between them</div>
+    </div>
+
+    <!-- C: winning X's are white, no line -->
+    <div class="swatch">
+      <svg width="220" height="220" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <rect width="512" height="512" fill="#1A0505"/>
+        <path d="M 168 272 L 168 182 A 88 88 0 0 1 344 182 L 344 272" fill="none" stroke="#EF4444" stroke-width="40" stroke-linecap="round"/>
+        <rect x="108" y="260" width="296" height="210" rx="30" fill="#2D1515" stroke="#EF4444" stroke-width="7"/>
+        <line x1="207" y1="270" x2="207" y2="460" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="305" y1="270" x2="305" y2="460" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="118" y1="330" x2="394" y2="330" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="118" y1="400" x2="394" y2="400" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <!-- Winning X's: white -->
+        <line x1="146" y1="283" x2="170" y2="307" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+        <line x1="170" y1="283" x2="146" y2="307" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+        <line x1="244" y1="353" x2="268" y2="377" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+        <line x1="268" y1="353" x2="244" y2="377" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+        <line x1="342" y1="423" x2="366" y2="447" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+        <line x1="366" y1="423" x2="342" y2="447" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+        <!-- O's -->
+        <circle cx="354" cy="295" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+        <circle cx="158" cy="365" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+        <circle cx="256" cy="435" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+      </svg>
+      <div class="name">C — White X's</div>
+      <div class="desc">No extra line — winning X's pop white against red grid</div>
+    </div>
+
+    <!-- D: white line + center dots -->
+    <div class="swatch">
+      <svg width="220" height="220" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <rect width="512" height="512" fill="#1A0505"/>
+        <path d="M 168 272 L 168 182 A 88 88 0 0 1 344 182 L 344 272" fill="none" stroke="#EF4444" stroke-width="40" stroke-linecap="round"/>
+        <rect x="108" y="260" width="296" height="210" rx="30" fill="#2D1515" stroke="#EF4444" stroke-width="7"/>
+        <line x1="207" y1="270" x2="207" y2="460" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="305" y1="270" x2="305" y2="460" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="118" y1="330" x2="394" y2="330" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <line x1="118" y1="400" x2="394" y2="400" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
+        <!-- X diagonal -->
+        <line x1="146" y1="283" x2="170" y2="307" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="170" y1="283" x2="146" y2="307" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="244" y1="353" x2="268" y2="377" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="268" y1="353" x2="244" y2="377" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="342" y1="423" x2="366" y2="447" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <line x1="366" y1="423" x2="342" y2="447" stroke="#EF4444" stroke-width="10" stroke-linecap="round"/>
+        <!-- O's -->
+        <circle cx="354" cy="295" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+        <circle cx="158" cy="365" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+        <circle cx="256" cy="435" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
+        <!-- White line + anchor dots at X centers -->
+        <line x1="128" y1="268" x2="384" y2="462" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+        <circle cx="158" cy="295" r="6" fill="#ffffff" opacity="0.95"/>
+        <circle cx="256" cy="365" r="6" fill="#ffffff" opacity="0.95"/>
+        <circle cx="354" cy="435" r="6" fill="#ffffff" opacity="0.95"/>
+      </svg>
+      <div class="name">D — Line + dots</div>
+      <div class="desc">White line anchored with dot at each X center</div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <h2>#5 — PHONE FACE (unchanged)</h2>
+  <div class="row">
+    <div class="swatch">
+      <svg width="220" height="220" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <rect width="512" height="512" fill="#1A0505"/>
+        <rect x="106" y="56" width="300" height="400" rx="40" fill="#2D1515" stroke="#EF4444" stroke-width="8"/>
+        <rect x="196" y="80" width="120" height="14" rx="7" fill="#1A0505" opacity="0.7"/>
+        <rect x="206" y="432" width="100" height="10" rx="5" fill="#EF4444" opacity="0.35"/>
+        <line x1="171" y1="163" x2="171" y2="247" stroke="#EF4444" stroke-width="5" opacity="0.65"/>
+        <line x1="199" y1="163" x2="199" y2="247" stroke="#EF4444" stroke-width="5" opacity="0.65"/>
+        <line x1="143" y1="191" x2="227" y2="191" stroke="#EF4444" stroke-width="5" opacity="0.65"/>
+        <line x1="143" y1="219" x2="227" y2="219" stroke="#EF4444" stroke-width="5" opacity="0.65"/>
+        <line x1="147" y1="167" x2="167" y2="187" stroke="#EF4444" stroke-width="6" stroke-linecap="round"/>
+        <line x1="167" y1="167" x2="147" y2="187" stroke="#EF4444" stroke-width="6" stroke-linecap="round"/>
+        <line x1="175" y1="195" x2="195" y2="215" stroke="#EF4444" stroke-width="6" stroke-linecap="round"/>
+        <line x1="195" y1="195" x2="175" y2="215" stroke="#EF4444" stroke-width="6" stroke-linecap="round"/>
+        <line x1="203" y1="223" x2="223" y2="243" stroke="#EF4444" stroke-width="6" stroke-linecap="round"/>
+        <line x1="223" y1="223" x2="203" y2="243" stroke="#EF4444" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="213" cy="177" r="10" fill="none" stroke="#fca5a5" stroke-width="5"/>
+        <circle cx="157" cy="205" r="10" fill="none" stroke="#fca5a5" stroke-width="5"/>
+        <circle cx="185" cy="233" r="10" fill="none" stroke="#fca5a5" stroke-width="5"/>
+        <line x1="143" y1="163" x2="227" y2="247" stroke="#EF4444" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+        <circle cx="330" cy="205" r="42" fill="#1A0505" stroke="#fca5a5" stroke-width="6"/>
+        <line x1="306" y1="181" x2="354" y2="229" stroke="#fca5a5" stroke-width="10" stroke-linecap="round"/>
+        <line x1="354" y1="181" x2="306" y2="229" stroke="#fca5a5" stroke-width="10" stroke-linecap="round"/>
+        <line x1="145" y1="148" x2="217" y2="158" stroke="#EF4444" stroke-width="9" stroke-linecap="round"/>
+        <line x1="295" y1="158" x2="367" y2="148" stroke="#EF4444" stroke-width="9" stroke-linecap="round"/>
+        <path d="M 196 328 Q 256 346 316 328" fill="none" stroke="#fca5a5" stroke-width="9" stroke-linecap="round"/>
+      </svg>
+      <div class="name">#5 — Phone Face</div>
+      <div class="desc">Unchanged</div>
+    </div>
+  </div>
+
+</body>
+</html>
