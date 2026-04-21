@@ -13,7 +13,7 @@
     h1 { color: #EF4444; margin-bottom: 4px; }
     .page-sub { color: #666; margin-top: 0; margin-bottom: 48px; font-size: 14px; }
     h2 { color: #aaa; font-size: 15px; font-weight: 500; border-bottom: 1px solid #222; padding-bottom: 8px; margin-bottom: 32px; margin-top: 48px; }
-    .row { display: flex; gap: 48px; flex-wrap: wrap; align-items: flex-start; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; max-width: 560px; }
     .swatch { display: flex; flex-direction: column; align-items: center; gap: 12px; }
     .swatch .name { font-size: 15px; font-weight: 700; color: #EF4444; }
     .swatch .desc { font-size: 12px; color: #666; text-align: center; max-width: 200px; line-height: 1.5; }
@@ -41,7 +41,6 @@
     Extended line: (130,275) → (382,455)   [34px beyond each outer X center along unit vec (0.814,0.581)]
   -->
 
-  <h2>#1 — PADLOCK</h2>
   <div class="row">
 
     <!-- SHARED DEFS as inline SVG template — rendered 4 times with different winning treatments -->
@@ -73,7 +72,7 @@
         <!-- Winning line: white, slightly steeper (CW) pivot around center (256,365) -->
         <line x1="128" y1="268" x2="384" y2="462" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.92"/>
       </svg>
-      <div class="name">A — White line (CW)</div>
+      <div class="name">#1A — White line</div>
       <div class="desc">Thin white over X's, rotated slightly clockwise</div>
     </div>
 
@@ -110,34 +109,8 @@
         <line x1="184" y1="314" x2="230" y2="346" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
         <line x1="282" y1="384" x2="328" y2="416" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
       </svg>
-      <div class="name">B — Circles + lines</div>
+      <div class="name">#1B — Circles + lines</div>
       <div class="desc">Ring around each winning X, lines thread between them</div>
-    </div>
-
-    <!-- C: winning X's are white, no line -->
-    <div class="swatch">
-      <svg width="220" height="220" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-        <rect width="512" height="512" fill="#1A0505"/>
-        <path d="M 168 272 L 168 182 A 88 88 0 0 1 344 182 L 344 272" fill="none" stroke="#EF4444" stroke-width="40" stroke-linecap="round"/>
-        <rect x="108" y="260" width="296" height="210" rx="30" fill="#2D1515" stroke="#EF4444" stroke-width="7"/>
-        <line x1="207" y1="270" x2="207" y2="460" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
-        <line x1="305" y1="270" x2="305" y2="460" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
-        <line x1="118" y1="330" x2="394" y2="330" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
-        <line x1="118" y1="400" x2="394" y2="400" stroke="#EF4444" stroke-width="4" opacity="0.55"/>
-        <!-- Winning X's: white -->
-        <line x1="146" y1="283" x2="170" y2="307" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
-        <line x1="170" y1="283" x2="146" y2="307" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
-        <line x1="244" y1="353" x2="268" y2="377" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
-        <line x1="268" y1="353" x2="244" y2="377" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
-        <line x1="342" y1="423" x2="366" y2="447" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
-        <line x1="366" y1="423" x2="342" y2="447" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
-        <!-- O's -->
-        <circle cx="354" cy="295" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
-        <circle cx="158" cy="365" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
-        <circle cx="256" cy="435" r="16" fill="none" stroke="#fca5a5" stroke-width="8"/>
-      </svg>
-      <div class="name">C — White X's</div>
-      <div class="desc">No extra line — winning X's pop white against red grid</div>
     </div>
 
     <!-- D: white line + center dots -->
@@ -167,15 +140,10 @@
         <circle cx="256" cy="365" r="6" fill="#ffffff" opacity="0.95"/>
         <circle cx="354" cy="435" r="6" fill="#ffffff" opacity="0.95"/>
       </svg>
-      <div class="name">D — Line + dots</div>
+      <div class="name">#1D — Line + dots</div>
       <div class="desc">White line anchored with dot at each X center</div>
     </div>
 
-  </div>
-
-  <!-- ═══════════════════════════════════════════════ -->
-  <h2>#5 — PHONE FACE (unchanged)</h2>
-  <div class="row">
     <div class="swatch">
       <svg width="220" height="220" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
         <rect width="512" height="512" fill="#1A0505"/>
@@ -206,6 +174,7 @@
       <div class="name">#5 — Phone Face</div>
       <div class="desc">Unchanged</div>
     </div>
+
   </div>
 
 </body>
