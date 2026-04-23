@@ -38,9 +38,9 @@ export default function HomeScreen({ navigation }) {
 
   if (loading) return <ScreenWrapper />;
 
-  const completionRate =
+  const frictionSuccessRate =
     today.intercepted > 0
-      ? Math.round((today.completed / today.intercepted) * 100)
+      ? Math.round(((today.walkedAway + today.rageQuit) / today.intercepted) * 100)
       : 0;
 
   return (
@@ -77,18 +77,18 @@ export default function HomeScreen({ navigation }) {
         {/* Today's stats — 2×2 grid */}
         <View style={styles.statsGrid}>
           <StatBox label="intercepted"   value={today.intercepted}  emoji="🚧" />
-          <StatBox label="walked away"   value={today.walkedAway}   emoji="💪" />
+          <StatBox label="walked away"   value={today.walkedAway}   emoji="🚶" />
           <StatBox label="opened anyway" value={today.openedAnyway} emoji="🧐" />
           <StatBox label="rage-quit"     value={today.rageQuit}     emoji="🏳️" />
         </View>
 
         {/* Completion rate */}
         <Card>
-          <AppText variant="caption" style={styles.rateLabel}>completion rate today</AppText>
+          <AppText variant="caption" style={styles.rateLabel}>friction success rate today</AppText>
           <View style={styles.rateBarBg}>
-            <View style={[styles.rateBarFill, { width: `${completionRate}%` }]} />
+            <View style={[styles.rateBarFill, { width: `${frictionSuccessRate}%` }]} />
           </View>
-          <AppText variant="sm" style={styles.rateValue}>{completionRate}%</AppText>
+          <AppText variant="sm" style={styles.rateValue}>{frictionSuccessRate}%</AppText>
         </Card>
 
         {/* Blocked apps */}

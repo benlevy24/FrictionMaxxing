@@ -42,7 +42,7 @@ export default function StatsScreen() {
 
   const allTimeRate =
     allTime.intercepted > 0
-      ? Math.round((allTime.walkedAway / allTime.intercepted) * 100)
+      ? Math.round(((allTime.walkedAway + allTime.rageQuit) / allTime.intercepted) * 100)
       : 0;
 
   const maxIntercepted = Math.max(...weekly.map((d) => d.intercepted), 1);
@@ -51,7 +51,7 @@ export default function StatsScreen() {
     const message =
       `my friction maxxing stats 🧱\n\n` +
       `📊 ${allTime.intercepted} times intercepted\n` +
-      `💪 ${allTime.walkedAway} walked away (${allTimeRate}% rate)\n` +
+      `🚶 ${allTime.walkedAway} walked away · 🏳️ ${allTime.rageQuit} rage-quits (${allTimeRate}% friction success)\n` +
       `🧐 ${allTime.openedAnyway} opened anyway\n` +
       `🏳️ ${allTime.rageQuit} rage-quits\n` +
       `🔥 ${allTime.streakCurrent} day streak (best: ${allTime.streakBest})\n\n` +
@@ -69,15 +69,15 @@ export default function StatsScreen() {
         <View style={styles.header}>
           <AppText variant="xxl">stats</AppText>
           <AppText variant="caption">
-            {allTime.daysSinceInstall} day{allTime.daysSinceInstall !== 1 ? 's' : ''} of self-inflicted annoyance
+            {allTime.daysSinceInstall} day{allTime.daysSinceInstall !== 1 ? 's' : ''} of friction
           </AppText>
         </View>
 
         {/* All-time summary */}
         <View style={styles.summaryRow}>
           <SummaryBox emoji="🚧" value={allTime.intercepted}  label="all-time blocked" />
-          <SummaryBox emoji="💪" value={allTime.walkedAway}   label="walked away" />
-          <SummaryBox emoji={`${allTimeRate}%`} value={null}  label="walk-away rate" isRate />
+          <SummaryBox emoji="🚶" value={allTime.walkedAway}   label="walked away" />
+          <SummaryBox emoji={`${allTimeRate}%`} value={null}  label="friction success" isRate />
         </View>
 
         {/* Streak */}
@@ -106,7 +106,7 @@ export default function StatsScreen() {
             {weekly.map((d) => {
               const barH = Math.round((d.intercepted / maxIntercepted) * 80);
               const fillH = d.intercepted > 0
-                ? Math.round((d.completed / d.intercepted) * barH)
+                ? Math.round((d.succeeded / d.intercepted) * barH)
                 : 0;
               return (
                 <View key={d.date} style={styles.barCol}>
@@ -126,7 +126,7 @@ export default function StatsScreen() {
           <View style={styles.legend}>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
-              <AppText variant="xs" style={styles.legendText}>completed</AppText>
+              <AppText variant="xs" style={styles.legendText}>succeeded</AppText>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: colors.border }]} />

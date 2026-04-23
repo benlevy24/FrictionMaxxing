@@ -200,7 +200,7 @@ export function deriveWeeklyStats(events) {
       day:         dayLabel(date),
       date,
       intercepted: dayEvents.length,
-      completed:   dayEvents.filter((e) => e.gameCompleted).length,
+      succeeded:   dayEvents.filter((e) => !(e.gameCompleted && !e.walkedAway)).length,
     };
   });
 }
