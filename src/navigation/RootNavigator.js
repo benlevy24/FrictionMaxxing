@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import OnboardingNavigator from './OnboardingNavigator';
 import MainTabNavigator from './MainTabNavigator';
 import GameScreen from '../screens/games/GameScreen';
+import TutorialScreen from '../screens/main/TutorialScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,6 +20,7 @@ export default function RootNavigator() {
           component={GameScreen}
           options={{ presentation: 'fullScreenModal' }}
         />
+        <Stack.Screen name="Tutorial" component={TutorialScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

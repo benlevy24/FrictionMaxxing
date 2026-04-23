@@ -14,7 +14,7 @@ import {
 import { GAMES } from '../../games/registry';
 import { colors, spacing, radius } from '../../theme';
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ navigation }) {
   const [loading, setLoading]       = useState(true);
   const [blockedApps, setBlockedApps] = useState([]);
   const [enabledGames, setEnabledGames] = useState(DEFAULT_ENABLED_GAMES);
@@ -144,6 +144,17 @@ export default function SettingsScreen() {
           />
         </Section>
 
+        {/* Setup guide */}
+        <Section title="setup">
+          <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate('Tutorial')}>
+            <AppText variant="base" style={styles.linkLabel}>📋  setup guide</AppText>
+            <AppText variant="caption" style={styles.linkSub}>
+              step-by-step: connect FrictionMaxxing to your blocked apps
+            </AppText>
+            <AppText variant="base" style={styles.linkChevron}>›</AppText>
+          </TouchableOpacity>
+        </Section>
+
         {/* Danger zone */}
         <Section title="danger zone">
           <TouchableOpacity style={styles.destructiveRow} onPress={handleResetStats}>
@@ -209,4 +220,8 @@ const styles = StyleSheet.create({
   destructiveRow:   { paddingVertical: spacing.md, paddingHorizontal: spacing.md, gap: spacing.xs },
   destructiveLabel: { color: colors.danger },
   destructiveSub:   { color: colors.textDisabled },
+  linkRow:          { paddingVertical: spacing.md, paddingHorizontal: spacing.md, gap: spacing.xs },
+  linkLabel:        { color: colors.text },
+  linkSub:          { color: colors.textDisabled },
+  linkChevron:      { color: colors.textDisabled, alignSelf: 'flex-end' },
 });
