@@ -11,6 +11,7 @@ import ObscureHangmanGame from './ObscureHangmanGame';
 import AnnoyingMathGame from './AnnoyingMathGame';
 import StroopGame from './StroopGame';
 import PongGame from './PongGame';
+import SnakeGame from './SnakeGame';
 
 // Each entry shape:
 // {
@@ -55,6 +56,12 @@ export const GAMES = [
     label: 'Unfair Pong',
     emoji: '🏓',
     component: PongGame,
+  },
+  {
+    id: 'snake',
+    label: 'Snake',
+    emoji: '🐍',
+    component: SnakeGame,
   },
 ];
 
