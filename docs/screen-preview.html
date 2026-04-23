@@ -6,7 +6,6 @@
 <title>FrictionMaxxing — Screen Preview</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
     --bg:            #111111;
     --surface:       #1C1C1C;
@@ -21,677 +20,478 @@
     --danger:        #C0544A;
     --warning:       #C9A84C;
   }
+  body { background:#0A0A0A; font-family:'Comic Sans MS','Chalkboard SE',cursive; padding:40px 20px 80px; color:var(--text); }
+  h1 { text-align:center; color:var(--primary); font-size:28px; margin-bottom:8px; }
+  .page-sub { text-align:center; color:var(--text-sub); font-size:13px; margin-bottom:48px; }
+  .section-label { text-align:center; color:var(--text-sub); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-bottom:24px; margin-top:56px; }
+  .phone-row { display:flex; flex-wrap:wrap; gap:32px; justify-content:center; align-items:flex-start; }
+  .phone { width:320px; background:#000; border-radius:44px; padding:14px; box-shadow:0 0 0 2px #333,0 24px 60px rgba(0,0,0,.7); }
+  .phone-label { text-align:center; color:var(--text-sub); font-size:12px; margin-top:14px; }
+  .phone-screen { background:var(--bg); border-radius:34px; overflow:hidden; height:620px; display:flex; flex-direction:column; position:relative; }
+  .status-bar { display:flex; justify-content:space-between; padding:10px 20px 4px; font-size:11px; color:var(--text); flex-shrink:0; }
+  .screen-content { flex:1; overflow-y:auto; padding:0 16px 8px; display:flex; flex-direction:column; gap:12px; scrollbar-width:none; }
+  .screen-content::-webkit-scrollbar { display:none; }
+  .tab-bar { display:flex; background:var(--surface); border-top:1px solid var(--border); padding:8px 0 12px; flex-shrink:0; }
+  .tab { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:18px; }
+  .tab-label { font-size:10px; color:var(--text-disabled); }
+  .tab.active .tab-label { color:var(--primary); }
+  .tab .tab-icon { opacity:.4; }
+  .tab.active .tab-icon { opacity:1; }
 
-  body {
-    background: #0A0A0A;
-    font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
-    padding: 40px 20px 80px;
-    color: var(--text);
-  }
+  /* type */
+  .t-xxl { font-size:26px; color:var(--text); }
+  .t-xl  { font-size:20px; color:var(--text); }
+  .t-lg  { font-size:17px; color:var(--text); }
+  .t-base{ font-size:14px; color:var(--text); }
+  .t-sm  { font-size:12px; color:var(--text); }
+  .t-xs  { font-size:10px; color:var(--text); }
+  .t-cap { font-size:11px; color:var(--text-sub); }
+  .t-sub { color:var(--text-sub); }
+  .t-dis { color:var(--text-disabled); }
+  .t-pri { color:var(--primary); }
+  .t-warn{ color:var(--warning); }
+  .t-dng { color:var(--danger); }
+  .t-suc { color:var(--success); }
 
-  h1 {
-    text-align: center;
-    color: var(--primary);
-    font-size: 28px;
-    margin-bottom: 8px;
-  }
-  .page-subtitle {
-    text-align: center;
-    color: var(--text-sub);
-    font-size: 13px;
-    margin-bottom: 48px;
-  }
+  /* layout */
+  .row   { display:flex; align-items:center; }
+  .row-b { display:flex; align-items:center; justify-content:space-between; }
+  .col   { display:flex; flex-direction:column; }
+  .f1    { flex:1; }
+  .center{ align-items:center; }
+  .gap2  { gap:2px; } .gap4 { gap:4px; } .gap8 { gap:8px; } .gap12 { gap:12px; }
 
-  /* Section labels */
-  .section-label {
-    text-align: center;
-    color: var(--text-sub);
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 24px;
-    margin-top: 56px;
-  }
+  /* card */
+  .card       { background:var(--surface); border-radius:12px; padding:12px; border:1px solid var(--border); }
+  .card-flush { padding:0; overflow:hidden; }
+  .streak-card{ border-color:var(--primary) !important; }
 
-  /* Phone grid */
-  .phone-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 32px;
-    justify-content: center;
-    align-items: flex-start;
-  }
+  /* bar */
+  .bar-bg   { height:7px; background:var(--border); border-radius:4px; overflow:hidden; flex:1; }
+  .bar-fill { height:100%; background:var(--primary); border-radius:4px; }
 
-  /* Phone frame */
-  .phone {
-    width: 320px;
-    background: #000;
-    border-radius: 44px;
-    padding: 14px;
-    box-shadow: 0 0 0 2px #333, 0 24px 60px rgba(0,0,0,0.7);
-    position: relative;
-  }
-  .phone-label {
-    text-align: center;
-    color: var(--text-sub);
-    font-size: 12px;
-    margin-top: 14px;
-  }
-  .phone-screen {
-    background: var(--bg);
-    border-radius: 34px;
-    overflow: hidden;
-    height: 620px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-  }
-  /* Status bar */
-  .status-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px 4px;
-    font-size: 11px;
-    color: var(--text);
-    flex-shrink: 0;
-  }
-  /* Scrollable content area */
-  .screen-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 16px 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    scrollbar-width: none;
-  }
-  .screen-content::-webkit-scrollbar { display: none; }
-  /* Tab bar */
-  .tab-bar {
-    display: flex;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    padding: 8px 0 12px;
-    flex-shrink: 0;
-  }
-  .tab {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    font-size: 18px;
-    cursor: pointer;
-  }
-  .tab-label {
-    font-size: 10px;
-    color: var(--text-disabled);
-  }
-  .tab.active .tab-label { color: var(--primary); }
-  .tab .tab-icon { opacity: 0.4; }
-  .tab.active .tab-icon { opacity: 1; }
-
-  /* ── Shared UI components ── */
-  .screen-header { margin-top: 12px; display: flex; flex-direction: column; gap: 4px; }
-  .t-xxl  { font-size: 26px; color: var(--text); }
-  .t-xl   { font-size: 20px; color: var(--text); }
-  .t-lg   { font-size: 17px; color: var(--text); }
-  .t-base { font-size: 14px; color: var(--text); }
-  .t-sm   { font-size: 12px; color: var(--text); }
-  .t-xs   { font-size: 10px; color: var(--text); }
-  .t-cap  { font-size: 11px; color: var(--text-sub); }
-  .t-sub  { color: var(--text-sub); }
-  .t-dis  { color: var(--text-disabled); }
-  .t-pri  { color: var(--primary); }
-  .t-warn { color: var(--warning); }
-  .t-dng  { color: var(--danger); }
-
-  .card {
-    background: var(--surface);
-    border-radius: 12px;
-    padding: 12px;
-    border: 1px solid var(--border);
-  }
-  .card-flush { padding: 0; overflow: hidden; }
-
-  .row { display: flex; align-items: center; }
-  .row-between { display: flex; align-items: center; justify-content: space-between; }
-  .col { display: flex; flex-direction: column; }
-  .gap2  { gap: 2px; }
-  .gap4  { gap: 4px; }
-  .gap8  { gap: 8px; }
-  .gap12 { gap: 12px; }
-  .f1    { flex: 1; }
-  .center { align-items: center; }
-
-  .badge-circle {
-    width: 26px; height: 26px; border-radius: 13px;
-    background: var(--primary-muted);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; color: var(--primary); font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  /* progress bar */
-  .bar-bg {
-    height: 7px; background: var(--border);
-    border-radius: 4px; overflow: hidden; flex: 1;
-  }
-  .bar-fill { height: 100%; background: var(--primary); border-radius: 4px; }
-
-  /* section divider row */
-  .list-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 12px;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-  }
-  .list-row:last-child { border-bottom: none; }
-  .list-row.highlight { background: var(--primary-muted); }
+  /* list row */
+  .list-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-bottom:1px solid var(--border); font-size:13px; }
+  .list-row:last-child { border-bottom:none; }
+  .list-row.hl { background:var(--primary-muted); }
 
   /* toggle */
-  .toggle {
-    width: 36px; height: 20px; border-radius: 10px;
-    display: flex; align-items: center; padding: 2px;
-    flex-shrink: 0;
-  }
-  .toggle.on  { background: var(--primary); justify-content: flex-end; }
-  .toggle.off { background: var(--border);  justify-content: flex-start; }
-  .toggle-thumb { width: 16px; height: 16px; border-radius: 8px; background: var(--text); }
+  .toggle { width:36px; height:20px; border-radius:10px; display:flex; align-items:center; padding:2px; flex-shrink:0; }
+  .toggle.on  { background:var(--primary); justify-content:flex-end; }
+  .toggle.off { background:var(--border);  justify-content:flex-start; }
+  .toggle-thumb { width:16px; height:16px; border-radius:8px; background:var(--text); }
 
   /* chip */
-  .chip {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 4px 10px;
-    font-size: 11px;
-    white-space: nowrap;
-  }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:4px 10px; font-size:11px; white-space:nowrap; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
 
-  /* button */
-  .btn {
-    border-radius: 10px; padding: 10px 14px;
-    font-family: inherit; cursor: pointer;
-    font-size: 13px; text-align: center; border: none;
-  }
-  .btn-primary   { background: var(--primary); color: #fff; }
-  .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
-  .btn-ghost     { background: transparent; color: var(--primary); font-size: 12px; padding: 4px 0; }
+  /* btn */
+  .btn { border-radius:10px; padding:10px 14px; font-family:inherit; font-size:13px; text-align:center; border:none; cursor:pointer; }
+  .btn-pri  { background:var(--primary); color:#fff; }
+  .btn-sec  { background:var(--surface); color:var(--text); border:1px solid var(--border); }
+  .btn-ghost{ background:transparent; color:var(--primary); font-size:12px; padding:4px 0; border:none; }
 
-  /* ── HOME ── */
-  .stat-boxes { display: flex; gap: 8px; }
-  .stat-box { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  /* stat grid 2×2 */
+  .stat-grid { display:flex; flex-wrap:wrap; gap:8px; }
+  .stat-box  { width:calc(50% - 4px); background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px 6px; display:flex; flex-direction:column; align-items:center; gap:2px; }
 
-  /* ── STATS chart ── */
-  .chart { display: flex; align-items: flex-end; justify-content: space-between; height: 90px; gap: 4px; margin-bottom: 8px; }
-  .bar-col { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
-  .bar-wrap { flex: 1; display: flex; align-items: flex-end; }
-  .bar-stack { width: 16px; border-radius: 3px; overflow: hidden; background: var(--border); }
-  .bar-inner { width: 100%; background: var(--primary); }
+  /* summary row (stats screen) */
+  .sum-row { display:flex; gap:8px; }
+  .sum-box { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px 6px; display:flex; flex-direction:column; align-items:center; gap:2px; }
 
-  /* ── SETTINGS section header ── */
-  .section-head {
-    display: flex; align-items: baseline; justify-content: space-between;
-    margin-bottom: 4px;
-  }
-  .subheading { font-size: 13px; color: var(--text); font-weight: 600; }
+  /* 7-day chart */
+  .chart { display:flex; align-items:flex-end; justify-content:space-between; height:90px; gap:4px; margin-bottom:8px; }
+  .bar-col  { display:flex; flex-direction:column; align-items:center; gap:3px; flex:1; cursor:pointer; }
+  .bar-wrap { flex:1; display:flex; align-items:flex-end; }
+  .bar-stack{ width:16px; border-radius:3px; overflow:hidden; background:var(--border); }
+  .bar-inner{ width:100%; background:var(--primary); }
+  .bar-col.sel .bar-stack { background:var(--primary-muted); border:1px solid var(--primary); }
+  .bar-col.sel .bar-day   { color:var(--primary); }
 
-  /* ── TUTORIAL mini diagrams ── */
-  .viz { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 6px; }
-  .viz-tabs { display: flex; background: var(--surface-raised); }
-  .viz-tab { flex: 1; padding: 6px 0; text-align: center; font-size: 10px; color: var(--text-disabled); border-bottom: 2px solid transparent; }
-  .viz-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  /* day breakdown */
+  .day-breakdown { background:var(--surface-raised); border-radius:8px; padding:8px 10px; margin-bottom:6px; }
+  .day-bd-title  { color:var(--primary); font-size:11px; margin-bottom:4px; }
+  .day-bd-grid   { display:flex; flex-wrap:wrap; gap:4px; }
+  .day-bd-item   { font-size:10px; color:var(--text-sub); width:48%; }
 
-  /* ── GAME SCREEN ── */
-  .full-screen { flex: 1; display: flex; flex-direction: column; }
-  .game-header { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 20px 16px 10px; }
-  .game-area { flex: 1; border: 1px solid var(--border); border-radius: 8px; margin: 0 16px 16px; display: flex; align-items: center; justify-content: center; background: var(--surface); }
-  .ttt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 12px; }
-  .ttt-cell { width: 34px; height: 34px; background: var(--surface-raised); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  /* legend */
+  .legend { display:flex; gap:12px; margin-top:6px; }
+  .legend-item { display:flex; align-items:center; gap:4px; cursor:pointer; }
+  .legend-dot  { width:8px; height:8px; border-radius:50%; }
+  .legend-lbl  { font-size:10px; color:var(--text-sub); }
+  .legend-item.active .legend-lbl { color:var(--primary); }
+  .tooltip-txt { font-size:10px; color:var(--text-disabled); font-style:italic; margin-top:4px; }
 
-  .decision-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 20px; }
+  /* section head */
+  .sec-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px; }
+  .subheading{ font-size:13px; color:var(--text); font-weight:600; }
 
-  /* Milestones modal overlay */
-  .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; border-radius: 34px; z-index: 10; }
-  .modal-box { background: var(--surface); border-radius: 16px; padding: 20px; margin: 20px; border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column; gap: 10px; }
+  /* tutorial */
+  .badge-circle { width:26px; height:26px; border-radius:13px; background:var(--primary-muted); display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--primary); font-weight:700; flex-shrink:0; }
+  .viz { border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-top:6px; }
+  .viz-tabs { display:flex; background:var(--surface-raised); }
+  .viz-tab  { flex:1; padding:6px 0; text-align:center; font-size:10px; color:var(--text-disabled); border-bottom:2px solid transparent; }
+  .viz-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
 
-  /* Streak badge */
-  .streak-card { border-color: var(--primary) !important; }
+  /* game screen */
+  .full-screen { flex:1; display:flex; flex-direction:column; }
+  .ttt-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; padding:12px; }
+  .ttt-cell { width:34px; height:34px; background:var(--surface-raised); border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+  .decision-screen { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:20px; }
+  .modal-overlay { position:absolute; inset:0; background:rgba(0,0,0,.75); display:flex; align-items:center; justify-content:center; border-radius:34px; z-index:10; }
+  .modal-box { background:var(--surface); border-radius:16px; padding:20px; margin:20px; border:1px solid var(--border); text-align:center; display:flex; flex-direction:column; gap:10px; }
+
+  /* snake game */
+  .snake-grid { position:relative; background:var(--surface); border:1px solid var(--border); border-radius:6px; }
+  .dpad { display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,44px); gap:2px; margin-top:8px; }
+  .dpad-btn { background:var(--surface); border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .dpad-center { background:var(--surface-raised); border-radius:8px; }
 </style>
 </head>
 <body>
 
 <h1>FrictionMaxxing</h1>
-<p class="page-subtitle">screen preview — scroll within each phone to see full content</p>
+<p class="page-sub">screen preview — scroll within each phone to see full content</p>
 
-<!-- ═══════════════════════════════════════════════════ MAIN SCREENS -->
+<!-- ═══ MAIN SCREENS ═══ -->
 <p class="section-label">main screens</p>
 <div class="phone-row">
 
   <!-- HOME -->
   <div>
-    <div class="phone">
-      <div class="phone-screen">
-        <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
-        <div class="screen-content">
-          <div class="screen-header">
-            <span class="t-xxl">today</span>
-            <span class="t-cap">you've been annoyed 3 times</span>
-          </div>
-
-          <!-- Streak card -->
-          <div class="card streak-card">
-            <div class="t-cap">current streak</div>
-            <div class="t-xxl t-pri" style="margin:4px 0">2 🔥</div>
-            <div class="t-cap">consecutive days intercepted</div>
-          </div>
-
-          <!-- Stat boxes -->
-          <div class="stat-boxes">
-            <div class="stat-box">
-              <span style="font-size:20px">🚧</span>
-              <span class="t-xl">3</span>
-              <span class="t-cap">intercepted</span>
-            </div>
-            <div class="stat-box">
-              <span style="font-size:20px">✅</span>
-              <span class="t-xl">2</span>
-              <span class="t-cap">completed</span>
-            </div>
-            <div class="stat-box">
-              <span style="font-size:20px">🏳️</span>
-              <span class="t-xl">1</span>
-              <span class="t-cap">rage-quit</span>
-            </div>
-          </div>
-
-          <!-- Completion rate -->
-          <div class="card col gap8">
-            <span class="t-cap">completion rate today</span>
-            <div class="bar-bg"><div class="bar-fill" style="width:67%"></div></div>
-            <span class="t-xs t-sub" style="text-align:right">67%</span>
-          </div>
-
-          <!-- Blocked apps -->
-          <div class="col gap8">
-            <div class="row-between">
-              <span class="subheading">blocked apps</span>
-              <button class="btn btn-ghost">edit</button>
-            </div>
-            <div class="chips">
-              <span class="chip">📸 Instagram</span>
-              <span class="chip">🎵 TikTok</span>
-              <span class="chip">▶️ YouTube</span>
-              <span class="chip">𝕏 Twitter/X</span>
-              <span class="chip">👻 Snapchat</span>
-              <span class="chip">👽 Reddit</span>
-              <span class="chip">📘 Facebook</span>
-            </div>
-          </div>
+    <div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
+      <div class="screen-content">
+        <div class="col gap4" style="margin-top:12px">
+          <span class="t-xxl">today</span>
+          <span class="t-cap">you've faced friction 3 times</span>
         </div>
-        <div class="tab-bar">
-          <div class="tab active"><span class="tab-icon">🏠</span><span class="tab-label">home</span></div>
-          <div class="tab"><span class="tab-icon">📊</span><span class="tab-label">stats</span></div>
-          <div class="tab"><span class="tab-icon">⚙️</span><span class="tab-label">settings</span></div>
+
+        <!-- Streak -->
+        <div class="card streak-card col gap4">
+          <span class="t-cap">current streak</span>
+          <span class="t-xxl t-pri">2 🔥</span>
+          <span class="t-cap">consecutive days you resisted</span>
+        </div>
+
+        <!-- 2×2 stat grid -->
+        <div class="stat-grid">
+          <div class="stat-box"><span style="font-size:20px">🚧</span><span class="t-xl">3</span><span class="t-cap">intercepted</span></div>
+          <div class="stat-box"><span style="font-size:20px">🚶</span><span class="t-xl">1</span><span class="t-cap">walked away</span></div>
+          <div class="stat-box"><span style="font-size:20px">🧐</span><span class="t-xl">1</span><span class="t-cap">opened anyway</span></div>
+          <div class="stat-box"><span style="font-size:20px">🏳️</span><span class="t-xl">1</span><span class="t-cap">rage-quit</span></div>
+        </div>
+
+        <!-- Friction success rate -->
+        <div class="card col gap8">
+          <span class="t-cap">friction success rate today</span>
+          <div class="bar-bg"><div class="bar-fill" style="width:67%"></div></div>
+          <span class="t-xs t-sub" style="text-align:right">67%</span>
+        </div>
+
+        <!-- Blocked apps -->
+        <div class="col gap8">
+          <div class="row-b"><span class="subheading">blocked apps</span><button class="btn btn-ghost">edit</button></div>
+          <div class="chips">
+            <span class="chip">📸 Instagram</span><span class="chip">🎵 TikTok</span>
+            <span class="chip">▶️ YouTube</span><span class="chip">𝕏 Twitter/X</span>
+            <span class="chip">👻 Snapchat</span><span class="chip">👽 Reddit</span>
+            <span class="chip">📘 Facebook</span>
+          </div>
         </div>
       </div>
-    </div>
+      <div class="tab-bar">
+        <div class="tab active"><span class="tab-icon">🏠</span><span class="tab-label">home</span></div>
+        <div class="tab"><span class="tab-icon">📊</span><span class="tab-label">stats</span></div>
+        <div class="tab"><span class="tab-icon">⚙️</span><span class="tab-label">settings</span></div>
+      </div>
+    </div></div>
     <div class="phone-label">Home</div>
   </div>
 
   <!-- STATS -->
   <div>
-    <div class="phone">
-      <div class="phone-screen">
-        <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
-        <div class="screen-content">
-          <div class="screen-header">
-            <span class="t-xxl">stats</span>
-            <span class="t-cap">12 days of self-inflicted annoyance</span>
-          </div>
-
-          <!-- Summary row -->
-          <div class="stat-boxes">
-            <div class="stat-box">
-              <span style="font-size:18px">🚧</span>
-              <span class="t-xl">47</span>
-              <span class="t-cap" style="text-align:center">all-time blocked</span>
-            </div>
-            <div class="stat-box">
-              <span style="font-size:18px">✅</span>
-              <span class="t-xl">31</span>
-              <span class="t-cap" style="text-align:center">games beaten</span>
-            </div>
-            <div class="stat-box">
-              <span style="font-size:18px">66%</span>
-              <span class="t-cap" style="text-align:center">completion rate</span>
-            </div>
-          </div>
-
-          <!-- Streak card -->
-          <div class="card streak-card row" style="gap:0">
-            <div class="col center gap4 f1">
-              <span class="t-cap">current streak</span>
-              <span class="t-xl t-pri">2 🔥</span>
-            </div>
-            <div style="width:1px;height:50px;background:var(--border);margin:0 12px"></div>
-            <div class="col center gap4 f1">
-              <span class="t-cap">best streak</span>
-              <span class="t-xl t-warn">5 🏆</span>
-            </div>
-          </div>
-
-          <!-- 7-day chart -->
-          <div class="card">
-            <div class="subheading" style="margin-bottom:10px">last 7 days</div>
-            <div class="chart">
-              <!-- bars: [intercepted_h, completed_h, label] -->
-              <div class="bar-col">
-                <div class="bar-wrap"><div class="bar-stack" style="height:20px"><div class="bar-inner" style="height:10px"></div></div></div>
-                <span class="t-xs t-sub">Mon</span><span class="t-xs t-dis">2</span>
-              </div>
-              <div class="bar-col">
-                <div class="bar-wrap"><div class="bar-stack" style="height:35px"><div class="bar-inner" style="height:25px"></div></div></div>
-                <span class="t-xs t-sub">Tue</span><span class="t-xs t-dis">4</span>
-              </div>
-              <div class="bar-col">
-                <div class="bar-wrap"><div class="bar-stack" style="height:26px"><div class="bar-inner" style="height:18px"></div></div></div>
-                <span class="t-xs t-sub">Wed</span><span class="t-xs t-dis">3</span>
-              </div>
-              <div class="bar-col">
-                <div class="bar-wrap"><div class="bar-stack" style="height:44px"><div class="bar-inner" style="height:30px"></div></div></div>
-                <span class="t-xs t-sub">Thu</span><span class="t-xs t-dis">5</span>
-              </div>
-              <div class="bar-col">
-                <div class="bar-wrap"><div class="bar-stack" style="height:18px"><div class="bar-inner" style="height:12px"></div></div></div>
-                <span class="t-xs t-sub">Fri</span><span class="t-xs t-dis">2</span>
-              </div>
-              <div class="bar-col">
-                <div class="bar-wrap"><div class="bar-stack" style="height:72px"><div class="bar-inner" style="height:50px"></div></div></div>
-                <span class="t-xs t-sub">Sat</span><span class="t-xs t-dis">8</span>
-              </div>
-              <div class="bar-col">
-                <div class="bar-wrap"><div class="bar-stack" style="height:26px"><div class="bar-inner" style="height:18px"></div></div></div>
-                <span class="t-xs t-sub">Sun</span><span class="t-xs t-dis">3</span>
-              </div>
-            </div>
-            <div class="row gap8">
-              <div class="row gap4"><div style="width:8px;height:8px;border-radius:50%;background:var(--primary)"></div><span class="t-xs t-sub">completed</span></div>
-              <div class="row gap4"><div style="width:8px;height:8px;border-radius:50%;background:var(--border)"></div><span class="t-xs t-sub">intercepted</span></div>
-            </div>
-          </div>
-
-          <!-- By app -->
-          <div class="card">
-            <div class="subheading" style="margin-bottom:10px">by app</div>
-            <div class="col gap12">
-              <div class="row gap10">
-                <span>📸</span>
-                <div class="col gap4 f1">
-                  <div class="row-between"><span class="t-sm">Instagram</span><span class="t-xs t-pri">71%</span></div>
-                  <div class="bar-bg"><div class="bar-fill" style="width:71%"></div></div>
-                  <span class="t-xs t-sub">21 blocked · 15 beaten</span>
-                </div>
-              </div>
-              <div class="row gap10">
-                <span>🎵</span>
-                <div class="col gap4 f1">
-                  <div class="row-between"><span class="t-sm">TikTok</span><span class="t-xs t-pri">50%</span></div>
-                  <div class="bar-bg"><div class="bar-fill" style="width:50%"></div></div>
-                  <span class="t-xs t-sub">16 blocked · 8 beaten</span>
-                </div>
-              </div>
-              <div class="row gap10">
-                <span>▶️</span>
-                <div class="col gap4 f1">
-                  <div class="row-between"><span class="t-sm">YouTube</span><span class="t-xs t-pri">80%</span></div>
-                  <div class="bar-bg"><div class="bar-fill" style="width:80%"></div></div>
-                  <span class="t-xs t-sub">10 blocked · 8 beaten</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn btn-secondary">share my stats 📤</button>
+    <div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
+      <div class="screen-content">
+        <div class="col gap4" style="margin-top:12px">
+          <span class="t-xxl">stats</span>
+          <span class="t-cap">12 days of friction</span>
         </div>
-        <div class="tab-bar">
-          <div class="tab"><span class="tab-icon">🏠</span><span class="tab-label">home</span></div>
-          <div class="tab active"><span class="tab-icon">📊</span><span class="tab-label">stats</span></div>
-          <div class="tab"><span class="tab-icon">⚙️</span><span class="tab-label">settings</span></div>
+
+        <!-- Summary -->
+        <div class="sum-row">
+          <div class="sum-box"><span style="font-size:18px">🚧</span><span class="t-xl">47</span><span class="t-cap" style="text-align:center">all-time blocked</span></div>
+          <div class="sum-box"><span style="font-size:18px">🚶</span><span class="t-xl">31</span><span class="t-cap" style="text-align:center">walked away</span></div>
+          <div class="sum-box"><span style="font-size:18px">66%</span><span class="t-cap" style="text-align:center">friction success</span></div>
         </div>
+
+        <!-- Streak -->
+        <div class="card streak-card row" style="gap:0">
+          <div class="col center gap4 f1"><span class="t-cap">current streak</span><span class="t-xl t-pri">2 🔥</span></div>
+          <div style="width:1px;height:50px;background:var(--border);margin:0 12px"></div>
+          <div class="col center gap4 f1"><span class="t-cap">best streak</span><span class="t-xl t-warn">5 🏆</span></div>
+        </div>
+
+        <!-- 7-day chart -->
+        <div class="card">
+          <div class="subheading" style="margin-bottom:10px">last 7 days</div>
+          <div class="chart">
+            <div class="bar-col"><div class="bar-wrap"><div class="bar-stack" style="height:20px"><div class="bar-inner" style="height:12px"></div></div></div><span class="bar-day t-xs t-sub">Mon</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar-stack" style="height:35px"><div class="bar-inner" style="height:25px"></div></div></div><span class="bar-day t-xs t-sub">Tue</span></div>
+            <div class="bar-col sel"><div class="bar-wrap"><div class="bar-stack" style="height:26px"><div class="bar-inner" style="height:18px"></div></div></div><span class="bar-day t-xs" style="color:var(--primary)">Wed</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar-stack" style="height:72px"><div class="bar-inner" style="height:50px"></div></div></div><span class="bar-day t-xs t-sub">Thu</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar-stack" style="height:18px"><div class="bar-inner" style="height:12px"></div></div></div><span class="bar-day t-xs t-sub">Fri</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar-stack" style="height:44px"><div class="bar-inner" style="height:30px"></div></div></div><span class="bar-day t-xs t-sub">Sat</span></div>
+            <div class="bar-col"><div class="bar-wrap"><div class="bar-stack" style="height:26px"><div class="bar-inner" style="height:18px"></div></div></div><span class="bar-day t-xs t-sub">Sun</span></div>
+          </div>
+          <!-- Selected day breakdown (Wed selected) -->
+          <div class="day-breakdown">
+            <div class="day-bd-title">Wed</div>
+            <div class="day-bd-grid">
+              <span class="day-bd-item">🚧 3 intercepted</span>
+              <span class="day-bd-item">🚶 1 walked away</span>
+              <span class="day-bd-item">🏳️ 1 rage-quit</span>
+              <span class="day-bd-item">🧐 1 opened anyway</span>
+            </div>
+          </div>
+          <!-- Legend -->
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span class="legend-lbl">resisted</span></div>
+            <div class="legend-item active"><div class="legend-dot" style="background:var(--border)"></div><span class="legend-lbl">intercepted</span></div>
+          </div>
+          <div class="tooltip-txt">total times the friction game popped up that day</div>
+        </div>
+
+        <!-- By app -->
+        <div class="card">
+          <div class="subheading" style="margin-bottom:10px">by app</div>
+          <div class="col gap12">
+            <div class="row gap8"><span>📸</span><div class="col gap4 f1"><div class="row-b"><span class="t-sm">Instagram</span><span class="t-xs t-pri">71%</span></div><div class="bar-bg"><div class="bar-fill" style="width:71%"></div></div><span class="t-xs t-sub">21 intercepted · 15 resisted</span></div></div>
+            <div class="row gap8"><span>🎵</span><div class="col gap4 f1"><div class="row-b"><span class="t-sm">TikTok</span><span class="t-xs t-pri">50%</span></div><div class="bar-bg"><div class="bar-fill" style="width:50%"></div></div><span class="t-xs t-sub">16 intercepted · 8 resisted</span></div></div>
+            <div class="row gap8"><span>▶️</span><div class="col gap4 f1"><div class="row-b"><span class="t-sm">YouTube</span><span class="t-xs t-pri">80%</span></div><div class="bar-bg"><div class="bar-fill" style="width:80%"></div></div><span class="t-xs t-sub">10 intercepted · 8 resisted</span></div></div>
+          </div>
+        </div>
+
+        <button class="btn btn-sec">share my stats 📤</button>
       </div>
-    </div>
-    <div class="phone-label">Stats</div>
+      <div class="tab-bar">
+        <div class="tab"><span class="tab-icon">🏠</span><span class="tab-label">home</span></div>
+        <div class="tab active"><span class="tab-icon">📊</span><span class="tab-label">stats</span></div>
+        <div class="tab"><span class="tab-icon">⚙️</span><span class="tab-label">settings</span></div>
+      </div>
+    </div></div>
+    <div class="phone-label">Stats (Wed bar selected, intercepted tooltip)</div>
   </div>
 
   <!-- SETTINGS -->
   <div>
-    <div class="phone">
-      <div class="phone-screen">
-        <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
-        <div class="screen-content">
-          <div class="screen-header">
-            <span class="t-xxl">settings</span>
-          </div>
+    <div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
+      <div class="screen-content">
+        <div style="margin-top:12px"><span class="t-xxl">settings</span></div>
 
-          <!-- Blocked apps -->
-          <div>
-            <div class="section-head"><span class="subheading">blocked apps</span><span class="t-cap">7 active</span></div>
-            <div class="card card-flush">
-              <div class="list-row"><span style="width:22px;text-align:center">📸</span><span class="f1">Instagram</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-              <div class="list-row"><span style="width:22px;text-align:center">🎵</span><span class="f1">TikTok</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-              <div class="list-row"><span style="width:22px;text-align:center">▶️</span><span class="f1">YouTube</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-              <div class="list-row"><span style="width:22px;text-align:center">𝕏</span><span class="f1">Twitter/X</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-              <div class="list-row"><span style="width:22px;text-align:center">👻</span><span class="f1">Snapchat</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-              <div class="list-row"><span style="width:22px;text-align:center">👽</span><span class="f1">Reddit</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-              <div class="list-row"><span style="width:22px;text-align:center">📘</span><span class="f1">Facebook</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-            </div>
-          </div>
+        <div><div class="sec-head"><span class="subheading">blocked apps</span><span class="t-cap">7 active</span></div>
+        <div class="card card-flush">
+          <div class="list-row"><span style="width:22px;text-align:center">📸</span><span class="f1">Instagram</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">🎵</span><span class="f1">TikTok</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">▶️</span><span class="f1">YouTube</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">𝕏</span><span class="f1">Twitter/X</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">👻</span><span class="f1">Snapchat</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">👽</span><span class="f1">Reddit</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">📘</span><span class="f1">Facebook</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+        </div></div>
 
-          <!-- Games -->
-          <div>
-            <div class="section-head"><span class="subheading">games</span><span class="t-cap">6 in rotation</span></div>
-            <div class="card card-flush">
-              <div class="list-row"><span style="width:22px;text-align:center">⭕</span><span class="f1">Tic Tac Toe</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-              <div class="list-row"><span style="width:22px;text-align:center">🌀</span><span class="f1">Confusing Maze</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-              <div class="list-row"><span style="width:22px;text-align:center">🔤</span><span class="f1">Hangman</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-              <div class="list-row"><span style="width:22px;text-align:center">🧮</span><span class="f1">Annoying Math</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-              <div class="list-row"><span style="width:22px;text-align:center">🎨</span><span class="f1">Stroop Test</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
-              <div class="list-row"><span style="width:22px;text-align:center">🏓</span><span class="f1">Unfair Pong</span><div class="toggle off"><div class="toggle-thumb"></div></div></div>
-            </div>
-          </div>
+        <div><div class="sec-head"><span class="subheading">games</span><span class="t-cap">7 in rotation</span></div>
+        <div class="card card-flush">
+          <div class="list-row"><span style="width:22px;text-align:center">❌</span><span class="f1">Unbeatable Tic Tac Toe</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">🌀</span><span class="f1">Confusing Maze</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">🪢</span><span class="f1">Obscure Hangman</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">🔢</span><span class="f1">Annoying Math</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">🎨</span><span class="f1">Stroop Test</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">🏓</span><span class="f1">Unfair Pong</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="list-row"><span style="width:22px;text-align:center">🐍</span><span class="f1">Snake</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+        </div></div>
 
-          <!-- Setup guide -->
-          <div>
-            <div class="section-head"><span class="subheading">setup</span></div>
-            <div class="card card-flush">
-              <div class="list-row col gap2" style="padding:10px 12px">
-                <span class="t-base">📋  setup guide</span>
-                <span class="t-xs t-dis">step-by-step: connect FrictionMaxxing to your blocked apps</span>
-              </div>
-            </div>
+        <div><div class="sec-head"><span class="subheading">setup</span></div>
+        <div class="card card-flush">
+          <div class="list-row col gap2" style="padding:10px 12px">
+            <span class="t-base">📋  setup guide</span>
+            <span class="t-xs t-dis">step-by-step: connect FrictionMaxxing to your blocked apps</span>
           </div>
+        </div></div>
 
-          <!-- Danger zone -->
-          <div>
-            <div class="section-head"><span class="subheading">danger zone</span></div>
-            <div class="card card-flush">
-              <div class="list-row col gap2" style="padding:10px 12px">
-                <span class="t-base t-dng">🗑️  reset all stats</span>
-                <span class="t-xs t-dis">wipes streak, walk-aways, and all history</span>
-              </div>
-            </div>
+        <div><div class="sec-head"><span class="subheading">danger zone</span></div>
+        <div class="card card-flush">
+          <div class="list-row col gap2" style="padding:10px 12px">
+            <span class="t-base t-dng">🗑️  reset all stats</span>
+            <span class="t-xs t-dis">wipes streak, walk-aways, and all history</span>
           </div>
-        </div>
-        <div class="tab-bar">
-          <div class="tab"><span class="tab-icon">🏠</span><span class="tab-label">home</span></div>
-          <div class="tab"><span class="tab-icon">📊</span><span class="tab-label">stats</span></div>
-          <div class="tab active"><span class="tab-icon">⚙️</span><span class="tab-label">settings</span></div>
-        </div>
+        </div></div>
       </div>
-    </div>
+      <div class="tab-bar">
+        <div class="tab"><span class="tab-icon">🏠</span><span class="tab-label">home</span></div>
+        <div class="tab"><span class="tab-icon">📊</span><span class="tab-label">stats</span></div>
+        <div class="tab active"><span class="tab-icon">⚙️</span><span class="tab-label">settings</span></div>
+      </div>
+    </div></div>
     <div class="phone-label">Settings</div>
   </div>
 
 </div>
 
-<!-- ═══════════════════════════════════════════════════ TUTORIAL -->
+<!-- ═══ TUTORIAL ═══ -->
 <p class="section-label">tutorial screen</p>
 <div class="phone-row">
   <div>
-    <div class="phone">
-      <div class="phone-screen">
-        <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
-        <div class="screen-content">
-          <div class="screen-header" style="margin-top:6px">
-            <span class="t-base t-pri">← back</span>
-            <span class="t-xxl">setup guide</span>
-            <span class="t-cap">FrictionMaxxing works through iOS Shortcuts automations — one per blocked app. follow these steps to wire it up.</span>
-          </div>
-
-          <!-- Step 1 -->
-          <div class="card col gap8">
-            <div class="row gap8"><div class="badge-circle">1</div><span class="subheading">open the Shortcuts app</span></div>
-            <span class="t-sm t-sub">tap the Automation tab at the bottom, then tap + to create a new Personal Automation.</span>
-            <div class="viz">
-              <div class="viz-tabs">
-                <div class="viz-tab">Shortcuts</div>
-                <div class="viz-tab active">Automation</div>
-                <div class="viz-tab">Gallery</div>
-              </div>
-            </div>
-            <button class="btn btn-primary" style="align-self:flex-start;font-size:12px;padding:7px 12px">Open Shortcuts App</button>
-          </div>
-
-          <!-- Step 2 -->
-          <div class="card col gap8">
-            <div class="row gap8"><div class="badge-circle">2</div><span class="subheading">scroll down and select App</span></div>
-            <span class="t-sm t-sub">this triggers the automation whenever a specific app opens.</span>
-            <div class="viz">
-              <div class="list-row highlight" style="font-size:12px"><span>↗</span><div class="col gap2 f1"><span>App</span><span class="t-xs t-dis">e.g. "When Instagram is opened"</span></div><span class="t-dis">›</span></div>
-              <div class="list-row" style="font-size:12px"><span>✈</span><div class="col gap2 f1"><span>Airplane Mode</span><span class="t-xs t-dis">e.g. "When turned on"</span></div><span class="t-dis">›</span></div>
-            </div>
-          </div>
-
-          <!-- Step 3 -->
-          <div class="card col gap8">
-            <div class="row gap8"><div class="badge-circle">3</div><span class="subheading">choose the app and configure</span></div>
-            <span class="t-sm t-sub">select the app (e.g. Instagram). check Is Opened. set Run Immediately, tap Next.<br><br><strong>Important:</strong> one automation per app.</span>
-            <div class="viz">
-              <div class="list-row" style="font-size:12px"><span class="f1">Run After Confirmation</span><div style="width:16px;height:16px;border-radius:50%;border:2px solid var(--text-disabled)"></div></div>
-              <div class="list-row highlight" style="font-size:12px"><span class="f1">Run Immediately</span><div style="width:16px;height:16px;border-radius:50%;background:var(--primary)"></div></div>
-              <div class="list-row" style="font-size:12px"><span class="f1">Notify When Run</span><div class="toggle off"><div class="toggle-thumb"></div></div></div>
-            </div>
-          </div>
-
-          <!-- Step 4 -->
-          <div class="card col gap8">
-            <div class="row gap8"><div class="badge-circle">4</div><span class="subheading">tap Create new Shortcut</span></div>
-            <span class="t-sm t-sub">on the next screen, tap Create new Shortcut (not one of the suggestions).</span>
-            <div class="viz">
-              <div style="padding:4px 10px;border-bottom:1px solid var(--border)"><span class="t-xs t-sub">Get Started ›</span></div>
-              <div class="row gap8" style="padding:8px">
-                <div style="width:80px;height:60px;border-radius:8px;border:1px solid var(--primary);background:var(--primary-muted);display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;padding:6px">Create New Shortcut</div>
-                <div style="width:80px;height:60px;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:11px">Start Timer</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Step 5 -->
-          <div class="card col gap8">
-            <div class="row gap8"><div class="badge-circle">5</div><span class="subheading">search for FrictionMaxxing</span></div>
-            <span class="t-sm t-sub">type "FrictionMaxxing" in the search bar and select Activate FrictionMaxxing (when app opens). tap Done.</span>
-            <div class="viz">
-              <div style="background:var(--surface);margin:6px;border-radius:6px;padding:5px 8px;border:1px solid var(--border)"><span class="t-xs t-sub">🔍  FrictionMaxxing</span></div>
-              <div class="list-row highlight" style="font-size:12px"><span>🛑</span><span class="f1">Activate FrictionMaxxing (when app opens)</span></div>
-            </div>
-          </div>
-
-          <div style="text-align:center;padding-top:4px"><span class="t-xs t-dis">repeat steps 1–5 for each app you want to block. that's it.</span></div>
+    <div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
+      <div class="screen-content">
+        <div class="col gap8" style="margin-top:8px">
+          <span class="t-base t-pri">← back</span>
+          <span class="t-xxl">setup guide</span>
+          <span class="t-cap">FrictionMaxxing works through iOS Shortcuts automations — one per blocked app.</span>
         </div>
+        <div class="card col gap8">
+          <div class="row gap8"><div class="badge-circle">1</div><span class="subheading">open the Shortcuts app</span></div>
+          <span class="t-sm t-sub">tap the Automation tab, then tap + to create a new Personal Automation.</span>
+          <div class="viz"><div class="viz-tabs"><div class="viz-tab">Shortcuts</div><div class="viz-tab active">Automation</div><div class="viz-tab">Gallery</div></div></div>
+          <button class="btn btn-pri" style="align-self:flex-start;font-size:12px;padding:7px 12px">Open Shortcuts App</button>
+        </div>
+        <div class="card col gap8">
+          <div class="row gap8"><div class="badge-circle">2</div><span class="subheading">scroll down and select App</span></div>
+          <span class="t-sm t-sub">this triggers the automation whenever a specific app opens.</span>
+          <div class="viz">
+            <div class="list-row hl" style="font-size:12px"><span>↗</span><div class="col gap2 f1"><span>App</span><span class="t-xs t-dis">e.g. "When Instagram is opened"</span></div><span class="t-dis">›</span></div>
+            <div class="list-row" style="font-size:12px"><span>✈</span><div class="col gap2 f1"><span>Airplane Mode</span></div><span class="t-dis">›</span></div>
+          </div>
+        </div>
+        <div class="card col gap8">
+          <div class="row gap8"><div class="badge-circle">3</div><span class="subheading">choose the app and configure</span></div>
+          <span class="t-sm t-sub">select the app. check Is Opened. set Run Immediately, tap Next. One automation per app.</span>
+          <div class="viz">
+            <div class="list-row" style="font-size:12px"><span class="f1">Run After Confirmation</span><div style="width:16px;height:16px;border-radius:50%;border:2px solid var(--text-disabled)"></div></div>
+            <div class="list-row hl" style="font-size:12px"><span class="f1">Run Immediately</span><div style="width:16px;height:16px;border-radius:50%;background:var(--primary)"></div></div>
+          </div>
+        </div>
+        <div class="card col gap8">
+          <div class="row gap8"><div class="badge-circle">4</div><span class="subheading">tap Create new Shortcut</span></div>
+          <div class="viz"><div class="row gap8" style="padding:8px"><div style="width:80px;height:55px;border-radius:8px;border:1px solid var(--primary);background:var(--primary-muted);display:flex;align-items:center;justify-content:center;font-size:11px;text-align:center;padding:4px">Create New Shortcut</div><div style="width:80px;height:55px;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:11px">Start Timer</div></div></div>
+        </div>
+        <div class="card col gap8">
+          <div class="row gap8"><div class="badge-circle">5</div><span class="subheading">search for FrictionMaxxing</span></div>
+          <span class="t-sm t-sub">select Activate FrictionMaxxing (when app opens). tap Done.</span>
+          <div class="viz">
+            <div style="background:var(--surface);margin:6px;border-radius:6px;padding:5px 8px;border:1px solid var(--border)"><span class="t-xs t-sub">🔍  FrictionMaxxing</span></div>
+            <div class="list-row hl" style="font-size:12px"><span>🛑</span><span class="f1">Activate FrictionMaxxing (when app opens)</span></div>
+          </div>
+        </div>
+        <div style="text-align:center;padding:4px 0 8px"><span class="t-xs t-dis">repeat for each app you want to block.</span></div>
       </div>
-    </div>
+    </div></div>
     <div class="phone-label">Tutorial (scrollable)</div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════ GAME SCREENS -->
+<!-- ═══ GAME SCREENS ═══ -->
 <p class="section-label">game screens</p>
 <div class="phone-row">
 
-  <!-- PLAYING state (TicTacToe) -->
+  <!-- PLAYING — TTT -->
   <div>
-    <div class="phone">
-      <div class="phone-screen">
-        <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
-        <div class="full-screen">
-          <div class="game-header">
-            <span style="font-size:44px">📸</span>
-            <span class="t-cap" style="text-align:center">really? Instagram? okay fine. beat this first.</span>
+    <div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
+      <div class="full-screen">
+        <div class="col center gap8" style="padding:20px 16px 10px">
+          <span style="font-size:44px">📸</span>
+          <span class="t-cap" style="text-align:center">really? Instagram? okay fine. beat this first.</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+          <span class="t-sm t-sub">❌ unbeatable tic tac toe</span>
+          <span class="t-cap">your turn (X)</span>
+          <div class="ttt-grid">
+            <div class="ttt-cell" style="color:var(--primary)">✕</div><div class="ttt-cell"></div><div class="ttt-cell" style="color:var(--text-sub)">○</div>
+            <div class="ttt-cell" style="color:var(--text-sub)">○</div><div class="ttt-cell" style="color:var(--primary)">✕</div><div class="ttt-cell"></div>
+            <div class="ttt-cell"></div><div class="ttt-cell" style="color:var(--text-sub)">○</div><div class="ttt-cell" style="color:var(--primary)">✕</div>
           </div>
-          <div style="flex:1;margin:0 16px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
-            <span class="t-sm t-sub" style="margin-bottom:4px">tic tac toe ⭕ — unbeatable AI</span>
-            <div class="ttt-grid">
-              <div class="ttt-cell" style="color:var(--primary)">✕</div>
-              <div class="ttt-cell"></div>
-              <div class="ttt-cell" style="color:var(--text-sub)">○</div>
-              <div class="ttt-cell" style="color:var(--text-sub)">○</div>
-              <div class="ttt-cell" style="color:var(--primary)">✕</div>
-              <div class="ttt-cell"></div>
-              <div class="ttt-cell"></div>
-              <div class="ttt-cell" style="color:var(--text-sub)">○</div>
-              <div class="ttt-cell" style="color:var(--primary)">✕</div>
-            </div>
-            <span class="t-xs t-dis" style="margin-top:6px">spoiler: you won't win</span>
-          </div>
+          <span class="t-xs t-dis">spoiler: you won't win</span>
         </div>
       </div>
-    </div>
+    </div></div>
     <div class="phone-label">Game — Playing (Tic Tac Toe)</div>
   </div>
 
-  <!-- DECISION state -->
+  <!-- PLAYING — SNAKE -->
   <div>
-    <div class="phone">
-      <div class="phone-screen">
-        <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
-        <div class="decision-screen">
-          <span style="font-size:48px">🎉</span>
-          <span class="t-xxl">you beat it.</span>
-          <span class="t-cap" style="text-align:center">now you get to choose. no judgment. (okay, a little judgment.)</span>
-          <div class="col gap8" style="width:100%;margin-top:8px">
-            <button class="btn btn-secondary">open Instagram anyway</button>
-            <button class="btn btn-primary">walk away 💪</button>
-            <span class="t-cap t-dis" style="text-align:center;margin-top:4px">walking away logs a win. just saying.</span>
+    <div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
+      <div class="full-screen">
+        <div class="col center gap8" style="padding:14px 16px 8px">
+          <span style="font-size:38px">🎵</span>
+          <span class="t-cap" style="text-align:center">really? TikTok? okay fine. beat this first.</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+          <span class="t-sm t-sub" style="margin-bottom:2px">🐍 snake</span>
+          <span class="t-cap">1/3 food eaten</span>
+          <!-- Snake grid representation -->
+          <div style="width:156px;height:156px;background:var(--surface);border:1px solid var(--border);border-radius:6px;position:relative;overflow:hidden">
+            <!-- grid lines suggestion -->
+            <div style="position:absolute;inset:0;background:repeating-linear-gradient(var(--border) 0,transparent 1px,transparent 13px,var(--border) 13px),repeating-linear-gradient(90deg,var(--border) 0,transparent 1px,transparent 13px,var(--border) 13px);opacity:0.3"></div>
+            <!-- snake body -->
+            <div style="position:absolute;background:var(--success);border-radius:2px;width:11px;height:11px;left:66px;top:66px"></div>
+            <div style="position:absolute;background:var(--success);border-radius:2px;width:11px;height:11px;left:53px;top:66px"></div>
+            <div style="position:absolute;background:var(--success);border-radius:2px;width:11px;height:11px;left:40px;top:66px"></div>
+            <!-- snake head (brighter) -->
+            <div style="position:absolute;background:#6BBF85;border-radius:3px;width:11px;height:11px;left:79px;top:66px"></div>
+            <!-- food -->
+            <div style="position:absolute;background:var(--primary);border-radius:3px;width:11px;height:11px;left:118px;top:40px"></div>
+          </div>
+          <!-- D-pad -->
+          <div class="dpad">
+            <div></div><div class="dpad-btn">▲</div><div></div>
+            <div class="dpad-btn">◀</div><div class="dpad-center"></div><div class="dpad-btn">▶</div>
+            <div></div><div class="dpad-btn">▼</div><div></div>
           </div>
         </div>
       </div>
-    </div>
+    </div></div>
+    <div class="phone-label">Game — Playing (Snake)</div>
+  </div>
+
+  <!-- DECISION -->
+  <div>
+    <div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
+      <div class="decision-screen">
+        <span style="font-size:48px">🎉</span>
+        <span class="t-xxl">you beat it.</span>
+        <span class="t-cap" style="text-align:center">now you get to choose. no judgment. (okay, a little judgment.)</span>
+        <div class="col gap8" style="width:100%;margin-top:8px">
+          <button class="btn btn-sec">open Instagram anyway</button>
+          <button class="btn btn-pri">walk away 💪</button>
+          <span class="t-cap t-dis" style="text-align:center;margin-top:4px">walking away logs a win. just saying.</span>
+        </div>
+      </div>
+    </div></div>
     <div class="phone-label">Game — Decision Screen</div>
   </div>
 
-  <!-- MILESTONE modal -->
+  <!-- MILESTONE -->
   <div>
-    <div class="phone">
-      <div class="phone-screen">
-        <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
-        <div class="decision-screen" style="opacity:0.3">
-          <span style="font-size:48px">🎉</span>
-          <span class="t-xxl">you beat it.</span>
-        </div>
-        <div class="modal-overlay">
-          <div class="modal-box">
-            <span style="font-size:40px">🏆</span>
-            <span class="t-xl">milestone unlocked!</span>
-            <span class="t-sm t-sub">10 walk-aways total. you actually have willpower. who knew.</span>
-            <button class="btn btn-primary" style="margin-top:4px">nice 😤</button>
-          </div>
+    <div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
+      <div class="decision-screen" style="opacity:.25">
+        <span style="font-size:48px">🎉</span><span class="t-xxl">you beat it.</span>
+      </div>
+      <div class="modal-overlay">
+        <div class="modal-box">
+          <span style="font-size:40px">🏆</span>
+          <span class="t-xl">milestone unlocked!</span>
+          <span class="t-sm t-sub">10 walk-aways total. you actually have willpower. who knew.</span>
+          <button class="btn btn-pri" style="margin-top:4px">nice 😤</button>
         </div>
       </div>
-    </div>
+    </div></div>
     <div class="phone-label">Game — Milestone Modal</div>
   </div>
 
