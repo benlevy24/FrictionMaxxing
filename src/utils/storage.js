@@ -140,37 +140,41 @@ export async function clearAllData() {
 // ── Derived stats (pure, synchronous — pass events as input) ──────────────────
 
 export function computeStreak(events) {
-  const today = getToday();
-  const datesWithEvents = new Set(events.map((e) => e.date));
+  // Streak rules:
+  //   Win day  — had at least one interception AND walked away every time (no "open anyway")
+  //   Loss day — opened the app anyway at least once (walkedAway=false)
+  //   Inactive — no events at all → streak freezes (neither adds nor resets)
+  //
+  // Current streak: walk backward from today counting win days,
+  //   skipping inactive gaps, stopping the moment a loss day is hit.
+  // Best streak: longest consecutive run of win days (inactive gaps between wins are fine).
 
-  // Determine the most recent active date to count backward from
-  let anchor = null;
-  if (datesWithEvents.has(today)) {
-    anchor = today;
-  } else {
-    const yesterday = shiftDay(today, -1);
-    if (datesWithEvents.has(yesterday)) anchor = yesterday;
+  if (events.length === 0) return { current: 0, best: 0 };
+
+  // Build date → 'win' | 'loss' (loss overwrites win if any event on that day opened the app)
+  const dateMap = {};
+  for (const e of events) {
+    if (!dateMap[e.date]) dateMap[e.date] = 'win';
+    if (!e.walkedAway)    dateMap[e.date] = 'loss';
   }
 
+  // Current streak — walk backward from today, skip inactive, stop at loss
   let current = 0;
-  if (anchor) {
-    let d = anchor;
-    while (datesWithEvents.has(d)) {
-      current++;
-      d = shiftDay(d, -1);
-    }
+  let d = getToday();
+  for (let i = 0; i < 365; i++) {
+    const s = dateMap[d];
+    if (s === 'win')  { current++; }
+    else if (s === 'loss') { break; }
+    // undefined (inactive) → skip
+    d = shiftDay(d, -1);
   }
 
-  // Best streak (all-time)
-  const sorted = [...datesWithEvents].sort();
+  // Best streak — longest run of wins with no loss between them
+  const activeDates = Object.keys(dateMap).sort();
   let best = 0, run = 0;
-  for (let i = 0; i < sorted.length; i++) {
-    if (i > 0 && sorted[i] === shiftDay(sorted[i - 1], 1)) {
-      run++;
-    } else {
-      run = 1;
-    }
-    if (run > best) best = run;
+  for (const date of activeDates) {
+    if      (dateMap[date] === 'win')  { run++; if (run > best) best = run; }
+    else if (dateMap[date] === 'loss') { run = 0; }
   }
 
   return { current, best: Math.max(current, best) };

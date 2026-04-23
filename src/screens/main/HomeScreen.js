@@ -53,7 +53,7 @@ export default function HomeScreen({ navigation }) {
           <AppText variant="caption">
             {today.intercepted === 0
               ? 'no interceptions yet today 🤞'
-              : `you've been annoyed ${today.intercepted} time${today.intercepted !== 1 ? 's' : ''}`}
+              : `you've faced friction ${today.intercepted} time${today.intercepted !== 1 ? 's' : ''}`}
           </AppText>
         </View>
 
@@ -67,8 +67,8 @@ export default function HomeScreen({ navigation }) {
               </AppText>
               <AppText variant="caption">
                 {streak.current === 0
-                  ? 'no streak — clean so far'
-                  : `consecutive day${streak.current !== 1 ? 's' : ''} intercepted`}
+                  ? 'walk away to start your streak'
+                  : `consecutive day${streak.current !== 1 ? 's' : ''} you resisted`}
               </AppText>
             </View>
           </View>

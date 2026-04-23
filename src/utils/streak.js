@@ -2,14 +2,16 @@
 // All state is in-memory for now — will be persisted in task #16 (AsyncStorage)
 
 // --- Streak logic ---
-// A "streak" = consecutive days with at least one interception.
-// A LONGER streak is BAD — it means you kept trying to open blocked apps.
-// Streak RESETS on a clean day (zero interceptions) — that's the win.
+// A "streak" = consecutive active days where you walked away every time.
+// A LONGER streak is GOOD — you kept resisting.
+// Streak resets the moment you open an app anyway.
+// Days with no interceptions at all freeze the streak (no change either way).
 
 export function getStreakStatus(streakDays) {
-  if (streakDays === 0) return { label: 'clean 🎉', color: 'success' };
-  if (streakDays <= 3) return { label: `${streakDays} day streak`, color: 'warning' };
-  return { label: `${streakDays} day streak 😬`, color: 'danger' };
+  if (streakDays === 0) return { label: 'no streak yet', color: 'disabled' };
+  if (streakDays <= 3)  return { label: `${streakDays} day streak 🔥`, color: 'primary' };
+  if (streakDays <= 7)  return { label: `${streakDays} day streak 🔥`, color: 'primary' };
+  return { label: `${streakDays} day streak 👑`, color: 'warning' };
 }
 
 // --- Walk-away milestones ---
