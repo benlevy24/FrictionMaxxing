@@ -42,7 +42,7 @@ export default function StatsScreen() {
 
   const allTimeRate =
     allTime.intercepted > 0
-      ? Math.round((allTime.completed / allTime.intercepted) * 100)
+      ? Math.round((allTime.walkedAway / allTime.intercepted) * 100)
       : 0;
 
   const maxIntercepted = Math.max(...weekly.map((d) => d.intercepted), 1);
@@ -51,8 +51,9 @@ export default function StatsScreen() {
     const message =
       `my friction maxxing stats 🧱\n\n` +
       `📊 ${allTime.intercepted} times intercepted\n` +
-      `✅ ${allTime.completed} games completed (${allTimeRate}% rate)\n` +
-      `🏳️ ${allTime.skipped} rage-quits\n` +
+      `💪 ${allTime.walkedAway} walked away (${allTimeRate}% rate)\n` +
+      `🧐 ${allTime.openedAnyway} opened anyway\n` +
+      `🏳️ ${allTime.rageQuit} rage-quits\n` +
       `🔥 ${allTime.streakCurrent} day streak (best: ${allTime.streakBest})\n\n` +
       `yes, i needed a maze to stop opening instagram.`;
     try {
@@ -75,8 +76,8 @@ export default function StatsScreen() {
         {/* All-time summary */}
         <View style={styles.summaryRow}>
           <SummaryBox emoji="🚧" value={allTime.intercepted}  label="all-time blocked" />
-          <SummaryBox emoji="✅" value={allTime.completed}    label="games beaten" />
-          <SummaryBox emoji={`${allTimeRate}%`} value={null}  label="completion rate" isRate />
+          <SummaryBox emoji="💪" value={allTime.walkedAway}   label="walked away" />
+          <SummaryBox emoji={`${allTimeRate}%`} value={null}  label="walk-away rate" isRate />
         </View>
 
         {/* Streak */}

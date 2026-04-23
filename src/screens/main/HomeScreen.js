@@ -74,11 +74,12 @@ export default function HomeScreen({ navigation }) {
           </View>
         </Card>
 
-        {/* Today's stats */}
-        <View style={styles.statsRow}>
-          <StatBox label="intercepted" value={today.intercepted} emoji="🚧" />
-          <StatBox label="completed"   value={today.completed}   emoji="✅" />
-          <StatBox label="rage-quit"   value={today.skipped}     emoji="🏳️" />
+        {/* Today's stats — 2×2 grid */}
+        <View style={styles.statsGrid}>
+          <StatBox label="intercepted"   value={today.intercepted}  emoji="🚧" />
+          <StatBox label="walked away"   value={today.walkedAway}   emoji="💪" />
+          <StatBox label="opened anyway" value={today.openedAnyway} emoji="🧐" />
+          <StatBox label="rage-quit"     value={today.rageQuit}     emoji="🏳️" />
         </View>
 
         {/* Completion rate */}
@@ -149,12 +150,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginVertical: spacing.xs,
   },
-  statsRow: {
+  statsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   statBox: {
-    flex: 1,
+    width: '47.5%',
     alignItems: 'center',
     gap: spacing.xs,
     paddingVertical: spacing.md,

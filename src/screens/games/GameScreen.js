@@ -40,6 +40,10 @@ export default function GameScreen({ navigation }) {
 
   const { appId, appLabel, appEmoji } = MOCK_INTERCEPTION;
 
+  // Track whether a final event has already been recorded this session.
+  // If the component unmounts without one, it counts as a rage-quit.
+  const eventRecorded = useRef(false);
+
   // Load enabled games from settings, then pick a random game
   useEffect(() => {
     getSettings().then((s) => {
@@ -49,12 +53,21 @@ export default function GameScreen({ navigation }) {
     });
   }, []);
 
+  // Rage-quit detector — fires on unmount if no event was recorded
+  useEffect(() => {
+    return () => {
+      if (!eventRecorded.current) {
+        recordEvent({ appId, appLabel, appEmoji, gameCompleted: false, walkedAway: false });
+      }
+    };
+  }, []);
+
   function handleGameComplete() {
     setGameState(STATE.DECISION);
   }
 
   async function handleWalkAway() {
-    // Record event + check milestones against real counts
+    eventRecorded.current = true;
     await recordEvent({ appId, appLabel, appEmoji, gameCompleted: true, walkedAway: true });
 
     const events = await getEvents();
@@ -71,6 +84,7 @@ export default function GameScreen({ navigation }) {
   }
 
   async function handleOpenAnyway() {
+    eventRecorded.current = true;
     await recordEvent({ appId, appLabel, appEmoji, gameCompleted: true, walkedAway: false });
     // TODO (task #22): dismiss Screen Time overlay
     navigation.goBack();

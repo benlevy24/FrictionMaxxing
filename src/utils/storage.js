@@ -184,10 +184,10 @@ export function deriveTodayStats(events) {
   const today = getToday();
   const todayEvents = events.filter((e) => e.date === today);
   return {
-    intercepted: todayEvents.length,
-    completed:   todayEvents.filter((e) => e.gameCompleted).length,
-    walkedAway:  todayEvents.filter((e) => e.walkedAway).length,
-    skipped:     todayEvents.filter((e) => !e.walkedAway).length,
+    intercepted:  todayEvents.length,
+    walkedAway:   todayEvents.filter((e) =>  e.gameCompleted &&  e.walkedAway).length,
+    openedAnyway: todayEvents.filter((e) =>  e.gameCompleted && !e.walkedAway).length,
+    rageQuit:     todayEvents.filter((e) => !e.gameCompleted).length,
   };
 }
 
@@ -229,9 +229,9 @@ export function deriveAllTimeStats(events, streak, installDate) {
   );
   return {
     intercepted:      events.length,
-    completed:        events.filter((e) => e.gameCompleted).length,
-    walkedAway:       events.filter((e) => e.walkedAway).length,
-    skipped:          events.filter((e) => !e.walkedAway).length,
+    walkedAway:       events.filter((e) =>  e.gameCompleted &&  e.walkedAway).length,
+    openedAnyway:     events.filter((e) =>  e.gameCompleted && !e.walkedAway).length,
+    rageQuit:         events.filter((e) => !e.gameCompleted).length,
     streakCurrent:    streak.current,
     streakBest:       streak.best,
     daysSinceInstall,
