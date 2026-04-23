@@ -197,10 +197,13 @@ export function deriveWeeklyStats(events) {
     const date      = shiftDay(today, i - 6); // 6 days ago → today
     const dayEvents = events.filter((e) => e.date === date);
     return {
-      day:         dayLabel(date),
+      day:          dayLabel(date),
       date,
-      intercepted: dayEvents.length,
-      succeeded:   dayEvents.filter((e) => !(e.gameCompleted && !e.walkedAway)).length,
+      intercepted:  dayEvents.length,
+      walkedAway:   dayEvents.filter((e) =>  e.gameCompleted &&  e.walkedAway).length,
+      rageQuit:     dayEvents.filter((e) => !e.gameCompleted).length,
+      openedAnyway: dayEvents.filter((e) =>  e.gameCompleted && !e.walkedAway).length,
+      succeeded:    dayEvents.filter((e) => !(e.gameCompleted && !e.walkedAway)).length,
     };
   });
 }
@@ -211,8 +214,11 @@ export function deriveByAppStats(events, blockedAppIds) {
       const appEvents = events.filter((e) => e.appId === app.id);
       return {
         ...app,
-        intercepted: appEvents.length,
-        completed:   appEvents.filter((e) => e.gameCompleted).length,
+        intercepted:  appEvents.length,
+        walkedAway:   appEvents.filter((e) =>  e.gameCompleted &&  e.walkedAway).length,
+        rageQuit:     appEvents.filter((e) => !e.gameCompleted).length,
+        openedAnyway: appEvents.filter((e) =>  e.gameCompleted && !e.walkedAway).length,
+        succeeded:    appEvents.filter((e) => !(e.gameCompleted && !e.walkedAway)).length,
       };
     })
     .filter((a) => a.intercepted > 0)

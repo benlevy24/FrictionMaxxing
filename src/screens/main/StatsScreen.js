@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { View, ScrollView, Share, StyleSheet } from 'react-native';
+import { View, ScrollView, Share, TouchableOpacity, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
@@ -16,10 +16,12 @@ import {
 import { colors, spacing, radius } from '../../theme';
 
 export default function StatsScreen() {
-  const [loading, setLoading]   = useState(true);
-  const [allTime, setAllTime]   = useState(null);
-  const [weekly, setWeekly]     = useState([]);
-  const [byApp, setByApp]       = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [allTime, setAllTime]       = useState(null);
+  const [weekly, setWeekly]         = useState([]);
+  const [byApp, setByApp]           = useState([]);
+  const [selectedDay, setSelectedDay]       = useState(null);
+  const [legendTooltip, setLegendTooltip]   = useState(null); // 'resisted' | 'intercepted' | null
 
   useFocusEffect(
     useCallback(() => {
@@ -108,31 +110,78 @@ export default function StatsScreen() {
               const fillH = d.intercepted > 0
                 ? Math.round((d.succeeded / d.intercepted) * barH)
                 : 0;
+              const isSelected = selectedDay?.date === d.date;
               return (
-                <View key={d.date} style={styles.barCol}>
+                <TouchableOpacity
+                  key={d.date}
+                  style={styles.barCol}
+                  onPress={() => setSelectedDay(isSelected ? null : d)}
+                  activeOpacity={0.7}
+                >
                   <View style={styles.barContainer}>
-                    <View style={[styles.barBg, { height: Math.max(barH, 2) }]}>
+                    <View style={[
+                      styles.barBg,
+                      { height: Math.max(barH, 2) },
+                      isSelected && styles.barBgSelected,
+                    ]}>
                       <View style={[styles.barFill, { height: fillH }]} />
                     </View>
                   </View>
-                  <AppText variant="xs" style={styles.barLabel}>{d.day}</AppText>
+                  <AppText variant="xs" style={[styles.barLabel, isSelected && styles.barLabelSelected]}>
+                    {d.day}
+                  </AppText>
                   <AppText variant="xs" style={styles.barValue}>
                     {d.intercepted > 0 ? d.intercepted : ''}
                   </AppText>
-                </View>
+                </TouchableOpacity>
               );
             })}
           </View>
+
+          {/* Selected day breakdown */}
+          {selectedDay && (
+            <View style={styles.dayBreakdown}>
+              <AppText variant="caption" style={styles.dayBreakdownTitle}>{selectedDay.day}</AppText>
+              <View style={styles.dayBreakdownRow}>
+                <AppText variant="xs" style={styles.dayBreakdownItem}>🚧 {selectedDay.intercepted} intercepted</AppText>
+                <AppText variant="xs" style={styles.dayBreakdownItem}>🚶 {selectedDay.walkedAway} walked away</AppText>
+                <AppText variant="xs" style={styles.dayBreakdownItem}>🏳️ {selectedDay.rageQuit} rage-quit</AppText>
+                <AppText variant="xs" style={styles.dayBreakdownItem}>🧐 {selectedDay.openedAnyway} opened anyway</AppText>
+              </View>
+            </View>
+          )}
+
+          {/* Legend */}
           <View style={styles.legend}>
-            <View style={styles.legendItem}>
+            <TouchableOpacity
+              style={styles.legendItem}
+              onPress={() => setLegendTooltip(legendTooltip === 'resisted' ? null : 'resisted')}
+            >
               <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
-              <AppText variant="xs" style={styles.legendText}>succeeded</AppText>
-            </View>
-            <View style={styles.legendItem}>
+              <AppText variant="xs" style={[styles.legendText, legendTooltip === 'resisted' && styles.legendTextActive]}>
+                resisted
+              </AppText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.legendItem}
+              onPress={() => setLegendTooltip(legendTooltip === 'intercepted' ? null : 'intercepted')}
+            >
               <View style={[styles.legendDot, { backgroundColor: colors.border }]} />
-              <AppText variant="xs" style={styles.legendText}>intercepted</AppText>
-            </View>
+              <AppText variant="xs" style={[styles.legendText, legendTooltip === 'intercepted' && styles.legendTextActive]}>
+                intercepted
+              </AppText>
+            </TouchableOpacity>
           </View>
+          {legendTooltip === 'resisted' && (
+            <AppText variant="xs" style={styles.tooltipText}>
+              times you didn't end up in the app — walked away or rage-quit the game
+            </AppText>
+          )}
+          {legendTooltip === 'intercepted' && (
+            <AppText variant="xs" style={styles.tooltipText}>
+              total times the friction game popped up that day
+            </AppText>
+          )}
         </Card>
 
         {/* Per-app breakdown */}
@@ -142,7 +191,7 @@ export default function StatsScreen() {
             <View style={styles.appList}>
               {byApp.map((app) => {
                 const rate = app.intercepted > 0
-                  ? Math.round((app.completed / app.intercepted) * 100)
+                  ? Math.round((app.succeeded / app.intercepted) * 100)
                   : 0;
                 return (
                   <View key={app.id} style={styles.appRow}>
@@ -156,7 +205,7 @@ export default function StatsScreen() {
                         <View style={[styles.appBarFill, { width: `${rate}%` }]} />
                       </View>
                       <AppText variant="xs" style={styles.appSub}>
-                        {app.intercepted} blocked · {app.completed} beaten
+                        {app.intercepted} intercepted · {app.succeeded} resisted
                       </AppText>
                     </View>
                   </View>
@@ -224,12 +273,30 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   barFill: { width: '100%', backgroundColor: colors.primary, borderRadius: radius.sm },
+  barBgSelected: { backgroundColor: colors.primaryMuted, borderWidth: 1, borderColor: colors.primary },
   barLabel: { color: colors.textSub },
+  barLabelSelected: { color: colors.primary },
   barValue: { color: colors.textDisabled },
+  dayBreakdown: {
+    backgroundColor: colors.surfaceRaised,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
+    gap: spacing.xs,
+  },
+  dayBreakdownTitle: { color: colors.primary, marginBottom: 2 },
+  dayBreakdownRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  dayBreakdownItem: { color: colors.textSub, width: '48%' },
   legend: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xs },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   legendDot: { width: 8, height: 8, borderRadius: radius.full },
   legendText: { color: colors.textSub },
+  legendTextActive: { color: colors.primary },
+  tooltipText: {
+    color: colors.textDisabled,
+    marginTop: spacing.xs,
+    fontStyle: 'italic',
+  },
   appList: { gap: spacing.md },
   appRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   appEmoji: { width: 28, textAlign: 'center' },
