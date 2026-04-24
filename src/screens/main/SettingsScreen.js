@@ -152,7 +152,7 @@ export default function SettingsScreen({ navigation }) {
           >
             <AppText variant="base" style={styles.linkLabel}>🌍  free zones</AppText>
             <AppText variant="caption" style={styles.linkSub}>
-              pause blocking at saved locations (home, gym, etc.)
+              block friction at saved locations (home, gym, etc.)
             </AppText>
             <AppText variant="base" style={styles.linkChevron}>›</AppText>
           </TouchableOpacity>

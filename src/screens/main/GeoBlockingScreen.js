@@ -118,7 +118,7 @@ export default function GeoBlockingScreen({ navigation }) {
         <View style={styles.header}>
           <AppText variant="xxl">free zones</AppText>
           <AppText variant="caption" style={styles.subtitle}>
-            blocking pauses when you're in these places
+            blocking friction when you're in these places
           </AppText>
         </View>
 
@@ -189,7 +189,7 @@ export default function GeoBlockingScreen({ navigation }) {
 
             <TextInput
               style={styles.nameInput}
-              placeholder="e.g. Home, Gym, Office"
+              placeholder="e.g. home, gym, office"
               placeholderTextColor={colors.textDisabled}
               value={zoneName}
               onChangeText={setZoneName}
