@@ -23,25 +23,25 @@ import SnakeGame from './SnakeGame';
 export const GAMES = [
   {
     id: 'tictactoe',
-    label: 'Unbeatable Tic Tac Toe',
+    label: 'Tic-Tac-Toe',
     emoji: '❌',
     component: TicTacToeGame,
   },
   {
     id: 'maze',
-    label: 'Confusing Maze',
+    label: 'Maze',
     emoji: '🌀',
     component: ConfusingMazeGame,
   },
   {
     id: 'hangman',
-    label: 'Obscure Hangman',
+    label: 'Hangman',
     emoji: '🪢',
     component: ObscureHangmanGame,
   },
   {
     id: 'math',
-    label: 'Annoying Math',
+    label: 'Math',
     emoji: '🔢',
     component: AnnoyingMathGame,
   },
@@ -53,7 +53,7 @@ export const GAMES = [
   },
   {
     id: 'pong',
-    label: 'Unfair Pong',
+    label: 'Pong',
     emoji: '🏓',
     component: PongGame,
   },
