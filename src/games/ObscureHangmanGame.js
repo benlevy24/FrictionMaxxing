@@ -337,7 +337,7 @@ export default function ObscureHangmanGame({ onComplete }) {
       showsVerticalScrollIndicator={false}
     >
       <AppText variant="subheading" style={styles.title}>
-        🪢 obscure hangman
+        🪢 hangman
       </AppText>
 
       <View style={styles.gameRow}>

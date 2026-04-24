@@ -476,7 +476,7 @@ export default function AnnoyingMathGame({ onComplete }) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <AppText variant="subheading">🔢 annoying math</AppText>
+        <AppText variant="subheading">🔢 math</AppText>
         <ProgressDots correct={correctCount} />
       </View>
       <AppText variant="caption" style={styles.needed}>

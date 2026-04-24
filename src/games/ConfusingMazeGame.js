@@ -185,7 +185,7 @@ export default function ConfusingMazeGame({ onComplete }) {
   return (
     <View style={styles.container}>
       <AppText variant="subheading" style={styles.title}>
-        🌀 confusing maze
+        🌀 maze
       </AppText>
       <AppText variant="caption" style={styles.taunt} numberOfLines={1}>
         {taunt}

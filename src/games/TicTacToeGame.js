@@ -169,7 +169,7 @@ export default function TicTacToeGame({ onComplete }) {
   return (
     <View style={styles.container}>
       <AppText variant="subheading" style={styles.title}>
-        ❌ unbeatable tic tac toe
+        ❌ tic-tac-toe
       </AppText>
       <AppText variant="caption" style={styles.subtitle}>
         {isTerminal
