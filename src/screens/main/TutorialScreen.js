@@ -19,8 +19,8 @@ const STEPS = [
   },
   {
     number: 3,
-    title: 'choose the app and configure',
-    body: 'select the app (e.g. Instagram). make sure Is Opened is checked. set Run Immediately, then tap Next.\n\nImportant: one automation per app — repeat these steps for each blocked app.',
+    title: 'select the app to add friction to',
+    body: 'choose the app (e.g. Instagram). set Run Immediately, then tap Next.\n\nImportant: one automation per app — repeat these steps for each blocked app.',
     visual: <RunImmediatelyVisual />,
   },
   {
@@ -34,6 +34,12 @@ const STEPS = [
     title: 'search for FrictionMaxxing',
     body: 'type "FrictionMaxxing" in the search bar and select Activate FrictionMaxxing (when app opens). tap Done.',
     visual: <SearchVisual />,
+  },
+  {
+    number: 6,
+    title: 're-select the app and tap Done',
+    body: '⚠️ on the final screen, tap App and re-select the same app you chose in step 3. the automation won\'t run without this step. then tap Done.',
+    visual: <ReSelectAppVisual />,
   },
 ];
 
@@ -59,7 +65,7 @@ export default function TutorialScreen({ navigation }) {
 
         <View style={styles.footer}>
           <AppText variant="base" style={styles.footerText}>
-            repeat steps 1–5 for each app you want to block. that's it.
+            repeat steps 1–6 for each app you want to block. that's it.
           </AppText>
         </View>
 
@@ -197,6 +203,30 @@ function SearchVisual() {
           <AppText variant="base" style={{ flex: 1 }}>
             Activate FrictionMaxxing (when app opens)
           </AppText>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function ReSelectAppVisual() {
+  return (
+    <View style={styles.visual}>
+      <View style={styles.listBox}>
+        <View style={[styles.listRow, styles.listRowHighlight]}>
+          <View style={styles.listRowIcon}><AppText variant="caption">↗</AppText></View>
+          <View style={styles.listRowText}>
+            <AppText variant="base">App</AppText>
+            <AppText variant="caption" style={styles.listRowSub}>tap to re-select (e.g. Instagram)</AppText>
+          </View>
+          <AppText variant="caption" style={{ color: colors.primary }}>⚠️</AppText>
+        </View>
+        <View style={styles.listRow}>
+          <View style={styles.listRowIcon}><AppText variant="caption">🛑</AppText></View>
+          <View style={styles.listRowText}>
+            <AppText variant="base">Activate FrictionMaxxing</AppText>
+            <AppText variant="caption" style={styles.listRowSub}>when app opens</AppText>
+          </View>
         </View>
       </View>
     </View>
