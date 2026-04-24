@@ -13,16 +13,18 @@ const GAME_H = 430;
 // Ball
 const BALL = 12;
 
-// Player paddle — small and manageable
-const P_W = 76;
+// Player paddle height and Y position
 const P_H = 11;
 const P_Y = GAME_H - 46;
 
-// Difficulty configs — AI paddle width and ball speed are the main levers
+// Difficulty configs:
+//   easy   — player paddle wide (96px), AI paddle narrow (150px), slow ball
+//   medium — player paddle medium (76px), AI paddle medium (190px)
+//   hard   — player paddle small (56px), AI paddle huge (228px), fast ball
 const PONG_CONFIGS = {
-  easy:   { aiW: 150, baseSpeed: 3.5, aiSpeed: 3.0 },
-  medium: { aiW: 190, baseSpeed: 4.5, aiSpeed: 4.0 },
-  hard:   { aiW: 228, baseSpeed: 5.5, aiSpeed: 5.0 },
+  easy:   { playerW: 96,  aiW: 150, baseSpeed: 3.5, aiSpeed: 3.0 },
+  medium: { playerW: 76,  aiW: 190, baseSpeed: 4.5, aiSpeed: 4.0 },
+  hard:   { playerW: 56,  aiW: 228, baseSpeed: 5.5, aiSpeed: 5.0 },
 };
 
 // AI paddle — width set per difficulty
@@ -70,7 +72,8 @@ function initialPhysics(cfg) {
     ballDX: dx,
     ballDY: dy,
     ballSpeed: cfg.baseSpeed,
-    playerX: GAME_W / 2 - P_W / 2,
+    playerX: GAME_W / 2 - cfg.playerW / 2,
+    playerW: cfg.playerW,
     aiX: GAME_W / 2 - cfg.aiW / 2,
     aiW: cfg.aiW,
     aiSpeed: cfg.aiSpeed,
@@ -114,7 +117,7 @@ export default function PongGame({ onComplete, difficulty = 'medium' }) {
 
       // Player paddle follows finger
       if (touchX.current !== null) {
-        p.playerX = Math.max(0, Math.min(GAME_W - P_W, touchX.current - P_W / 2));
+        p.playerX = Math.max(0, Math.min(GAME_W - p.playerW, touchX.current - p.playerW / 2));
       }
 
       // Move ball
@@ -135,10 +138,10 @@ export default function PongGame({ onComplete, difficulty = 'medium' }) {
         ballBottom >= P_Y &&
         ballBottom <= P_Y + P_H + Math.abs(p.ballDY) &&
         ballCX >= p.playerX &&
-        ballCX <= p.playerX + P_W;
+        ballCX <= p.playerX + p.playerW;
 
       if (hitPlayer) {
-        const hitPos = (ballCX - (p.playerX + P_W / 2)) / (P_W / 2); // -1 to +1
+        const hitPos = (ballCX - (p.playerX + p.playerW / 2)) / (p.playerW / 2); // -1 to +1
         const newDX = hitPos * MAX_ANGLE;
         const dy = -Math.sqrt(Math.max(p.ballSpeed ** 2 - newDX ** 2, 1));
         p.ballDX = newDX;
@@ -280,7 +283,7 @@ export default function PongGame({ onComplete, difficulty = 'medium' }) {
             {
               left: p.playerX,
               top: P_Y,
-              width: P_W,
+              width: p.playerW,
               height: P_H,
               backgroundColor: playerColor,
             },
