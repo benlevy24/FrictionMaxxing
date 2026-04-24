@@ -18,17 +18,21 @@ const P_W = 76;
 const P_H = 11;
 const P_Y = GAME_H - 46;
 
-// AI paddle — wide and thick and menacing
-const AI_W = 228;
+// Difficulty configs — AI paddle width and ball speed are the main levers
+const PONG_CONFIGS = {
+  easy:   { aiW: 150, baseSpeed: 3.5, aiSpeed: 3.0 },
+  medium: { aiW: 190, baseSpeed: 4.5, aiSpeed: 4.0 },
+  hard:   { aiW: 228, baseSpeed: 5.5, aiSpeed: 5.0 },
+};
+
+// AI paddle — width set per difficulty
 const AI_H = 16;
 const AI_Y = 30;
 
-// Physics
-const BASE_SPEED = 4.5;
+// Physics defaults (overridden per difficulty)
 const MAX_SPEED  = 9.5;
-const MAX_ANGLE  = 6.5;    // max horizontal velocity component
-const AI_SPEED   = 4.0;    // max px/frame AI can move — beatable with sharp angles
-const AI_SPEEDUP = 0.45;   // speed added to ball each time AI hits it
+const MAX_ANGLE  = 6.5;
+const AI_SPEEDUP = 0.45;
 
 // Center line dashes
 const DASH_COUNT = 14;
@@ -58,17 +62,19 @@ function makeBallVelocity(speed) {
   return { dx, dy };
 }
 
-function initialPhysics() {
-  const { dx, dy } = makeBallVelocity(BASE_SPEED);
+function initialPhysics(cfg) {
+  const { dx, dy } = makeBallVelocity(cfg.baseSpeed);
   return {
     ballX: GAME_W / 2 - BALL / 2,
     ballY: GAME_H / 2 - BALL / 2,
     ballDX: dx,
     ballDY: dy,
-    ballSpeed: BASE_SPEED,
+    ballSpeed: cfg.baseSpeed,
     playerX: GAME_W / 2 - P_W / 2,
-    aiX: GAME_W / 2 - AI_W / 2,
-    phase: 'playing',     // 'playing' | 'player_scored' | 'ai_scored'
+    aiX: GAME_W / 2 - cfg.aiW / 2,
+    aiW: cfg.aiW,
+    aiSpeed: cfg.aiSpeed,
+    phase: 'playing',
     rallyCount: 0,
     playerFlash: false,
     aiFlash: false,
@@ -77,8 +83,9 @@ function initialPhysics() {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function PongGame({ onComplete }) {
-  const physRef = useRef(initialPhysics());
+export default function PongGame({ onComplete, difficulty = 'medium' }) {
+  const cfg = PONG_CONFIGS[difficulty] ?? PONG_CONFIGS.medium;
+  const physRef = useRef(initialPhysics(cfg));
   const [renderTick, setRenderTick] = useState(0);
   const [phase, setPhase] = useState('playing');
   const [missCount, setMissCount] = useState(0);
@@ -148,10 +155,10 @@ export default function PongGame({ onComplete }) {
         ballTop <= AI_Y + AI_H &&
         ballTop >= AI_Y - Math.abs(p.ballDY) &&
         ballCX >= p.aiX &&
-        ballCX <= p.aiX + AI_W;
+        ballCX <= p.aiX + p.aiW;
 
       if (hitAI) {
-        const hitPos = (ballCX - (p.aiX + AI_W / 2)) / (AI_W / 2);
+        const hitPos = (ballCX - (p.aiX + p.aiW / 2)) / (p.aiW / 2);
         // AI hits harder — ball speeds up
         const newSpeed = Math.min(p.ballSpeed + AI_SPEEDUP, MAX_SPEED);
         p.ballSpeed = newSpeed;
@@ -183,10 +190,10 @@ export default function PongGame({ onComplete }) {
       }
 
       // ── AI movement — limited speed so sharp angles can beat it ──
-      const targetAiX = ballCX - AI_W / 2;
+      const targetAiX = ballCX - p.aiW / 2;
       const diff = targetAiX - p.aiX;
-      const move = Math.sign(diff) * Math.min(Math.abs(diff), AI_SPEED);
-      p.aiX = Math.max(0, Math.min(GAME_W - AI_W, p.aiX + move));
+      const move = Math.sign(diff) * Math.min(Math.abs(diff), p.aiSpeed);
+      p.aiX = Math.max(0, Math.min(GAME_W - p.aiW, p.aiX + move));
 
       setRenderTick((n) => n + 1);
     }, 16);
@@ -196,13 +203,13 @@ export default function PongGame({ onComplete }) {
 
   // ── Retry — reset ball, keep playing ─────────────────────────────────────
   function handleRetry() {
-    const { dx, dy } = makeBallVelocity(BASE_SPEED);
+    const { dx, dy } = makeBallVelocity(cfg.baseSpeed);
     const p = physRef.current;
     p.ballX = GAME_W / 2 - BALL / 2;
     p.ballY = GAME_H / 2 - BALL / 2;
     p.ballDX = dx;
     p.ballDY = dy;
-    p.ballSpeed = BASE_SPEED;
+    p.ballSpeed = cfg.baseSpeed;
     p.rallyCount = 0;
     p.phase = 'playing';
     setPhase('playing');
@@ -247,7 +254,7 @@ export default function PongGame({ onComplete }) {
             {
               left: p.aiX,
               top: AI_Y,
-              width: AI_W,
+              width: p.aiW,
               height: AI_H,
               backgroundColor: p.aiFlash ? '#FF6666' : colors.danger,
             },

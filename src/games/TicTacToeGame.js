@@ -71,6 +71,19 @@ function getBestMove(board) {
   return bestMove;
 }
 
+function getRandomMove(board) {
+  const empty = board.map((v, i) => (v === null ? i : -1)).filter((i) => i !== -1);
+  return empty[Math.floor(Math.random() * empty.length)] ?? -1;
+}
+
+function getAIMove(board, difficulty) {
+  if (difficulty === 'easy') return getRandomMove(board);
+  if (difficulty === 'medium') return Math.random() < 0.6 ? getBestMove(board) : getRandomMove(board);
+  return getBestMove(board); // hard
+}
+
+const WINS_NEEDED = { easy: 1, medium: 1, hard: 2 };
+
 // ── Taunts ────────────────────────────────────────────────────────────────────
 
 const LOSS_TAUNTS = [
@@ -104,13 +117,15 @@ const RESULT = {
 
 const EMPTY_BOARD = Array(9).fill(null);
 
-export default function TicTacToeGame({ onComplete }) {
+export default function TicTacToeGame({ onComplete, difficulty = 'medium' }) {
+  const winsNeeded = WINS_NEEDED[difficulty] ?? 1;
   const [board, setBoard] = useState([...EMPTY_BOARD]);
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
   const [result, setResult] = useState(RESULT.NONE);
   const [winLine, setWinLine] = useState(null);
   const [taunt, setTaunt] = useState('');
   const [attemptCount, setAttemptCount] = useState(1);
+  const [successes, setSuccesses] = useState(0); // ties or wins earned
 
   // Check terminal state after every board change
   useEffect(() => {
@@ -120,13 +135,20 @@ export default function TicTacToeGame({ onComplete }) {
       if (winResult.winner === 'O') {
         setResult(RESULT.AI_WINS);
         setTaunt(randomFrom(LOSS_TAUNTS));
+      } else {
+        // Player won (only possible on easy/medium)
+        const newSuccesses = successes + 1;
+        setSuccesses(newSuccesses);
+        setResult(RESULT.DRAW); // reuse draw state — triggers "continue" button
+        setTaunt(newSuccesses >= winsNeeded ? 'okay fine. you win.' : `${newSuccesses}/${winsNeeded} — keep going.`);
       }
-      // X can never win vs minimax — no need to handle X win
       return;
     }
     if (isBoardFull(board)) {
+      const newSuccesses = successes + 1;
+      setSuccesses(newSuccesses);
       setResult(RESULT.DRAW);
-      setTaunt(randomFrom(DRAW_TAUNTS));
+      setTaunt(newSuccesses >= winsNeeded ? randomFrom(DRAW_TAUNTS) : `${newSuccesses}/${winsNeeded} — not done yet.`);
     }
   }, [board]);
 
@@ -137,12 +159,12 @@ export default function TicTacToeGame({ onComplete }) {
     const timer = setTimeout(() => {
       setBoard((prev) => {
         const next = [...prev];
-        const move = getBestMove(next);
+        const move = getAIMove(next, difficulty);
         if (move !== -1) next[move] = 'O';
         return next;
       });
       setIsPlayerTurn(true);
-    }, 350); // small delay so moves feel intentional
+    }, 350);
 
     return () => clearTimeout(timer);
   }, [isPlayerTurn, result]);
@@ -218,7 +240,11 @@ export default function TicTacToeGame({ onComplete }) {
             </AppText>
           )}
           {result === RESULT.DRAW ? (
-            <Button label="okay fine, continue" variant="primary" onPress={onComplete} />
+            successes >= winsNeeded ? (
+              <Button label="okay fine, continue" variant="primary" onPress={onComplete} />
+            ) : (
+              <Button label="play again" variant="secondary" onPress={handleRetry} />
+            )
           ) : (
             <View style={styles.retryRow}>
               <Button label="try again" variant="secondary" onPress={handleRetry} />

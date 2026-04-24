@@ -6,12 +6,13 @@ import { colors, spacing, radius } from '../theme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const ROWS = 11;
-const COLS = 11;
-const CELL = 27;       // px per cell
-const WALL = 1.5;      // border width
-const FOG_RADIUS = 3;  // cells visible around player (7×7 window)
-const EXIT = { row: ROWS - 1, col: COLS - 1 };
+const WALL = 1.5;
+
+const CONFIGS = {
+  easy:   { rows: 9,  cols: 9,  fogRadius: 99, cell: 31 }, // fogRadius 99 = no fog
+  medium: { rows: 11, cols: 11, fogRadius: 3,  cell: 27 },
+  hard:   { rows: 15, cols: 15, fogRadius: 2,  cell: 20 },
+};
 
 // ── Seeded RNG ────────────────────────────────────────────────────────────────
 
@@ -29,14 +30,14 @@ const DIRS = ['N', 'E', 'S', 'W'];
 const DELTA = { N: [-1, 0], E: [0, 1], S: [1, 0], W: [0, -1] };
 const OPPOSITE = { N: 'S', E: 'W', S: 'N', W: 'E' };
 
-function generateMaze(seed) {
+function generateMaze(seed, rows, cols) {
   const rng = makeRng(seed);
+  const exit = { row: rows - 1, col: cols - 1 };
 
-  // cells[r][c].{N,E,S,W} = true means wall present
-  const cells = Array.from({ length: ROWS }, () =>
-    Array.from({ length: COLS }, () => ({ N: true, E: true, S: true, W: true }))
+  const cells = Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => ({ N: true, E: true, S: true, W: true }))
   );
-  const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+  const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
 
   function carve(r, c) {
     visited[r][c] = true;
@@ -48,7 +49,7 @@ function generateMaze(seed) {
     for (const dir of dirs) {
       const [dr, dc] = DELTA[dir];
       const nr = r + dr, nc = c + dc;
-      if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && !visited[nr][nc]) {
+      if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc]) {
         cells[r][c][dir] = false;
         cells[nr][nc][OPPOSITE[dir]] = false;
         carve(nr, nc);
@@ -58,23 +59,17 @@ function generateMaze(seed) {
 
   carve(0, 0);
 
-  // ── Phantom walls ─────────────────────────────────────────────────────────
-  // ~18% of open interior passages get a phantom visual wall — looks blocked
-  // but the player can walk through. Creates "wait, that worked?!" confusion.
-  // Stored as Set of "r,c,dir" strings. Applied symmetrically.
   const phantoms = new Set();
-
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      for (const dir of ['E', 'S']) {  // only check each passage once
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      for (const dir of ['E', 'S']) {
         if (!cells[r][c][dir]) {
           const [dr, dc] = DELTA[dir];
           const nr = r + dr, nc = c + dc;
-          if (nr < ROWS && nc < COLS) {
-            // Skip passages adjacent to the exit — avoid trapping the player
+          if (nr < rows && nc < cols) {
             const nearExit =
-              (r === EXIT.row && c === EXIT.col) ||
-              (nr === EXIT.row && nc === EXIT.col);
+              (r === exit.row && c === exit.col) ||
+              (nr === exit.row && nc === exit.col);
             if (!nearExit && rng() < 0.18) {
               phantoms.add(`${r},${c},${dir}`);
               phantoms.add(`${nr},${nc},${OPPOSITE[dir]}`);
@@ -85,7 +80,7 @@ function generateMaze(seed) {
     }
   }
 
-  return { cells, phantoms };
+  return { cells, phantoms, exit };
 }
 
 // ── Taunts ────────────────────────────────────────────────────────────────────
@@ -120,7 +115,8 @@ function pick(arr) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function ConfusingMazeGame({ onComplete }) {
+export default function ConfusingMazeGame({ onComplete, difficulty = 'medium' }) {
+  const { rows, cols, fogRadius, cell: cellPx } = CONFIGS[difficulty] ?? CONFIGS.medium;
   const [baseSeed] = useState(() => Date.now());
   const [attemptCount, setAttemptCount] = useState(0);
   const [playerPos, setPlayerPos] = useState({ row: 0, col: 0 });
@@ -128,10 +124,9 @@ export default function ConfusingMazeGame({ onComplete }) {
   const [taunt, setTaunt] = useState('find the exit. how hard can it be.');
   const [completed, setCompleted] = useState(false);
 
-  // Each attempt gets a unique seed → completely different maze layout
-  const { cells, phantoms } = useMemo(
-    () => generateMaze(baseSeed + attemptCount * 77777),
-    [baseSeed, attemptCount]
+  const { cells, phantoms, exit } = useMemo(
+    () => generateMaze(baseSeed + attemptCount * 77777, rows, cols),
+    [baseSeed, attemptCount, rows, cols]
   );
 
   // What the cell visually LOOKS like (real walls + phantom fakes)
@@ -161,7 +156,7 @@ export default function ConfusingMazeGame({ onComplete }) {
     setPlayerPos(newPos);
     setMoveCount((n) => n + 1);
 
-    if (newPos.row === EXIT.row && newPos.col === EXIT.col) {
+    if (newPos.row === exit.row && newPos.col === exit.col) {
       setCompleted(true);
       setTaunt(`escaped in ${moveCount + 1} moves. not great.`);
     }
@@ -177,8 +172,8 @@ export default function ConfusingMazeGame({ onComplete }) {
 
   function isVisible(r, c) {
     return (
-      Math.abs(r - playerPos.row) <= FOG_RADIUS &&
-      Math.abs(c - playerPos.col) <= FOG_RADIUS
+      Math.abs(r - playerPos.row) <= fogRadius &&
+      Math.abs(c - playerPos.col) <= fogRadius
     );
   }
 
@@ -193,34 +188,35 @@ export default function ConfusingMazeGame({ onComplete }) {
 
       {/* Maze */}
       <View style={styles.mazeWrapper}>
-        {Array.from({ length: ROWS }, (_, r) => (
+        {Array.from({ length: rows }, (_, r) => (
           <View key={r} style={styles.mazeRow}>
-            {Array.from({ length: COLS }, (_, c) => {
+            {Array.from({ length: cols }, (_, c) => {
               const visible = isVisible(r, c);
               const isPlayer = r === playerPos.row && c === playerPos.col;
-              const isExit = r === EXIT.row && c === EXIT.col;
+              const isExit = r === exit.row && c === exit.col;
+              const markerSize = cellPx * 0.45;
 
               return (
                 <View
                   key={c}
                   style={[
                     styles.cell,
-                    {
-                      // N+W only for interior walls — S/E of adjacent cells handle the rest
+                    { width: cellPx, height: cellPx,
                       borderTopWidth: displayWall(r, c, 'N') ? WALL : 0,
                       borderLeftWidth: displayWall(r, c, 'W') ? WALL : 0,
-                      // Close outer boundary (last row / last col)
-                      borderBottomWidth: r === ROWS - 1 && displayWall(r, c, 'S') ? WALL : 0,
-                      borderRightWidth: c === COLS - 1 && displayWall(r, c, 'E') ? WALL : 0,
+                      borderBottomWidth: r === rows - 1 && displayWall(r, c, 'S') ? WALL : 0,
+                      borderRightWidth: c === cols - 1 && displayWall(r, c, 'E') ? WALL : 0,
                     },
                     !visible && styles.fogCell,
                   ]}
                 >
                   {visible && isPlayer && (
-                    <View style={[styles.marker, styles.playerMarker]} />
+                    <View style={[styles.marker, styles.playerMarker,
+                      { width: markerSize, height: markerSize }]} />
                   )}
                   {visible && isExit && !isPlayer && (
-                    <View style={[styles.marker, styles.exitMarker]} />
+                    <View style={[styles.marker, styles.exitMarker,
+                      { width: markerSize, height: markerSize }]} />
                   )}
                 </View>
               );
@@ -308,8 +304,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   cell: {
-    width: CELL,
-    height: CELL,
     borderColor: colors.textSub,
     alignItems: 'center',
     justifyContent: 'center',
@@ -318,8 +312,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   marker: {
-    width: CELL * 0.45,
-    height: CELL * 0.45,
     borderRadius: 99,
   },
   playerMarker: {

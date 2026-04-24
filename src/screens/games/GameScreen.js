@@ -38,6 +38,7 @@ const MOCK_INTERCEPTION = {
 export default function GameScreen({ navigation }) {
   const [gameState, setGameState] = useState(STATE.LOADING);
   const [selectedGame, setSelectedGame] = useState(null);
+  const [difficulty, setDifficulty]     = useState('medium');
   const [milestone, setMilestone] = useState(null);
 
   const { appId, appLabel, appEmoji } = MOCK_INTERCEPTION;
@@ -61,6 +62,7 @@ export default function GameScreen({ navigation }) {
         }
       }
 
+      setDifficulty(s.difficulty ?? 'medium');
       const game = pickRandomGame(s.enabledGames);
       setSelectedGame(game);
       setGameState(STATE.PLAYING);
@@ -146,6 +148,7 @@ export default function GameScreen({ navigation }) {
               onComplete={handleGameComplete}
               gameLabel={selectedGame.label}
               gameEmoji={selectedGame.emoji}
+              difficulty={difficulty}
             />
           </View>
         </View>

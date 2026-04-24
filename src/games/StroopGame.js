@@ -14,7 +14,7 @@ const STROOP_COLORS = [
   { name: 'PURPLE', hex: '#9B59D6' },
 ];
 
-const NEEDED = 5;
+const NEEDED_BY_DIFFICULTY = { easy: 3, medium: 5, hard: 7 };
 
 // ── Taunts ────────────────────────────────────────────────────────────────────
 
@@ -41,7 +41,8 @@ function newProblem(prevWordIndex, prevInkIndex) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function StroopGame({ onComplete }) {
+export default function StroopGame({ onComplete, difficulty = 'medium' }) {
+  const needed = NEEDED_BY_DIFFICULTY[difficulty] ?? 5;
   const [problem, setProblem] = useState(() => newProblem(-1, -1));
   const [correctCount, setCorrectCount] = useState(0);
   // feedback: null | { correct: bool, tappedIndex: int, message?: string }
@@ -67,7 +68,7 @@ export default function StroopGame({ onComplete }) {
 
     timeoutRef.current = setTimeout(() => {
       setFeedback(null);
-      if (newCount >= NEEDED) {
+      if (newCount >= needed) {
         onComplete();
       } else {
         setProblem(newProblem(problem.wordIndex, problem.inkIndex));
@@ -84,7 +85,7 @@ export default function StroopGame({ onComplete }) {
 
       {/* Progress dots */}
       <View style={styles.progress}>
-        {Array.from({ length: NEEDED }, (_, i) => (
+        {Array.from({ length: needed }, (_, i) => (
           <View key={i} style={[styles.dot, i < correctCount && styles.dotFilled]} />
         ))}
       </View>

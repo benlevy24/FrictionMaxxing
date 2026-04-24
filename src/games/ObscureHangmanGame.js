@@ -86,19 +86,27 @@ const WORDS = [
   { word: 'VELLICHOR',       hint: 'strange wistfulness in a used bookstore' },
 ];
 
-const MAX_WRONG = 6;
+// easy: short common words (≤6 letters), 8 wrong guesses
+// medium: full list, 6 wrong guesses (current)
+// hard: long words only (≥10 letters), 5 wrong guesses
+const DIFFICULTY_CONFIG = {
+  easy:   { maxWrong: 8, filter: (w) => w.word.length <= 6 },
+  medium: { maxWrong: 6, filter: () => true },
+  hard:   { maxWrong: 5, filter: (w) => w.word.length >= 10 },
+};
 
-// ── Seeded pick ───────────────────────────────────────────────────────────────
+function pickWord(seed, usedIndices, difficulty) {
+  const { filter } = DIFFICULTY_CONFIG[difficulty] ?? DIFFICULTY_CONFIG.medium;
+  const eligible = WORDS.map((w, i) => ({ ...w, i })).filter((w) => filter(w));
+  const pool = eligible.filter((w) => !usedIndices.has(w.i));
+  const source = pool.length > 0 ? pool : eligible;
 
-function pickWord(seed, usedIndices) {
   let s = seed >>> 0;
   function next() {
     s = (Math.imul(1664525, s) + 1013904223) >>> 0;
     return s / 0x100000000;
   }
-  const available = WORDS.map((_, i) => i).filter((i) => !usedIndices.has(i));
-  const pool = available.length > 0 ? available : WORDS.map((_, i) => i);
-  return pool[Math.floor(next() * pool.length)];
+  return source[Math.floor(next() * source.length)].i;
 }
 
 // ── Hangman drawing helpers ───────────────────────────────────────────────────
@@ -274,7 +282,8 @@ function pick(arr) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ObscureHangmanGame({ onComplete }) {
+export default function ObscureHangmanGame({ onComplete, difficulty = 'medium' }) {
+  const { maxWrong } = DIFFICULTY_CONFIG[difficulty] ?? DIFFICULTY_CONFIG.medium;
   const [baseSeed] = useState(() => Date.now());
   const [usedIndices, setUsedIndices] = useState(new Set());
   const [attemptCount, setAttemptCount] = useState(0);
@@ -282,17 +291,16 @@ export default function ObscureHangmanGame({ onComplete }) {
   const [taunt, setTaunt] = useState('');
 
   const wordIndex = useMemo(
-    () => pickWord(baseSeed + attemptCount * 13337, usedIndices),
-    [baseSeed, attemptCount, usedIndices]
+    () => pickWord(baseSeed + attemptCount * 13337, usedIndices, difficulty),
+    [baseSeed, attemptCount, usedIndices, difficulty]
   );
   const { word, hint } = WORDS[wordIndex];
 
-  // Derived state
   const letters = new Set(word.split(''));
   const wrongGuesses = [...guessed].filter((l) => !letters.has(l));
   const wrongCount = wrongGuesses.length;
   const isWon = word.split('').every((l) => guessed.has(l));
-  const isLost = wrongCount >= MAX_WRONG;
+  const isLost = wrongCount >= maxWrong;
   const isOver = isWon || isLost;
 
   function handleGuess(letter) {
@@ -303,7 +311,7 @@ export default function ObscureHangmanGame({ onComplete }) {
 
     if (!letters.has(letter)) {
       const newWrong = wrongCount + 1;
-      if (newWrong === MAX_WRONG - 1) {
+      if (newWrong === maxWrong - 1) {
         setTaunt(pick(CLOSE_CALL_TAUNTS));
       } else {
         setTaunt(pick(WRONG_TAUNTS));
@@ -350,7 +358,7 @@ export default function ObscureHangmanGame({ onComplete }) {
           <AppText variant="caption" style={styles.hintText}>{hint}</AppText>
 
           <AppText variant="caption" style={[styles.hintLabel, { marginTop: spacing.md }]}>
-            wrong ({wrongCount}/{MAX_WRONG}):
+            wrong ({wrongCount}/{maxWrong}):
           </AppText>
           <AppText style={styles.wrongLetters}>
             {wrongGuesses.join('  ') || '—'}

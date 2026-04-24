@@ -93,10 +93,15 @@ export default function SnakeGame({ onComplete, difficulty = 'medium' }) {
       if (nextDir !== dir) setDir(nextDir);
 
       const head = snake[0];
-      const newHead = { x: head.x + nextDir.x, y: head.y + nextDir.y };
+      let newHead = { x: head.x + nextDir.x, y: head.y + nextDir.y };
 
-      // Wall collision → die
-      if (newHead.x < 0 || newHead.x >= cols || newHead.y < 0 || newHead.y >= rows) {
+      // Wall collision — easy wraps, medium/hard die
+      if (difficulty === 'easy') {
+        newHead = {
+          x: (newHead.x + cols) % cols,
+          y: (newHead.y + rows) % rows,
+        };
+      } else if (newHead.x < 0 || newHead.x >= cols || newHead.y < 0 || newHead.y >= rows) {
         setStatus('dead');
         setDeaths((d) => d + 1);
         setTaunt(randomTaunt());
@@ -130,7 +135,7 @@ export default function SnakeGame({ onComplete, difficulty = 'medium' }) {
     }, speed);
 
     return () => clearInterval(interval);
-  }, [status, speed, cols, rows, goal]);
+  }, [status, speed, cols, rows, goal, difficulty]);
 
   // ── Controls ─────────────────────────────────────────────────────────────────
   function press(newDir) {

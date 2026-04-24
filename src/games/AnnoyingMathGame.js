@@ -370,12 +370,12 @@ const padStyles = StyleSheet.create({
 
 // ── Progress dots ─────────────────────────────────────────────────────────────
 
-const NEEDED = 3;
+const NEEDED_BY_DIFFICULTY = { easy: 3, medium: 4, hard: 5 };
 
-function ProgressDots({ correct }) {
+function ProgressDots({ correct, needed }) {
   return (
     <View style={progStyles.row}>
-      {Array.from({ length: NEEDED }, (_, i) => (
+      {Array.from({ length: needed }, (_, i) => (
         <View
           key={i}
           style={[progStyles.dot, i < correct && progStyles.dotFilled]}
@@ -403,12 +403,13 @@ const progStyles = StyleSheet.create({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function AnnoyingMathGame({ onComplete }) {
+export default function AnnoyingMathGame({ onComplete, difficulty = 'medium' }) {
+  const needed = NEEDED_BY_DIFFICULTY[difficulty] ?? 4;
   const [baseSeed] = useState(() => Date.now());
   const [problemIndex, setProblemIndex] = useState(0);
   const [input, setInput] = useState('');
   const [correctCount, setCorrectCount] = useState(0);
-  const [feedback, setFeedback] = useState(null); // { correct: bool, message: string }
+  const [feedback, setFeedback] = useState(null);
   const [taunt, setTaunt] = useState('');
 
   const problem = useMemo(
@@ -416,7 +417,7 @@ export default function AnnoyingMathGame({ onComplete }) {
     [baseSeed, problemIndex]
   );
 
-  const isWon = correctCount >= NEEDED;
+  const isWon = correctCount >= needed;
 
   function handleDigit(d) {
     if (feedback) return;
@@ -477,10 +478,10 @@ export default function AnnoyingMathGame({ onComplete }) {
       {/* Header */}
       <View style={styles.header}>
         <AppText variant="subheading">🔢 math</AppText>
-        <ProgressDots correct={correctCount} />
+        <ProgressDots correct={correctCount} needed={needed} />
       </View>
       <AppText variant="caption" style={styles.needed}>
-        get {NEEDED - correctCount} more correct
+        get {needed - correctCount} more correct
       </AppText>
 
       {/* Problem */}

@@ -15,9 +15,10 @@ import { GAMES } from '../../games/registry';
 import { colors, spacing, radius } from '../../theme';
 
 export default function SettingsScreen({ navigation }) {
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading]         = useState(true);
   const [blockedApps, setBlockedApps] = useState([]);
   const [enabledGames, setEnabledGames] = useState(DEFAULT_ENABLED_GAMES);
+  const [difficulty, setDifficulty]   = useState('medium');
   const [notifications, setNotifications] = useState({ milestones: false });
 
   useFocusEffect(
@@ -25,11 +26,11 @@ export default function SettingsScreen({ navigation }) {
       let active = true;
       getSettings().then((s) => {
         if (!active) return;
-        // Build a full list of all apps with enabled flag from settings
         setBlockedApps(
           ALL_APPS.map((app) => ({ ...app, enabled: s.blockedApps.includes(app.id) }))
         );
         setEnabledGames(s.enabledGames);
+        setDifficulty(s.difficulty ?? 'medium');
         setLoading(false);
       });
       return () => { active = false; };
@@ -49,6 +50,11 @@ export default function SettingsScreen({ navigation }) {
     const next = blockedApps.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a));
     setBlockedApps(next);
     await saveSettings({ blockedApps: next.filter((a) => a.enabled).map((a) => a.id) });
+  }
+
+  async function selectDifficulty(level) {
+    setDifficulty(level);
+    await saveSettings({ difficulty: level });
   }
 
   async function toggleGame(id) {
@@ -115,6 +121,26 @@ export default function SettingsScreen({ navigation }) {
               onToggle={() => toggleApp(app.id)}
             />
           ))}
+        </Section>
+
+        {/* Difficulty */}
+        <Section title="difficulty" subtitle="how hard should the games be?">
+          <View style={styles.diffRow}>
+            {['easy', 'medium', 'hard'].map((level) => (
+              <TouchableOpacity
+                key={level}
+                style={[styles.diffPill, difficulty === level && styles.diffPillActive]}
+                onPress={() => selectDifficulty(level)}
+              >
+                <AppText
+                  variant="base"
+                  style={[styles.diffLabel, difficulty === level && styles.diffLabelActive]}
+                >
+                  {level}
+                </AppText>
+              </TouchableOpacity>
+            ))}
+          </View>
         </Section>
 
         {/* Games */}
@@ -231,6 +257,14 @@ const styles = StyleSheet.create({
   },
   rowEmoji:         { width: 28, textAlign: 'center' },
   rowText:          { flex: 1, gap: 2 },
+  diffRow:          { flexDirection: 'row', gap: spacing.sm, padding: spacing.md },
+  diffPill: {
+    flex: 1, paddingVertical: spacing.sm, borderRadius: radius.md,
+    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
+  },
+  diffPillActive:   { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
+  diffLabel:        { color: colors.textSub },
+  diffLabelActive:  { color: colors.primary },
   destructiveRow:   { paddingVertical: spacing.md, paddingHorizontal: spacing.md, gap: spacing.xs },
   destructiveLabel: { color: colors.danger },
   destructiveSub:   { color: colors.textDisabled },
