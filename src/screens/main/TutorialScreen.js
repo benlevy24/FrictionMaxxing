@@ -38,7 +38,7 @@ const STEPS = [
   {
     number: 6,
     title: 're-select the app and tap Done',
-    body: '⚠️ on the final screen, tap App and re-select the same app you chose in step 3. the automation won\'t run without this step. then tap Done.',
+    body: 'tap App (must be selected ⚠️) to re-select the app you chose in step 3. the automation won\'t run without this. then tap Done.',
     visual: <ReSelectAppVisual />,
   },
 ];
