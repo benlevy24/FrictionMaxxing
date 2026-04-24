@@ -51,13 +51,14 @@ export default function StatsScreen() {
 
   async function handleShare() {
     const message =
-      `my friction maxxing stats 🧱\n\n` +
-      `📊 ${allTime.intercepted} times intercepted\n` +
-      `🚶 ${allTime.walkedAway} walked away · 🏳️ ${allTime.rageQuit} rage-quits (${allTimeRate}% friction success)\n` +
-      `🧐 ${allTime.openedAnyway} opened anyway\n` +
-      `🏳️ ${allTime.rageQuit} rage-quits\n` +
-      `🔥 ${allTime.streakCurrent} day streak (best: ${allTime.streakBest})\n\n` +
-      `yes, i needed a maze to stop opening instagram.`;
+      `day ${allTime.daysSinceInstall} of needing a maze to stop doomscrolling.\n\n` +
+      `🚧 ${allTime.intercepted} intercepts\n` +
+      `🚶 ${allTime.walkedAway} walked away\n` +
+      `🏳️ ${allTime.rageQuit} rage-quits (the games are genuinely unfair)\n` +
+      `🧐 ${allTime.openedAnyway} opened anyway (i'm only human)\n\n` +
+      `${allTimeRate}% friction success rate. ${allTime.streakCurrent > 0 ? `${allTime.streakCurrent} day streak.` : `streak: none. keep trying.`}\n\n` +
+      `yes i downloaded an app that gives me annoying games before i can doomscroll.\n` +
+      `no i'm not okay. get it at frictionmaxxing.app`;
     try {
       await Share.share({ message });
     } catch { /* cancelled */ }
@@ -155,20 +156,20 @@ export default function StatsScreen() {
           <View style={styles.legend}>
             <TouchableOpacity
               style={styles.legendItem}
-              onPress={() => setLegendTooltip(legendTooltip === 'resisted' ? null : 'resisted')}
-            >
-              <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
-              <AppText variant="xs" style={[styles.legendText, legendTooltip === 'resisted' && styles.legendTextActive]}>
-                resisted
-              </AppText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.legendItem}
               onPress={() => setLegendTooltip(legendTooltip === 'intercepted' ? null : 'intercepted')}
             >
               <View style={[styles.legendDot, { backgroundColor: colors.border }]} />
               <AppText variant="xs" style={[styles.legendText, legendTooltip === 'intercepted' && styles.legendTextActive]}>
                 intercepted
+              </AppText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.legendItem}
+              onPress={() => setLegendTooltip(legendTooltip === 'resisted' ? null : 'resisted')}
+            >
+              <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
+              <AppText variant="xs" style={[styles.legendText, legendTooltip === 'resisted' && styles.legendTextActive]}>
+                resisted
               </AppText>
             </TouchableOpacity>
           </View>
@@ -225,6 +226,9 @@ export default function StatsScreen() {
 
         {/* Share */}
         <Button label="share my stats 📤" variant="secondary" onPress={handleShare} />
+        <AppText variant="caption" style={styles.shareWarning}>
+          ⚠️ sharing to a blocked app counts as opening it. your streak is at stake. worth it?
+        </AppText>
 
       </ScrollView>
     </ScreenWrapper>
@@ -307,4 +311,5 @@ const styles = StyleSheet.create({
   appBarFill: { height: '100%', backgroundColor: colors.primary, borderRadius: radius.full },
   appSub: { color: colors.textSub },
   emptyText: { color: colors.textSub, textAlign: 'center', paddingVertical: spacing.sm },
+  shareWarning: { textAlign: 'center', color: colors.textDisabled, lineHeight: 18 },
 });

@@ -257,8 +257,8 @@
           </div>
           <!-- Legend -->
           <div class="legend">
-            <div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span class="legend-lbl">resisted</span></div>
             <div class="legend-item active"><div class="legend-dot" style="background:var(--border)"></div><span class="legend-lbl">intercepted</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span class="legend-lbl">resisted</span></div>
           </div>
           <div class="tooltip-txt">total times the friction game popped up that day</div>
         </div>
@@ -313,6 +313,29 @@
           <div class="list-row"><span style="width:22px;text-align:center">🐍</span><span class="f1">Snake</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
         </div></div>
 
+        <div><div class="sec-head"><span class="subheading">geo-blocking</span><span class="t-cap">location-based</span></div>
+        <div class="card card-flush">
+          <div class="list-row" style="padding:10px 12px">
+            <div class="col gap2 f1">
+              <span class="t-base">🌍  free zones</span>
+              <span class="t-xs t-dis">pause blocking at saved locations (home, gym, etc.)</span>
+            </div>
+            <span class="t-base t-dis">›</span>
+          </div>
+        </div></div>
+
+        <div><div class="sec-head"><span class="subheading">notifications</span><span class="t-cap">off by default</span></div>
+        <div class="card card-flush">
+          <div class="list-row">
+            <span style="width:22px;text-align:center">🏆</span>
+            <div class="col gap2 f1">
+              <span class="t-base">milestone alerts</span>
+              <span class="t-xs t-dis">notify when you hit a walk-away milestone</span>
+            </div>
+            <div class="toggle off"><div class="toggle-thumb"></div></div>
+          </div>
+        </div></div>
+
         <div><div class="sec-head"><span class="subheading">setup</span></div>
         <div class="card card-flush">
           <div class="list-row col gap2" style="padding:10px 12px">
@@ -336,6 +359,75 @@
       </div>
     </div></div>
     <div class="phone-label">Settings</div>
+  </div>
+
+  <!-- GEO BLOCKING -->
+  <div>
+    <div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
+      <div class="screen-content">
+        <span class="t-cap t-pri" style="margin-top:8px">‹ settings</span>
+        <div class="col gap4" style="margin-top:4px">
+          <span class="t-xxl">free zones</span>
+          <span class="t-cap">blocking pauses when you're in these places</span>
+        </div>
+
+        <div class="card card-flush">
+          <div class="list-row">
+            <span style="width:28px;text-align:center;font-size:16px">📍</span>
+            <div class="col gap4 f1">
+              <span class="t-base">Home</span>
+              <span style="display:inline-flex"><span style="background:var(--primary-muted);border-radius:20px;padding:2px 8px;font-size:11px;color:var(--primary)">500m</span></span>
+            </div>
+            <span class="t-cap t-dis" style="padding:4px 6px">✕</span>
+          </div>
+          <div class="list-row">
+            <span style="width:28px;text-align:center;font-size:16px">📍</span>
+            <div class="col gap4 f1">
+              <span class="t-base">Work</span>
+              <span style="display:inline-flex"><span style="background:var(--primary-muted);border-radius:20px;padding:2px 8px;font-size:11px;color:var(--primary)">100m</span></span>
+            </div>
+            <span class="t-cap t-dis" style="padding:4px 6px">✕</span>
+          </div>
+        </div>
+
+        <button class="btn btn-pri" style="margin-top:4px">+ add current location</button>
+      </div>
+    </div></div>
+    <div class="phone-label">Free Zones (2 saved)</div>
+  </div>
+
+  <!-- GEO BLOCKING — ADD MODAL -->
+  <div>
+    <div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
+      <div class="screen-content" style="opacity:.2">
+        <div class="col gap4" style="margin-top:8px"><span class="t-xxl">free zones</span></div>
+      </div>
+      <div class="modal-overlay">
+        <div class="modal-box" style="text-align:left;gap:12px">
+          <span class="subheading" style="font-size:14px">name this place</span>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text-sub);font-size:14px">Gym</div>
+          <span class="t-cap t-sub" style="margin-bottom:-6px">radius</span>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1;border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center">
+              <div class="t-sm t-sub">100m</div><div style="font-size:10px;color:var(--text-disabled)">exact building</div>
+            </div>
+            <div style="flex:1;border:1px solid var(--primary);border-radius:10px;padding:8px 4px;text-align:center;background:var(--primary-muted)">
+              <div class="t-sm t-pri">500m</div><div style="font-size:10px;color:var(--primary);opacity:.7">my block</div>
+            </div>
+            <div style="flex:1;border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center">
+              <div class="t-sm t-sub">2km</div><div style="font-size:10px;color:var(--text-disabled)">my area</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="btn btn-sec f1">cancel</button>
+            <button class="btn btn-pri f1">save zone</button>
+          </div>
+        </div>
+      </div>
+    </div></div>
+    <div class="phone-label">Free Zones — Add Modal</div>
   </div>
 
 </div>
@@ -396,6 +488,22 @@
 <!-- ═══ GAME SCREENS ═══ -->
 <p class="section-label">game screens</p>
 <div class="phone-row">
+
+  <!-- FREE ZONE -->
+  <div>
+    <div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><span>●●● WiFi 🔋</span></div>
+      <div class="decision-screen">
+        <span style="font-size:48px">🌍</span>
+        <span class="t-xxl">you're in a free zone.</span>
+        <span class="t-cap" style="text-align:center">blocking is paused here. enjoy.</span>
+        <div class="col gap8" style="width:100%;margin-top:8px">
+          <button class="btn btn-pri">got it</button>
+        </div>
+      </div>
+    </div></div>
+    <div class="phone-label">Game — Free Zone (skipped)</div>
+  </div>
 
   <!-- PLAYING — TTT -->
   <div>

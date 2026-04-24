@@ -4,6 +4,7 @@ import OnboardingNavigator from './OnboardingNavigator';
 import MainTabNavigator from './MainTabNavigator';
 import GameScreen from '../screens/games/GameScreen';
 import TutorialScreen from '../screens/main/TutorialScreen';
+import GeoBlockingScreen from '../screens/main/GeoBlockingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -21,6 +22,7 @@ export default function RootNavigator() {
           options={{ presentation: 'fullScreenModal' }}
         />
         <Stack.Screen name="Tutorial" component={TutorialScreen} />
+        <Stack.Screen name="GeoBlocking" component={GeoBlockingScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

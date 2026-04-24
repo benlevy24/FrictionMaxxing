@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
@@ -16,14 +16,16 @@ import {
   getEvents,
   recordEvent,
 } from '../../utils/storage';
+import { isInFreeZone } from '../../utils/location';
 import { colors, spacing } from '../../theme';
 
 // Game flow states
 const STATE = {
-  LOADING:  'loading',   // fetching settings
-  PLAYING:  'playing',   // game in progress
-  DECISION: 'decision',  // game beaten — open anyway or walk away?
-  DONE:     'done',      // user made their choice
+  LOADING:   'loading',    // fetching settings + location check
+  FREE_ZONE: 'free_zone',  // user is in a free zone — skip the game
+  PLAYING:   'playing',    // game in progress
+  DECISION:  'decision',   // game beaten — open anyway or walk away?
+  DONE:      'done',       // user made their choice
 };
 
 // Mock interception context — replaced by Screen Time extension in task #22
@@ -44,13 +46,26 @@ export default function GameScreen({ navigation }) {
   // If the component unmounts without one, it counts as a rage-quit.
   const eventRecorded = useRef(false);
 
-  // Load enabled games from settings, then pick a random game
+  // Load settings, check free zone, then pick a game
   useEffect(() => {
-    getSettings().then((s) => {
+    async function init() {
+      const s = await getSettings();
+
+      // If the user is in a saved free zone, skip the game entirely
+      if (s.freeZones?.length) {
+        const inFreeZone = await isInFreeZone(s.freeZones);
+        if (inFreeZone) {
+          eventRecorded.current = true; // prevent false rage-quit on unmount
+          setGameState(STATE.FREE_ZONE);
+          return;
+        }
+      }
+
       const game = pickRandomGame(s.enabledGames);
       setSelectedGame(game);
       setGameState(STATE.PLAYING);
-    });
+    }
+    init();
   }, []);
 
   // Rage-quit detector — fires on unmount if no event was recorded
@@ -98,9 +113,23 @@ export default function GameScreen({ navigation }) {
   return (
     <ScreenWrapper style={styles.wrapper}>
 
-      {/* Loading — brief, just fetching local settings */}
+      {/* Loading — brief, fetching settings + location check */}
       {gameState === STATE.LOADING && (
         <View style={styles.centered} />
+      )}
+
+      {/* Free zone — user is in a saved location, skip the game */}
+      {gameState === STATE.FREE_ZONE && (
+        <View style={styles.centered}>
+          <AppText variant="xxl" style={styles.winEmoji}>🌍</AppText>
+          <AppText variant="xxl" style={styles.decisionTitle}>you're in a free zone.</AppText>
+          <AppText variant="caption" style={styles.decisionSub}>
+            blocking is paused here. enjoy.
+          </AppText>
+          <View style={styles.decisionButtons}>
+            <Button label="got it" variant="primary" onPress={() => navigation.goBack()} />
+          </View>
+        </View>
       )}
 
       {/* Playing state */}

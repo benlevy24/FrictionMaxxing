@@ -144,6 +144,20 @@ export default function SettingsScreen({ navigation }) {
           />
         </Section>
 
+        {/* Geo-blocking */}
+        <Section title="geo-blocking" subtitle="location-based">
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => navigation.navigate('GeoBlocking')}
+          >
+            <AppText variant="base" style={styles.linkLabel}>🌍  free zones</AppText>
+            <AppText variant="caption" style={styles.linkSub}>
+              pause blocking at saved locations (home, gym, etc.)
+            </AppText>
+            <AppText variant="base" style={styles.linkChevron}>›</AppText>
+          </TouchableOpacity>
+        </Section>
+
         {/* Setup guide */}
         <Section title="setup">
           <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate('Tutorial')}>

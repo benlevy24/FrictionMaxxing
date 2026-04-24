@@ -66,6 +66,7 @@ export function dayLabel(dateStr) {
 const DEFAULT_SETTINGS = {
   blockedApps:      DEFAULT_BLOCKED_APPS,
   enabledGames:     DEFAULT_ENABLED_GAMES,
+  freeZones:        [],     // [{ id, name, lat, lng, radiusMeters }]
   installDate:      null,   // set on first write
   onboardingDone:   false,
 };
