@@ -13,13 +13,14 @@ export const ALL_APPS = [
   { id: 'facebook',  label: 'Facebook',    emoji: '👍' },
   { id: 'snapchat',  label: 'Snapchat',    emoji: '👻' },
   { id: 'reddit',    label: 'Reddit',      emoji: '🤖' },
+  { id: 'chatgpt',   label: 'ChatGPT',     emoji: '🧠' },
   { id: 'threads',   label: 'Threads',     emoji: '🧵' },
   { id: 'linkedin',  label: 'LinkedIn',    emoji: '💼' },
   { id: 'pinterest', label: 'Pinterest',   emoji: '📌' },
 ];
 
 export const DEFAULT_BLOCKED_APPS = [
-  'instagram', 'tiktok', 'youtube', 'x', 'facebook', 'snapchat', 'reddit',
+  'instagram', 'tiktok', 'youtube', 'x', 'facebook', 'snapchat', 'reddit', 'chatgpt',
 ];
 
 export const DEFAULT_ENABLED_GAMES = [
