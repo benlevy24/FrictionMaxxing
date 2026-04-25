@@ -12,6 +12,8 @@ import AnnoyingMathGame from './AnnoyingMathGame';
 import StroopGame from './StroopGame';
 import PongGame from './PongGame';
 import SnakeGame from './SnakeGame';
+import CheckersGame from './CheckersGame';
+import ChessGame from './ChessGame';
 
 // Each entry shape:
 // {
