@@ -18,20 +18,28 @@ const NEEDED_BY_DIFFICULTY = { easy: 3, medium: 5, hard: 7 };
 
 // ── Taunts ────────────────────────────────────────────────────────────────────
 
-const WRONG_TAUNTS = [
+const WRONG_TAUNTS_INK = [
   "that's the WORD. not the color.",
-  "you're reading it. we said look at it.",
+  "you're reading it. look at the ink.",
   "the TEXT color. ignore what it says.",
   "your brain is fighting you. that's the point.",
   "that's what it says. not what it looks like.",
   "stop reading. start seeing.",
 ];
 
+const WRONG_TAUNTS_WORD = [
+  "that's the ink color. read the word.",
+  "we asked what it SAYS. not how it looks.",
+  "ignore the color. read the actual word.",
+  "your eyes lied to you.",
+  "the word. the word itself. read it.",
+  "that's the ink. the word is different.",
+];
+
 // ── Problem generator ─────────────────────────────────────────────────────────
 
 function newProblem(prevWordIndex, prevInkIndex) {
   let inkIndex, wordIndex;
-  // Avoid same ink or same word as last round to keep it fresh
   do { inkIndex = Math.floor(Math.random() * STROOP_COLORS.length); }
   while (inkIndex === prevInkIndex);
   do { wordIndex = Math.floor(Math.random() * STROOP_COLORS.length); }
@@ -39,31 +47,42 @@ function newProblem(prevWordIndex, prevInkIndex) {
   return { inkIndex, wordIndex };
 }
 
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function StroopGame({ onComplete, difficulty = 'medium' }) {
   const needed = NEEDED_BY_DIFFICULTY[difficulty] ?? 5;
+  const alternates = difficulty === 'medium' || difficulty === 'hard';
+
   const [problem, setProblem] = useState(() => newProblem(-1, -1));
   const [correctCount, setCorrectCount] = useState(0);
-  // feedback: null | { correct: bool, tappedIndex: int, message?: string }
+  // 'ink' = tap the ink color, 'word' = tap what the word spells
+  const [questionType, setQuestionType] = useState(() =>
+    alternates ? (Math.random() < 0.5 ? 'ink' : 'word') : 'ink'
+  );
   const [feedback, setFeedback] = useState(null);
   const timeoutRef = useRef(null);
 
   const word = STROOP_COLORS[problem.wordIndex].name;
   const inkHex = STROOP_COLORS[problem.inkIndex].hex;
+  const correctIndex = questionType === 'ink' ? problem.inkIndex : problem.wordIndex;
 
   function handleTap(colorIndex) {
     if (feedback) return;
     clearTimeout(timeoutRef.current);
 
-    const correct = colorIndex === problem.inkIndex;
+    const correct = colorIndex === correctIndex;
     const newCount = correct ? correctCount + 1 : correctCount;
     if (correct) setCorrectCount(newCount);
 
+    const taunts = questionType === 'ink' ? WRONG_TAUNTS_INK : WRONG_TAUNTS_WORD;
     setFeedback({
       correct,
       tappedIndex: colorIndex,
-      message: correct ? null : WRONG_TAUNTS[Math.floor(Math.random() * WRONG_TAUNTS.length)],
+      message: correct ? null : pick(taunts),
     });
 
     timeoutRef.current = setTimeout(() => {
@@ -72,15 +91,20 @@ export default function StroopGame({ onComplete, difficulty = 'medium' }) {
         onComplete();
       } else {
         setProblem(newProblem(problem.wordIndex, problem.inkIndex));
+        if (alternates) setQuestionType((t) => t === 'ink' ? 'word' : 'ink');
       }
     }, correct ? 450 : 1300);
   }
+
+  const instruction = questionType === 'ink'
+    ? 'tap the color the text is WRITTEN IN'
+    : 'tap the color the word SPELLS OUT';
 
   return (
     <View style={styles.container}>
       <AppText variant="subheading" style={styles.title}>🎨 stroop test</AppText>
       <AppText variant="caption" style={styles.instruction}>
-        tap the COLOR of the text — not what it says
+        {instruction}
       </AppText>
 
       {/* Progress dots */}
@@ -112,7 +136,7 @@ export default function StroopGame({ onComplete, difficulty = 'medium' }) {
         {STROOP_COLORS.map((color, i) => {
           let borderStyle = {};
           if (feedback) {
-            if (i === problem.inkIndex) {
+            if (i === correctIndex) {
               borderStyle = { borderWidth: 3, borderColor: colors.success };
             } else if (i === feedback.tappedIndex && !feedback.correct) {
               borderStyle = { borderWidth: 3, borderColor: colors.danger };
