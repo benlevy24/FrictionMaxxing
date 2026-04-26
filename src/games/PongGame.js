@@ -93,6 +93,7 @@ export default function PongGame({ onComplete, difficulty = 'medium' }) {
   const [phase, setPhase] = useState('playing');
   const [missCount, setMissCount] = useState(0);
   const [taunt, setTaunt] = useState('');
+  const [totalHits, setTotalHits] = useState(0);
   const touchX = useRef(null);
 
   // ── PanResponder — player moves paddle by dragging anywhere in the game ──
@@ -149,6 +150,7 @@ export default function PongGame({ onComplete, difficulty = 'medium' }) {
         p.ballY = P_Y - BALL;
         p.rallyCount++;
         p.playerFlash = true;
+        setTotalHits((n) => n + 1);
         setTimeout(() => { p.playerFlash = false; }, 140);
       }
 
@@ -316,7 +318,13 @@ export default function PongGame({ onComplete, difficulty = 'medium' }) {
         {phase === 'ai_scored' && (
           <View style={styles.actionButtons}>
             <Button label="try again" variant="secondary" onPress={handleRetry} />
-            <Button label="just let me through" variant="ghost" onPress={onComplete} />
+            {totalHits >= 1 ? (
+              <Button label="just let me through" variant="ghost" onPress={onComplete} />
+            ) : (
+              <AppText variant="caption" style={styles.gateHint}>
+                hit the ball at least once to unlock this
+              </AppText>
+            )}
           </View>
         )}
         {phase === 'player_scored' && (
@@ -426,6 +434,11 @@ const styles = StyleSheet.create({
   hint: {
     color: colors.textDisabled,
     textAlign: 'center',
+  },
+  gateHint: {
+    color: colors.textDisabled,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   actionButtons: {
     width: '100%',
