@@ -79,7 +79,7 @@ export default function AppSelectionScreen({ navigation }) {
           style={styles.toggleAll}
         />
         <Button
-          label={selected.size === 0 ? 'skip for now' : `block ${selected.size} app${selected.size === 1 ? '' : 's'}`}
+          label={selected.size === 0 ? 'skip for now' : `add friction to ${selected.size} app${selected.size === 1 ? '' : 's'}`}
           onPress={() => navigation.navigate('Permissions')}
           disabled={false}
         />

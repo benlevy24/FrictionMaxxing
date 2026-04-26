@@ -1,7 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import WelcomeScreen from '../screens/onboarding/WelcomeScreen';
 import HowItWorksScreen from '../screens/onboarding/HowItWorksScreen';
-import AppSelectionScreen from '../screens/onboarding/AppSelectionScreen';
 import PermissionsScreen from '../screens/onboarding/PermissionsScreen';
 
 const Stack = createNativeStackNavigator();
@@ -11,7 +10,6 @@ export default function OnboardingNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="HowItWorks" component={HowItWorksScreen} />
-      <Stack.Screen name="AppSelection" component={AppSelectionScreen} />
       <Stack.Screen name="Permissions" component={PermissionsScreen} />
     </Stack.Navigator>
   );

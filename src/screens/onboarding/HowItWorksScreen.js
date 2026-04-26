@@ -13,7 +13,7 @@ const STEPS = [
   {
     emoji: '🎮',
     title: 'get a game',
-    body: 'every time you try to open a blocked app, you get a random mini-game. and yes, some of them are designed to be frustrating.',
+    body: 'every time you open a gated app, iOS Shortcuts redirects you here for a random mini-game. and yes, some of them are designed to be frustrating.',
   },
   {
     emoji: '🏳️',
@@ -46,7 +46,7 @@ export default function HowItWorksScreen({ navigation }) {
       </View>
 
       <View style={styles.footer}>
-        <Button label="got it, let's go" onPress={() => navigation.navigate('AppSelection')} />
+        <Button label="got it, let's go" onPress={() => navigation.navigate('Permissions')} />
       </View>
     </ScreenWrapper>
   );

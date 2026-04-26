@@ -4,39 +4,44 @@ import AppText from '../../components/AppText';
 import Button from '../../components/Button';
 import { colors, spacing, radius } from '../../theme';
 
-const PERMISSION_POINTS = [
+const HOW_IT_WORKS = [
   {
-    emoji: '🔒',
-    text: 'Screen Time lets us intercept blocked apps before they open.',
+    emoji: '📱',
+    text: 'when you open Instagram (or any gated app), Shortcuts redirects you here automatically.',
   },
   {
-    emoji: '👀',
-    text: 'We can see which apps you open — but nothing inside them.',
+    emoji: '🎮',
+    text: 'you get a random annoying mini-game. beat it, then decide: open anyway or walk away.',
   },
   {
-    emoji: '🚫',
-    text: 'We never collect or share your data. everything stays on your phone.',
+    emoji: '🔓',
+    text: 'nothing is hard-blocked — it\'s friction, not a lock. the choice is always yours.',
   },
 ];
 
 export default function PermissionsScreen({ navigation }) {
-  function handleGrant() {
-    // TODO (task #19 on Mac): trigger real FamilyControls permission request
-    // For now, navigate straight to main app
+  function openSetupGuide() {
+    navigation.getParent()?.reset({
+      index: 1,
+      routes: [{ name: 'Main' }, { name: 'Tutorial' }],
+    });
+  }
+
+  function skipForNow() {
     navigation.getParent()?.navigate('Main');
   }
 
   return (
     <ScreenWrapper>
       <View style={styles.header}>
-        <AppText variant="xxl" style={styles.title}>one permission</AppText>
+        <AppText variant="xxl" style={styles.title}>last step: shortcuts</AppText>
         <AppText variant="caption">
-          we need Screen Time access to actually block apps. here's exactly what that means.
+          FrictionMaxxing works through iOS Shortcuts automations — one per app. here's what that means.
         </AppText>
       </View>
 
       <View style={styles.points}>
-        {PERMISSION_POINTS.map((point, i) => (
+        {HOW_IT_WORKS.map((point, i) => (
           <View key={i} style={styles.point}>
             <AppText variant="lg">{point.emoji}</AppText>
             <AppText variant="body" style={styles.pointText}>{point.text}</AppText>
@@ -46,18 +51,13 @@ export default function PermissionsScreen({ navigation }) {
 
       <View style={styles.notice}>
         <AppText variant="caption" style={styles.noticeText}>
-          Apple will show a system prompt — tap "Allow" to continue. you can revoke this anytime in Settings → Screen Time.
+          takes about 2 minutes per app. you can always find it later under Settings → Setup Guide.
         </AppText>
       </View>
 
       <View style={styles.footer}>
-        <Button label="grant access" onPress={handleGrant} />
-        <Button
-          label="skip for now (app won't block anything)"
-          variant="ghost"
-          onPress={() => navigation.getParent()?.navigate('Main')}
-          style={styles.skip}
-        />
+        <Button label="open setup guide" onPress={openSetupGuide} />
+        <Button label="skip for now" variant="ghost" onPress={skipForNow} style={styles.skip} />
       </View>
     </ScreenWrapper>
   );

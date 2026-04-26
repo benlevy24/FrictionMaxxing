@@ -1,24 +1,24 @@
 import { useState, useCallback } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
 import Card from '../../components/Card';
-import Button from '../../components/Button';
 import {
   getSettings,
+  saveSettings,
   getEvents,
   computeStreak,
   deriveTodayStats,
-  ALL_APPS,
 } from '../../utils/storage';
 import { colors, spacing, radius } from '../../theme';
 
-export default function HomeScreen({ navigation }) {
-  const [loading, setLoading] = useState(true);
-  const [today, setToday]     = useState({ intercepted: 0, completed: 0, skipped: 0 });
-  const [streak, setStreak]   = useState({ current: 0, best: 0 });
-  const [blockedApps, setBlockedApps] = useState([]);
+export default function HomeScreen() {
+  const [loading, setLoading]       = useState(true);
+  const [today, setToday]           = useState({ intercepted: 0, completed: 0, skipped: 0 });
+  const [streak, setStreak]         = useState({ current: 0, best: 0 });
+  const [gatedApps, setGatedApps]   = useState([]);
+  const [hiddenAppIds, setHiddenAppIds] = useState([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -28,13 +28,42 @@ export default function HomeScreen({ navigation }) {
         if (!active) return;
         setToday(deriveTodayStats(events));
         setStreak(computeStreak(events));
-        setBlockedApps(ALL_APPS.filter((a) => settings.blockedApps.includes(a.id)));
+        const hidden = settings.hiddenAppIds ?? [];
+        setHiddenAppIds(hidden);
+        // Derive gated apps from event history, excluding manually hidden ones
+        const seen = new Map();
+        for (const e of events) {
+          if (!hidden.includes(e.appId) && !seen.has(e.appId)) {
+            seen.set(e.appId, { id: e.appId, label: e.appLabel, emoji: e.appEmoji });
+          }
+        }
+        setGatedApps([...seen.values()]);
         setLoading(false);
       }
       load();
       return () => { active = false; };
     }, [])
   );
+
+  function handleHideApp(app) {
+    Alert.alert(
+      `remove ${app.label}?`,
+      "hides it from this list. your stats history stays intact. it'll reappear if the Shortcut fires again.",
+      [
+        { text: 'cancel', style: 'cancel' },
+        {
+          text: 'remove',
+          style: 'destructive',
+          onPress: async () => {
+            const next = [...hiddenAppIds, app.id];
+            setHiddenAppIds(next);
+            setGatedApps((prev) => prev.filter((a) => a.id !== app.id));
+            await saveSettings({ hiddenAppIds: next });
+          },
+        },
+      ]
+    );
+  }
 
   if (loading) return <ScreenWrapper />;
 
@@ -82,7 +111,7 @@ export default function HomeScreen({ navigation }) {
           <StatBox label="rage-quit"     value={today.rageQuit}     emoji="🏳️" />
         </View>
 
-        {/* Completion rate */}
+        {/* Friction success rate */}
         <Card>
           <AppText variant="caption" style={styles.rateLabel}>friction success rate today</AppText>
           <View style={styles.rateBarBg}>
@@ -91,24 +120,38 @@ export default function HomeScreen({ navigation }) {
           <AppText variant="sm" style={styles.rateValue}>{frictionSuccessRate}%</AppText>
         </Card>
 
-        {/* Blocked apps */}
+        {/* Gated apps */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <AppText variant="subheading">blocked apps</AppText>
-            <Button
-              label="edit"
-              variant="ghost"
-              onPress={() => navigation.navigate('Settings')}
-              style={styles.editBtn}
-            />
-          </View>
-          <View style={styles.appChips}>
-            {blockedApps.map((app) => (
-              <View key={app.id} style={styles.chip}>
-                <AppText variant="sm">{app.emoji} {app.label}</AppText>
-              </View>
-            ))}
-          </View>
+          <AppText variant="subheading">gated apps</AppText>
+          {gatedApps.length === 0 ? (
+            <AppText variant="caption" style={styles.noApps}>
+              none yet — apps appear here automatically after their first intercepted session
+            </AppText>
+          ) : (
+            <View style={styles.appChips}>
+              {gatedApps.map((app) => (
+                <TouchableOpacity
+                  key={app.id}
+                  style={styles.chip}
+                  onLongPress={() => handleHideApp(app)}
+                  activeOpacity={0.7}
+                >
+                  <AppText variant="sm">{app.emoji} {app.label}</AppText>
+                  <TouchableOpacity
+                    onPress={() => handleHideApp(app)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <AppText variant="xs" style={styles.chipRemove}>✕</AppText>
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+          {gatedApps.length > 0 && (
+            <AppText variant="caption" style={styles.chipHint}>
+              tap ✕ to remove if you've deleted that Shortcut
+            </AppText>
+          )}
         </View>
 
       </ScrollView>
@@ -127,83 +170,27 @@ function StatBox({ label, value, emoji }) {
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingBottom: spacing.xxl,
-    gap: spacing.md,
-  },
-  header: {
-    marginTop: spacing.xl,
-    marginBottom: spacing.sm,
-    gap: spacing.xs,
-  },
-  streakCard: {
-    borderColor: colors.border,
-  },
-  streakCardActive: {
-    borderColor: colors.primary,
-  },
-  streakRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  streakNumber: {
-    color: colors.primary,
-    marginVertical: spacing.xs,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  statBox: {
-    width: '47.5%',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-  },
-  statEmoji: {
-    fontSize: 22,
-  },
-  statValue: {
-    color: colors.text,
-  },
-  rateLabel: {
-    marginBottom: spacing.sm,
-  },
-  rateBarBg: {
-    height: 8,
-    backgroundColor: colors.border,
-    borderRadius: radius.full,
-    overflow: 'hidden',
-  },
-  rateBarFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: radius.full,
-  },
-  rateValue: {
-    marginTop: spacing.xs,
-    color: colors.textSub,
-    textAlign: 'right',
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  editBtn: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: 0,
-  },
-  appChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
+  scroll:           { paddingBottom: spacing.xxl, gap: spacing.md },
+  header:           { marginTop: spacing.xl, marginBottom: spacing.sm, gap: spacing.xs },
+  streakCard:       { borderColor: colors.border },
+  streakCardActive: { borderColor: colors.primary },
+  streakRow:        { flexDirection: 'row', alignItems: 'center' },
+  streakNumber:     { color: colors.primary, marginVertical: spacing.xs },
+  statsGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  statBox:          { width: '47.5%', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.md },
+  statEmoji:        { fontSize: 22 },
+  statValue:        { color: colors.text },
+  rateLabel:  { marginBottom: spacing.sm },
+  rateBarBg:  { height: 8, backgroundColor: colors.border, borderRadius: radius.full, overflow: 'hidden' },
+  rateBarFill: { height: '100%', backgroundColor: colors.primary, borderRadius: radius.full },
+  rateValue:  { marginTop: spacing.xs, color: colors.textSub, textAlign: 'right' },
+  section:          { gap: spacing.sm },
+  noApps:           { color: colors.textDisabled },
+  appChips:         { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     backgroundColor: colors.surface,
     borderRadius: radius.full,
     paddingVertical: spacing.xs,
@@ -211,4 +198,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  chipRemove:  { color: colors.textDisabled, fontSize: 10 },
+  chipHint:    { color: colors.textDisabled },
 });

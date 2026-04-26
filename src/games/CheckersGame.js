@@ -288,7 +288,7 @@ export default function CheckersGame({ onComplete, difficulty = 'medium' }) {
         <AppText variant="caption" style={{ color: colors.textDisabled }}>
           {difficulty === 'easy' ? '12v12' : difficulty === 'medium' ? '10v12' : '8v12 · 3 kings'}
         </AppText>
-        <AppText variant="caption" style={{ color: colors.primary }}>you: {pCount}</AppText>
+        <AppText variant="caption" style={{ color: '#4A8A4A' }}>you: {pCount}</AppText>
       </View>
 
       {/* Board */}
@@ -388,8 +388,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   playerPiece: {
-    backgroundColor: colors.primary,
-    borderColor: '#6BAFE0',
+    backgroundColor: '#4A8A4A',
+    borderColor: '#7DC87D',
   },
   aiPiece: {
     backgroundColor: colors.danger,

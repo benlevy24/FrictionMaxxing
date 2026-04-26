@@ -3,6 +3,7 @@
     "name": "FrictionMaxxing",
     "slug": "FrictionMaxxing",
     "version": "1.0.0",
+    "scheme": "frictionmaxxing",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",

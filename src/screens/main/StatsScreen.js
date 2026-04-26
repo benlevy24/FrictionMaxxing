@@ -12,16 +12,19 @@ import {
   deriveWeeklyStats,
   deriveByAppStats,
   deriveAllTimeStats,
+  deriveMinutesSaved,
 } from '../../utils/storage';
 import { colors, spacing, radius } from '../../theme';
 
-export default function StatsScreen() {
-  const [loading, setLoading]       = useState(true);
-  const [allTime, setAllTime]       = useState(null);
-  const [weekly, setWeekly]         = useState([]);
-  const [byApp, setByApp]           = useState([]);
-  const [selectedDay, setSelectedDay]       = useState(null);
-  const [legendTooltip, setLegendTooltip]   = useState(null); // 'resisted' | 'intercepted' | null
+export default function StatsScreen({ navigation }) {
+  const [loading, setLoading]             = useState(true);
+  const [allTime, setAllTime]             = useState(null);
+  const [weekly, setWeekly]               = useState([]);
+  const [byApp, setByApp]                 = useState([]);
+  const [minutesSaved, setMinutesSaved]   = useState(null); // null = no estimates configured
+  const [hasEstimates, setHasEstimates]   = useState(false);
+  const [selectedDay, setSelectedDay]     = useState(null);
+  const [legendTooltip, setLegendTooltip] = useState(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -32,7 +35,13 @@ export default function StatsScreen() {
         const streak = computeStreak(events);
         setAllTime(deriveAllTimeStats(events, streak, settings.installDate));
         setWeekly(deriveWeeklyStats(events));
-        setByApp(deriveByAppStats(events, settings.blockedApps));
+        setByApp(deriveByAppStats(events));
+        const estimates = settings.appUsageEstimates ?? {};
+        const anyEstimate = Object.values(estimates).some(
+          (e) => e.dailyOpens > 0 && e.dailyMinutes > 0
+        );
+        setHasEstimates(anyEstimate);
+        setMinutesSaved(anyEstimate ? deriveMinutesSaved(events, estimates) : null);
         setLoading(false);
       }
       load();
@@ -76,12 +85,49 @@ export default function StatsScreen() {
           </AppText>
         </View>
 
-        {/* All-time summary */}
-        <View style={styles.summaryRow}>
-          <SummaryBox emoji="🚧" value={allTime.intercepted}  label="all-time blocked" />
+        {/* All-time summary — 2×2 grid matching home screen */}
+        <View style={styles.summaryGrid}>
+          <SummaryBox emoji="🚧" value={allTime.intercepted}  label="intercepted" />
           <SummaryBox emoji="🚶" value={allTime.walkedAway}   label="walked away" />
-          <SummaryBox emoji={`${allTimeRate}%`} value={null}  label="friction success" isRate />
+          <SummaryBox emoji="🧐" value={allTime.openedAnyway} label="opened anyway" />
+          <SummaryBox emoji="🏳️" value={allTime.rageQuit}    label="rage-quit" />
         </View>
+
+        {/* Minutes saved */}
+        {hasEstimates ? (
+          <Card style={styles.minutesCard}>
+            <AppText variant="caption" style={styles.minutesLabel}>⏱  estimated time saved</AppText>
+            <AppText variant="xxl" style={styles.minutesValue}>
+              {minutesSaved >= 60
+                ? `${Math.floor(minutesSaved / 60)}h ${minutesSaved % 60}m`
+                : `${minutesSaved}m`}
+            </AppText>
+            <AppText variant="caption" style={styles.minutesSub}>
+              based on your Screen Time averages × times you didn't open the app
+            </AppText>
+          </Card>
+        ) : (
+          <TouchableOpacity
+            style={styles.minutesPrompt}
+            onPress={() => navigation.navigate('UsageEstimates')}
+          >
+            <AppText variant="base" style={styles.minutesPromptText}>
+              ⏱  add your Screen Time averages to see minutes saved →
+            </AppText>
+          </TouchableOpacity>
+        )}
+
+        {/* Friction success rate */}
+        <Card>
+          <AppText variant="caption" style={styles.rateLabel}>all-time friction success rate</AppText>
+          <View style={styles.rateBarBg}>
+            <View style={[styles.rateBarFill, { width: `${allTimeRate}%` }]} />
+          </View>
+          <AppText variant="sm" style={styles.rateValue}>{allTimeRate}%</AppText>
+          <AppText variant="caption" style={styles.rateDef}>
+            of all interceptions, how often you didn't end up in the app — either by walking away or rage-quitting the game. "opened anyway" doesn't count.
+          </AppText>
+        </Card>
 
         {/* Streak */}
         <Card style={styles.streakCard}>
@@ -227,7 +273,7 @@ export default function StatsScreen() {
         {/* Share */}
         <Button label="share my stats 📤" variant="secondary" onPress={handleShare} />
         <AppText variant="caption" style={styles.shareWarning}>
-          ⚠️ sharing to a blocked app counts as opening it. your streak is at stake. worth it?
+          ⚠️ sharing to a gated app counts as opening it. your streak is at stake. worth it?
         </AppText>
 
       </ScrollView>
@@ -235,11 +281,11 @@ export default function StatsScreen() {
   );
 }
 
-function SummaryBox({ emoji, value, label, isRate }) {
+function SummaryBox({ emoji, value, label }) {
   return (
     <Card style={styles.summaryBox}>
       <AppText variant="lg" style={styles.summaryEmoji}>{emoji}</AppText>
-      {!isRate && <AppText variant="xl" style={styles.summaryValue}>{value}</AppText>}
+      <AppText variant="xl" style={styles.summaryValue}>{value}</AppText>
       <AppText variant="caption" style={styles.summaryLabel}>{label}</AppText>
     </Card>
   );
@@ -248,11 +294,29 @@ function SummaryBox({ emoji, value, label, isRate }) {
 const styles = StyleSheet.create({
   scroll: { paddingBottom: spacing.xxl, gap: spacing.md },
   header: { marginTop: spacing.xl, marginBottom: spacing.sm, gap: spacing.xs },
-  summaryRow: { flexDirection: 'row', gap: spacing.sm },
-  summaryBox: { flex: 1, alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.md },
+  summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  summaryBox: { width: '47.5%', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.md },
   summaryEmoji: { fontSize: 20 },
   summaryValue: { color: colors.text },
   summaryLabel: { textAlign: 'center' },
+  minutesCard:       { gap: spacing.xs, borderColor: colors.primary },
+  minutesLabel:      { color: colors.textSub },
+  minutesValue:      { color: colors.primary },
+  minutesSub:        { color: colors.textDisabled, lineHeight: 18 },
+  minutesPrompt: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    padding: spacing.md,
+  },
+  minutesPromptText: { color: colors.textDisabled },
+  rateLabel: { marginBottom: spacing.sm },
+  rateBarBg: { height: 8, backgroundColor: colors.border, borderRadius: radius.full, overflow: 'hidden' },
+  rateBarFill: { height: '100%', backgroundColor: colors.primary, borderRadius: radius.full },
+  rateValue: { marginTop: spacing.xs, color: colors.textSub, textAlign: 'right' },
+  rateDef:   { marginTop: spacing.sm, color: colors.textDisabled, lineHeight: 18 },
   streakCard: { borderColor: colors.primary },
   streakRow: { flexDirection: 'row', alignItems: 'center' },
   streakItem: { flex: 1, alignItems: 'center', gap: spacing.xs },

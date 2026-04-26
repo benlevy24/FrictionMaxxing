@@ -18,9 +18,11 @@ const CONFIGS = {
   hard:   { aiPreMoves: 2, noQueenStart: true,  aiDepth: 2 },
 };
 
+// Use the same outline symbols for both colors — differentiated by text color only.
+// This avoids font inconsistency where ♟ (U+265F) renders from a different glyph than the rest.
 const SYMBOLS = {
   w: { K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙' },
-  b: { K:'♚', Q:'♛', R:'♜', B:'♝', N:'♞', P:'♟' },
+  b: { K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙' },
 };
 
 const PIECE_VAL = { P:1, N:3, B:3.2, R:5, Q:9, K:0 };
@@ -358,13 +360,14 @@ export default function ChessGame({ onComplete, difficulty = 'medium' }) {
   const isDone = turn==='done';
   const playerWon = isDone && status==='checkmate' && inCheck(board, B);
 
-  // Count material
+  // Count material advantage (positive = you're ahead, negative = AI ahead)
   let wMat=0, bMat=0;
   board.forEach(row=>row.forEach(p=>{
     if (!p||p.type==='K') return;
     const v=PIECE_VAL[p.type]??0;
     if (p.color===W) wMat+=v; else bMat+=v;
   }));
+  const advantage = Math.round(wMat - bMat);
 
   return (
     <View style={styles.container}>
@@ -372,11 +375,14 @@ export default function ChessGame({ onComplete, difficulty = 'medium' }) {
 
       {/* Material balance */}
       <View style={styles.countsRow}>
-        <AppText variant="caption" style={{ color: colors.danger }}>AI: {bMat}pts</AppText>
         <AppText variant="caption" style={{ color: colors.textDisabled }}>
           {cfg.noQueenStart ? 'no queen mode' : cfg.aiPreMoves>0 ? 'head start mode' : ''}
         </AppText>
-        <AppText variant="caption" style={{ color: colors.primary }}>you: {wMat}pts</AppText>
+        <AppText variant="caption" style={{
+          color: advantage > 0 ? colors.primary : advantage < 0 ? colors.danger : colors.textDisabled
+        }}>
+          {advantage > 0 ? `+${advantage} you` : advantage < 0 ? `+${-advantage} AI` : 'even'}
+        </AppText>
       </View>
 
       {/* Board */}

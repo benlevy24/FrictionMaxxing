@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import AppText from '../components/AppText';
 import Button from '../components/Button';
@@ -70,7 +70,7 @@ function generateMaze(seed, rows, cols) {
             const nearExit =
               (r === exit.row && c === exit.col) ||
               (nr === exit.row && nc === exit.col);
-            if (!nearExit && rng() < 0.18) {
+            if (!nearExit && rng() < 0.10) {
               phantoms.add(`${r},${c},${dir}`);
               phantoms.add(`${nr},${nc},${OPPOSITE[dir]}`);
             }
@@ -162,6 +162,18 @@ export default function ConfusingMazeGame({ onComplete, difficulty = 'medium' })
     }
   }
 
+  // Keyboard support for web/desktop testing
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'ArrowUp')    move('N');
+      if (e.key === 'ArrowDown')  move('S');
+      if (e.key === 'ArrowLeft')  move('W');
+      if (e.key === 'ArrowRight') move('E');
+    };
+    window.addEventListener?.('keydown', handler);
+    return () => window.removeEventListener?.('keydown', handler);
+  });
+
   function retry() {
     setAttemptCount((n) => n + 1);
     setPlayerPos({ row: 0, col: 0 });
@@ -243,6 +255,10 @@ export default function ConfusingMazeGame({ onComplete, difficulty = 'medium' })
           <View style={styles.dpadSpacer} />
         </View>
       </View>
+
+      <AppText variant="caption" style={styles.phantomHint}>
+        some walls aren't real. try walking through them.
+      </AppText>
 
       {/* Actions */}
       <View style={styles.actions}>
@@ -371,5 +387,10 @@ const styles = StyleSheet.create({
   },
   hint: {
     color: colors.textDisabled,
+  },
+  phantomHint: {
+    color: colors.textDisabled,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

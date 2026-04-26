@@ -1,6 +1,7 @@
 import { View, ScrollView, TouchableOpacity, Linking, StyleSheet } from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
+import { ALL_APPS } from '../../utils/storage';
 import { colors, spacing, radius } from '../../theme';
 
 const STEPS = [
@@ -20,7 +21,7 @@ const STEPS = [
   {
     number: 3,
     title: 'select the app to add friction to',
-    body: 'choose the app (e.g. Instagram). set Run Immediately, then tap Next.\n\nImportant: one automation per app — repeat these steps for each blocked app.',
+    body: 'choose the app (e.g. Instagram). set Run Immediately, then tap Next.\n\nImportant: one automation per app — repeat these steps for each gated app.',
     visual: <RunImmediatelyVisual />,
   },
   {
@@ -31,9 +32,9 @@ const STEPS = [
   },
   {
     number: 5,
-    title: 'search for FrictionMaxxing',
-    body: 'type "FrictionMaxxing" in the search bar and select Activate FrictionMaxxing (when app opens). tap Done.',
-    visual: <SearchVisual />,
+    title: 'search for "Open URLs"',
+    body: 'type "Open URLs" in the search bar and select it. then paste the URL for your app from the list at the bottom of this guide.',
+    visual: <OpenURLsVisual />,
   },
   {
     number: 6,
@@ -54,7 +55,7 @@ export default function TutorialScreen({ navigation }) {
           </TouchableOpacity>
           <AppText variant="xxl">setup guide</AppText>
           <AppText variant="base" style={styles.subtitle}>
-            FrictionMaxxing works through iOS Shortcuts automations — one per blocked app.
+            FrictionMaxxing works through iOS Shortcuts automations — one per gated app.
             follow these steps to wire it up.
           </AppText>
         </View>
@@ -63,9 +64,36 @@ export default function TutorialScreen({ navigation }) {
           <StepCard key={step.number} step={step} />
         ))}
 
+        {/* URL reference list */}
+        <View style={styles.urlSection}>
+          <AppText variant="subheading" style={styles.urlTitle}>your app URLs</AppText>
+          <AppText variant="base" style={styles.urlSubtitle}>
+            copy the URL for each app and paste it into the "Open URLs" action in step 5.
+          </AppText>
+          {ALL_APPS.map((app) => {
+            const url = `frictionmaxxing://game?appId=${app.id}&label=${encodeURIComponent(app.label)}`;
+            return (
+              <View key={app.id} style={styles.urlRow}>
+                <AppText variant="base" style={styles.urlAppLabel}>{app.emoji}  {app.label}</AppText>
+                <TouchableOpacity
+                  style={styles.urlBox}
+                  onLongPress={() => Linking.openURL(url)}
+                  activeOpacity={0.7}
+                >
+                  <AppText variant="caption" style={styles.urlText} numberOfLines={1}>{url}</AppText>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+          <AppText variant="caption" style={styles.urlNote}>
+            don't see your app? add it in Settings → Usage Estimates, then use:{'\n'}
+            {'frictionmaxxing://game?appId=yourapp&label=YourApp'}
+          </AppText>
+        </View>
+
         <View style={styles.footer}>
           <AppText variant="base" style={styles.footerText}>
-            repeat steps 1–6 for each app you want to block. that's it.
+            repeat steps 1–6 for each app you want to gate. that's it.
           </AppText>
         </View>
 
@@ -202,6 +230,27 @@ function SearchVisual() {
           <View style={styles.appIcon}><AppText>🛑</AppText></View>
           <AppText variant="base" style={{ flex: 1 }}>
             Activate FrictionMaxxing (when app opens)
+          </AppText>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function OpenURLsVisual() {
+  return (
+    <View style={styles.visual}>
+      <View style={styles.listBox}>
+        <View style={styles.searchBar}>
+          <AppText variant="caption" style={styles.searchText}>🔍  Open URLs</AppText>
+        </View>
+        <View style={[styles.listRow, styles.listRowHighlight]}>
+          <View style={styles.appIcon}><AppText>🔗</AppText></View>
+          <AppText variant="base" style={{ flex: 1 }}>Open URLs</AppText>
+        </View>
+        <View style={[styles.listRow, { paddingVertical: spacing.sm }]}>
+          <AppText variant="caption" style={[styles.listRowSub, { flex: 1 }]}>
+            frictionmaxxing://game?appId=...
           </AppText>
         </View>
       </View>
@@ -361,4 +410,20 @@ const styles = StyleSheet.create({
 
   footer:       { alignItems: 'center', paddingTop: spacing.sm },
   footerText:   { color: colors.textDisabled, textAlign: 'center' },
+
+  urlSection:   { gap: spacing.md },
+  urlTitle:     { color: colors.text },
+  urlSubtitle:  { color: colors.textSub, lineHeight: 22 },
+  urlRow:       { gap: spacing.xs },
+  urlAppLabel:  { color: colors.text },
+  urlBox: {
+    backgroundColor: colors.surfaceRaised,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  urlText:      { color: colors.primary, fontFamily: 'monospace' },
+  urlNote:      { color: colors.textDisabled, lineHeight: 20, marginTop: spacing.xs },
 });

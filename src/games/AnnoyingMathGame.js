@@ -27,98 +27,123 @@ function pickFrom(rng, arr) {
 // All answers are guaranteed positive integers.
 
 function genArithmetic(rng) {
-  // Two clearly-bracketed steps so order of operations isn't the trick.
-  // We present it as "(A op B) op C = ?"
   const opChoices = ['+', '-', '×', '÷'];
   const op1 = pickFrom(rng, opChoices);
-  const op2 = pickFrom(rng, ['+', '-', '×']); // avoid chained divisions
+  const op2 = pickFrom(rng, ['+', '-', '×']);
 
   let a, b, mid;
 
   if (op1 === '+') {
-    a = randInt(rng, 12, 60);
-    b = randInt(rng, 8, 40);
+    a = randInt(rng, 12, 90);
+    b = randInt(rng, 8, 60);
     mid = a + b;
   } else if (op1 === '-') {
-    a = randInt(rng, 30, 80);
+    a = randInt(rng, 30, 120);
     b = randInt(rng, 5, a - 5);
     mid = a - b;
   } else if (op1 === '×') {
-    a = randInt(rng, 3, 13);
-    b = randInt(rng, 3, 12);
+    a = randInt(rng, 3, 15);
+    b = randInt(rng, 3, 14);
     mid = a * b;
   } else {
-    // ÷  — pick b first, make a a multiple
-    b = randInt(rng, 2, 9);
-    a = b * randInt(rng, 2, 12);
+    b = randInt(rng, 2, 12);
+    a = b * randInt(rng, 2, 15);
     mid = a / b;
   }
 
   let c, answer;
   if (op2 === '+') {
-    c = randInt(rng, 5, 30);
+    c = randInt(rng, 5, 40);
     answer = mid + c;
   } else if (op2 === '-') {
     c = randInt(rng, 2, mid - 1);
     answer = mid - c;
   } else {
-    c = randInt(rng, 2, 8);
+    c = randInt(rng, 2, 9);
     answer = mid * c;
   }
 
-  const sym1 = op1;
-  const sym2 = op2;
   return {
-    question: `What is (${a} ${sym1} ${b}) ${sym2} ${c}?`,
+    question: `What is (${a} ${op1} ${b}) ${op2} ${c}?`,
     answer,
   };
 }
 
+function genConversion(rng) {
+  const type = randInt(rng, 0, 4);
+  if (type === 0) {
+    const km = randInt(rng, 2, 20);
+    return { question: `${km} kilometers = how many meters?`, answer: km * 1000 };
+  } else if (type === 1) {
+    const min = randInt(rng, 2, 10) * 60 + pickFrom(rng, [0, 15, 30, 45]);
+    return { question: `${min} minutes = how many seconds?`, answer: min * 60 };
+  } else if (type === 2) {
+    const days = randInt(rng, 2, 6);
+    return { question: `${days} days = how many hours?`, answer: days * 24 };
+  } else if (type === 3) {
+    const kg = randInt(rng, 2, 15);
+    return { question: `${kg} kilograms = how many grams?`, answer: kg * 1000 };
+  } else {
+    const feet = randInt(rng, 2, 8);
+    return { question: `${feet} feet = how many inches?`, answer: feet * 12 };
+  }
+}
+
 function genMissingNumber(rng) {
-  const type = randInt(rng, 0, 3);
+  const type = randInt(rng, 0, 8);
 
   if (type === 0) {
     // ? × a = b
-    const a = randInt(rng, 3, 12);
-    const answer = randInt(rng, 2, 11);
-    return {
-      question: `? × ${a} = ${answer * a}`,
-      answer,
-      note: 'find the missing number',
-    };
+    const a = randInt(rng, 3, 15);
+    const answer = randInt(rng, 2, 12);
+    return { question: `? × ${a} = ${answer * a}`, answer, note: 'find the missing number' };
   } else if (type === 1) {
     // a × ? + b = c
     const a = randInt(rng, 2, 9);
-    const b = randInt(rng, 3, 20);
-    const answer = randInt(rng, 2, 10);
-    const c = a * answer + b;
-    return {
-      question: `${a} × ? + ${b} = ${c}`,
-      answer,
-      note: 'find the missing number',
-    };
+    const b = randInt(rng, 3, 25);
+    const answer = randInt(rng, 2, 12);
+    return { question: `${a} × ? + ${b} = ${a * answer + b}`, answer, note: 'find the missing number' };
   } else if (type === 2) {
     // (? + a) × b = c
-    const b = randInt(rng, 2, 8);
-    const answer = randInt(rng, 2, 12);
+    const b = randInt(rng, 2, 9);
+    const answer = randInt(rng, 2, 14);
     const a = randInt(rng, 1, 10);
-    const c = (answer + a) * b;
-    return {
-      question: `(? + ${a}) × ${b} = ${c}`,
-      answer,
-      note: 'find the missing number',
-    };
+    return { question: `(? + ${a}) × ${b} = ${(answer + a) * b}`, answer, note: 'find the missing number' };
+  } else if (type === 3) {
+    // a - ? × b = c
+    const b = randInt(rng, 2, 7);
+    const answer = randInt(rng, 2, 9);
+    const c = randInt(rng, 2, 20);
+    return { question: `${c + answer * b} - ? × ${b} = ${c}`, answer, note: 'find the missing number' };
+  } else if (type === 4) {
+    // ? ÷ a + b = c
+    const a = randInt(rng, 2, 8);
+    const answer = randInt(rng, 2, 10) * a; // ensure divisible
+    const b = randInt(rng, 2, 15);
+    return { question: `? ÷ ${a} + ${b} = ${answer / a + b}`, answer, note: 'find the missing number' };
+  } else if (type === 5) {
+    // a² + ? = b
+    const a = randInt(rng, 3, 10);
+    const answer = randInt(rng, 5, 40);
+    return { question: `${a}² + ? = ${a * a + answer}`, answer, note: 'find the missing number' };
+  } else if (type === 6) {
+    // (a - ?) × b = c
+    const b = randInt(rng, 2, 7);
+    const answer = randInt(rng, 1, 8);
+    const a = answer + randInt(rng, 2, 10);
+    return { question: `(${a} - ?) × ${b} = ${(a - answer) * b}`, answer, note: 'find the missing number' };
+  } else if (type === 7) {
+    // a + ? × b = c (two-step)
+    const b = randInt(rng, 2, 8);
+    const answer = randInt(rng, 2, 10);
+    const a = randInt(rng, 5, 30);
+    return { question: `${a} + ? × ${b} = ${a + answer * b}`, answer, note: 'find the missing number' };
   } else {
-    // a - ? × b = c  (answer = (a - c) / b)
-    const b = randInt(rng, 2, 6);
-    const answer = randInt(rng, 2, 8);
-    const c = randInt(rng, 2, 15);
-    const a = c + answer * b;
-    return {
-      question: `${a} - ? × ${b} = ${c}`,
-      answer,
-      note: 'find the missing number',
-    };
+    // ? % of a = b (nice percentages)
+    const percents = [10, 20, 25, 50];
+    const p = pickFrom(rng, percents);
+    const answer = randInt(rng, 2, 20) * (100 / p);
+    return { question: `${p}% of ? = ${(p * answer) / 100}`, answer, note: 'find the missing number' };
   }
 }
 
@@ -138,12 +163,12 @@ function genPercentage(rng) {
 }
 
 function genSequence(rng) {
-  const type = randInt(rng, 0, 3);
+  const type = randInt(rng, 0, 8);
 
   if (type === 0) {
     // Arithmetic: a, a+d, a+2d, a+3d, ?
-    const a = randInt(rng, 1, 15);
-    const d = randInt(rng, 2, 9);
+    const a = randInt(rng, 1, 25);
+    const d = randInt(rng, 2, 12);
     const terms = [a, a + d, a + 2 * d, a + 3 * d];
     return {
       question: `What comes next?\n${terms.join(', ')}, ?`,
@@ -151,9 +176,9 @@ function genSequence(rng) {
       note: 'complete the sequence',
     };
   } else if (type === 1) {
-    // Geometric: a, a*r, a*r², a*r³, ? (small values)
-    const a = randInt(rng, 1, 4);
-    const r = randInt(rng, 2, 3);
+    // Geometric: a, a*r, a*r², a*r³, ?
+    const a = randInt(rng, 1, 5);
+    const r = randInt(rng, 2, 4);
     const terms = [a, a * r, a * r ** 2, a * r ** 3];
     return {
       question: `What comes next?\n${terms.join(', ')}, ?`,
@@ -161,27 +186,73 @@ function genSequence(rng) {
       note: 'complete the sequence',
     };
   } else if (type === 2) {
-    // Squares: n², (n+1)², (n+2)², (n+3)², ?
-    const n = randInt(rng, 1, 7);
+    // Squares: n², (n+1)², ...
+    const n = randInt(rng, 1, 9);
     const terms = [n ** 2, (n + 1) ** 2, (n + 2) ** 2, (n + 3) ** 2];
     return {
       question: `What comes next?\n${terms.join(', ')}, ?`,
       answer: (n + 4) ** 2,
       note: 'complete the sequence',
     };
-  } else {
-    // Alternating add/multiply: a, a+d, (a+d)*m, (a+d)*m+d, ((a+d)*m+d)*m, ?
-    // Simpler: every other term doubles, others add a constant
+  } else if (type === 3) {
+    // Alternating +d, ×2
     const a = randInt(rng, 2, 8);
     const d = randInt(rng, 3, 7);
-    // Pattern: +d, ×2, +d, ×2 ...
-    const t1 = a;
-    const t2 = a + d;
-    const t3 = t2 * 2;
-    const t4 = t3 + d;
+    const t1 = a, t2 = a + d, t3 = t2 * 2, t4 = t3 + d;
     return {
       question: `What comes next?\n${t1}, ${t2}, ${t3}, ${t4}, ?`,
       answer: t4 * 2,
+      note: 'complete the sequence',
+    };
+  } else if (type === 4) {
+    // Fibonacci-like: a, b, a+b, a+2b, 2a+3b, ?
+    const a = randInt(rng, 1, 8);
+    const b = randInt(rng, 1, 8);
+    const t1 = a, t2 = b, t3 = a + b, t4 = b + t3, t5 = t3 + t4;
+    return {
+      question: `What comes next?\n${t1}, ${t2}, ${t3}, ${t4}, ?`,
+      answer: t5,
+      note: 'complete the sequence',
+    };
+  } else if (type === 5) {
+    // Triangular numbers offset: n*(n+1)/2 + offset
+    const start = randInt(rng, 1, 5);
+    const offset = randInt(rng, 0, 10);
+    const tri = (n) => (n * (n + 1)) / 2 + offset;
+    const terms = [tri(start), tri(start+1), tri(start+2), tri(start+3)];
+    return {
+      question: `What comes next?\n${terms.join(', ')}, ?`,
+      answer: tri(start + 4),
+      note: 'complete the sequence',
+    };
+  } else if (type === 6) {
+    // Alternating subtract/multiply: a, a-d, (a-d)*r, (a-d)*r - d, ?
+    const a = randInt(rng, 15, 30);
+    const d = randInt(rng, 2, 6);
+    const r = randInt(rng, 2, 3);
+    const t1 = a, t2 = a - d, t3 = t2 * r, t4 = t3 - d;
+    return {
+      question: `What comes next?\n${t1}, ${t2}, ${t3}, ${t4}, ?`,
+      answer: t4 * r,
+      note: 'complete the sequence',
+    };
+  } else if (type === 7) {
+    // Cubes: n³, (n+1)³, ...
+    const n = randInt(rng, 1, 5);
+    const terms = [n ** 3, (n+1) ** 3, (n+2) ** 3, (n+3) ** 3];
+    return {
+      question: `What comes next?\n${terms.join(', ')}, ?`,
+      answer: (n + 4) ** 3,
+      note: 'complete the sequence',
+    };
+  } else {
+    // Arithmetic with negative step
+    const a = randInt(rng, 50, 120);
+    const d = randInt(rng, 3, 11);
+    const terms = [a, a - d, a - 2 * d, a - 3 * d];
+    return {
+      question: `What comes next?\n${terms.join(', ')}, ?`,
+      answer: a - 4 * d,
       note: 'complete the sequence',
     };
   }
@@ -190,8 +261,8 @@ function genSequence(rng) {
 const WORD_TEMPLATES = [
   {
     gen: (rng) => {
-      const rows = randInt(rng, 4, 12);
-      const cols = randInt(rng, 4, 12);
+      const rows = randInt(rng, 4, 14);
+      const cols = randInt(rng, 4, 14);
       const empty = randInt(rng, 2, rows * cols - 3);
       return {
         question: `A cinema has ${rows} rows of ${cols} seats.\n${empty} seats are empty.\nHow many are occupied?`,
@@ -201,7 +272,7 @@ const WORD_TEMPLATES = [
   },
   {
     gen: (rng) => {
-      const h = randInt(rng, 1, 3);
+      const h = randInt(rng, 1, 4);
       const m = randInt(rng, 5, 55);
       return {
         question: `A movie is ${h} hour${h > 1 ? 's' : ''} and ${m} minutes long.\nHow many minutes is that?`,
@@ -211,21 +282,20 @@ const WORD_TEMPLATES = [
   },
   {
     gen: (rng) => {
-      const price = randInt(rng, 3, 15);
-      const qty = randInt(rng, 3, 9);
+      const price = randInt(rng, 3, 20);
+      const qty = randInt(rng, 3, 12);
       const discount = price * randInt(rng, 1, Math.floor(qty / 2));
-      const total = price * qty - discount;
       return {
         question: `You buy ${qty} items at $${price} each.\nYou have a $${discount} coupon.\nHow much do you pay?`,
-        answer: total,
+        answer: price * qty - discount,
       };
     },
   },
   {
     gen: (rng) => {
-      const start = randInt(rng, 20, 80);
+      const start = randInt(rng, 20, 100);
       const give = randInt(rng, 3, start - 5);
-      const find = randInt(rng, 2, 20);
+      const find = randInt(rng, 2, 30);
       return {
         question: `You have ${start} coins.\nYou give ${give} away, then find ${find} more.\nHow many do you have?`,
         answer: start - give + find,
@@ -234,25 +304,142 @@ const WORD_TEMPLATES = [
   },
   {
     gen: (rng) => {
-      const workers = randInt(rng, 3, 8);
-      const rate = randInt(rng, 4, 12); // items per hour
-      const hours = randInt(rng, 2, 6);
+      const workers = randInt(rng, 3, 10);
+      const rate = randInt(rng, 4, 15);
+      const hours = randInt(rng, 2, 8);
       return {
-        question: `${workers} workers each make ${rate} items per hour.\nHow many items do they make in ${hours} hours?`,
+        question: `${workers} workers each make ${rate} items per hour.\nHow many items in ${hours} hours?`,
         answer: workers * rate * hours,
       };
     },
   },
   {
     gen: (rng) => {
-      const total = randInt(rng, 20, 100);
-      // fraction: 1/2, 1/4, 1/5 of total
-      const fracs = [[1, 2], [1, 4], [1, 5]];
-      const [num, den] = pickFrom(rng, fracs.filter(([, d]) => total % d === 0));
-      const taken = (total * num) / den;
+      const total = randInt(rng, 20, 120);
+      const fracs = [[1, 2], [1, 4], [1, 5], [1, 3], [2, 5]];
+      const valid = fracs.filter(([, d]) => total % d === 0);
+      const [num, den] = pickFrom(rng, valid.length ? valid : [[1, 2]]);
+      const taken = Math.floor((total * num) / den);
       return {
         question: `There are ${total} students.\n${num}/${den} of them go home early.\nHow many are left?`,
         answer: total - taken,
+      };
+    },
+  },
+  {
+    gen: (rng) => {
+      const speed = randInt(rng, 30, 90);
+      const hours = randInt(rng, 1, 5);
+      return {
+        question: `A car travels at ${speed} mph.\nHow far does it go in ${hours} hour${hours > 1 ? 's' : ''}?`,
+        answer: speed * hours,
+      };
+    },
+  },
+  {
+    gen: (rng) => {
+      const packs = randInt(rng, 3, 10);
+      const perPack = randInt(rng, 4, 12);
+      const eaten = randInt(rng, 2, packs * perPack - 4);
+      return {
+        question: `You have ${packs} packs of ${perPack} crackers.\nYou eat ${eaten}.\nHow many crackers are left?`,
+        answer: packs * perPack - eaten,
+      };
+    },
+  },
+  {
+    gen: (rng) => {
+      const saved = randInt(rng, 20, 200);
+      const earn = randInt(rng, 5, 30);
+      const weeks = randInt(rng, 2, 8);
+      const spend = randInt(rng, 5, saved - 5);
+      return {
+        question: `You have $${saved} saved.\nYou earn $${earn}/week for ${weeks} weeks,\nthen spend $${spend}.\nHow much do you have?`,
+        answer: saved + earn * weeks - spend,
+      };
+    },
+  },
+  {
+    gen: (rng) => {
+      const shelves = randInt(rng, 3, 8);
+      const perShelf = randInt(rng, 5, 15);
+      const removed = randInt(rng, 2, shelves * perShelf - 5);
+      return {
+        question: `A library has ${shelves} shelves with ${perShelf} books each.\n${removed} books are checked out.\nHow many remain?`,
+        answer: shelves * perShelf - removed,
+      };
+    },
+  },
+  {
+    gen: (rng) => {
+      const adults = randInt(rng, 10, 40);
+      const kids = randInt(rng, 5, 25);
+      const adultPrice = randInt(rng, 5, 15);
+      const kidPrice = randInt(rng, 2, adultPrice - 1);
+      return {
+        question: `${adults} adults at $${adultPrice} each and ${kids} kids at $${kidPrice} each.\nWhat's the total?`,
+        answer: adults * adultPrice + kids * kidPrice,
+      };
+    },
+  },
+  {
+    gen: (rng) => {
+      const length = randInt(rng, 5, 20);
+      const width = randInt(rng, 3, 14);
+      return {
+        question: `A rectangular garden is ${length}m long and ${width}m wide.\nWhat is its area in m²?`,
+        answer: length * width,
+      };
+    },
+  },
+  {
+    gen: (rng) => {
+      const total = randInt(rng, 30, 120);
+      const groups = randInt(rng, 3, 8);
+      // make total divisible
+      const actual = groups * randInt(rng, 3, 15);
+      const left = randInt(rng, 1, groups - 1);
+      return {
+        question: `${actual} people are split into ${groups} equal groups.\n${left} group${left > 1 ? 's' : ''} leave${left === 1 ? 's' : ''}.\nHow many people remain?`,
+        answer: actual - left * (actual / groups),
+      };
+    },
+  },
+  {
+    gen: (rng) => {
+      const perDay = randInt(rng, 8, 25);
+      const days = randInt(rng, 3, 7);
+      const bonus = randInt(rng, 10, 50);
+      return {
+        question: `You read ${perDay} pages/day for ${days} days,\nthen read ${bonus} extra pages on the weekend.\nHow many pages total?`,
+        answer: perDay * days + bonus,
+      };
+    },
+  },
+  {
+    gen: (rng) => {
+      const start = randInt(rng, 6, 10);
+      const startMin = pickFrom(rng, [0, 15, 30, 45]);
+      const durationH = randInt(rng, 1, 3);
+      const durationM = pickFrom(rng, [0, 15, 30, 45]);
+      const endMin = (startMin + durationM) % 60;
+      const carry = startMin + durationM >= 60 ? 1 : 0;
+      const endH = start + durationH + carry;
+      const fmt = (h, m) => `${h}:${m === 0 ? '00' : m}`;
+      return {
+        question: `A meeting starts at ${fmt(start, startMin)}.\nIt lasts ${durationH}h ${durationM}m.\nWhat minute does it end on? (just the minute, 0–59)`,
+        answer: endMin,
+      };
+    },
+  },
+  {
+    gen: (rng) => {
+      const price = randInt(rng, 10, 50);
+      const pct = pickFrom(rng, [10, 20, 25, 50]);
+      const discount = Math.floor((price * pct) / 100);
+      return {
+        question: `An item costs $${price}.\nIt's ${pct}% off.\nHow much do you save?`,
+        answer: discount,
       };
     },
   },
@@ -272,6 +459,8 @@ const GENERATORS = [
   genPercentage,
   genSequence,
   genWordProblem,
+  genWordProblem,      // weighted heavier
+  genConversion,
 ];
 
 function generateProblem(seed) {

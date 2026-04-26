@@ -19,12 +19,8 @@ export const ALL_APPS = [
   { id: 'pinterest', label: 'Pinterest',   emoji: '📌' },
 ];
 
-export const DEFAULT_BLOCKED_APPS = [
-  'instagram', 'tiktok', 'youtube', 'x', 'facebook', 'snapchat', 'reddit', 'chatgpt',
-];
-
 export const DEFAULT_ENABLED_GAMES = [
-  'tictactoe', 'maze', 'hangman', 'math', 'stroop', 'pong',
+  'tictactoe', 'maze', 'hangman', 'math', 'stroop', 'pong', 'snake', 'checkers', 'chess',
 ];
 
 // ── Storage keys ──────────────────────────────────────────────────────────────
@@ -65,12 +61,14 @@ export function dayLabel(dateStr) {
 // ── Settings ──────────────────────────────────────────────────────────────────
 
 const DEFAULT_SETTINGS = {
-  blockedApps:      DEFAULT_BLOCKED_APPS,
-  enabledGames:     DEFAULT_ENABLED_GAMES,
-  freeZones:        [],     // [{ id, name, lat, lng, radiusMeters }]
-  difficulty:       'medium', // 'easy' | 'medium' | 'hard'
-  installDate:      null,   // set on first write
-  onboardingDone:   false,
+  enabledGames:       DEFAULT_ENABLED_GAMES,
+  freeZones:          [],       // [{ id, name, lat, lng, radiusMeters }]
+  difficulty:         'medium', // 'easy' | 'medium' | 'hard'
+  installDate:        null,     // set on first write
+  onboardingDone:     false,
+  appUsageEstimates:  {},       // { [appId]: { weeklyMinutes: number, weeklyPickups: number } }
+  customApps:         [],       // [{ id, label, emoji }] — user-added apps beyond the defaults
+  hiddenAppIds:       [],       // apps manually removed from the gated apps display
 };
 
 export async function getSettings() {
@@ -211,8 +209,12 @@ export function deriveWeeklyStats(events) {
   });
 }
 
-export function deriveByAppStats(events, blockedAppIds) {
-  return ALL_APPS.filter((a) => blockedAppIds.includes(a.id))
+export function deriveByAppStats(events) {
+  const seen = new Map();
+  for (const e of events) {
+    if (!seen.has(e.appId)) seen.set(e.appId, { id: e.appId, label: e.appLabel, emoji: e.appEmoji });
+  }
+  return [...seen.values()]
     .map((app) => {
       const appEvents = events.filter((e) => e.appId === app.id);
       return {
@@ -224,8 +226,22 @@ export function deriveByAppStats(events, blockedAppIds) {
         succeeded:    appEvents.filter((e) => !(e.gameCompleted && !e.walkedAway)).length,
       };
     })
-    .filter((a) => a.intercepted > 0)
     .sort((a, b) => b.intercepted - a.intercepted);
+}
+
+// Minutes saved = sum of avg session length for every walk-away or rage-quit.
+// Avg session length per app = weeklyMinutes / weeklyPickups (user-entered from Screen Time).
+// The weekly totals are used directly — no need to divide by 7 since it cancels out.
+// "Opened anyway" events are not counted — the user spent that time in the app.
+export function deriveMinutesSaved(events, appUsageEstimates = {}) {
+  const savedEvents = events.filter((e) => e.walkedAway || !e.gameCompleted);
+  let total = 0;
+  for (const e of savedEvents) {
+    const est = appUsageEstimates[e.appId];
+    if (!est || !est.weeklyPickups || !est.weeklyMinutes) continue;
+    total += est.weeklyMinutes / est.weeklyPickups;
+  }
+  return Math.round(total);
 }
 
 export function deriveAllTimeStats(events, streak, installDate) {

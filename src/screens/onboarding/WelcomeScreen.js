@@ -17,7 +17,7 @@ export default function WelcomeScreen({ navigation }) {
 
       <View style={styles.footer}>
         <AppText variant="caption" style={styles.fine}>
-          works on iOS 16+. requires Screen Time permission.
+          works on iOS 16+. free to download.
         </AppText>
         <Button label="let's go" onPress={() => navigation.navigate('HowItWorks')} />
       </View>

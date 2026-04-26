@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
 import Button from '../../components/Button';
@@ -17,6 +17,7 @@ import {
   recordEvent,
 } from '../../utils/storage';
 import { isInFreeZone } from '../../utils/location';
+import { ALL_APPS } from '../../utils/storage';
 import { colors, spacing } from '../../theme';
 
 // Game flow states
@@ -28,20 +29,20 @@ const STATE = {
   DONE:      'done',       // user made their choice
 };
 
-// Mock interception context — replaced by Screen Time extension in task #22
-const MOCK_INTERCEPTION = {
-  appId:    'instagram',
-  appLabel: 'Instagram',
-  appEmoji: '📸',
-};
+export default function GameScreen({ navigation, route }) {
+  // App context comes from the deep link URL params:
+  //   frictionmaxxing://game?appId=tiktok&label=TikTok
+  // Falls back to Instagram for the dev test button in Settings.
+  const rawId    = route?.params?.appId ?? 'instagram';
+  const rawLabel = route?.params?.label  ?? 'Instagram';
+  const appId    = rawId;
+  const appLabel = decodeURIComponent(rawLabel);
+  const appEmoji = ALL_APPS.find((a) => a.id === appId)?.emoji ?? '📱';
 
-export default function GameScreen({ navigation }) {
   const [gameState, setGameState] = useState(STATE.LOADING);
   const [selectedGame, setSelectedGame] = useState(null);
   const [difficulty, setDifficulty]     = useState('medium');
   const [milestone, setMilestone] = useState(null);
-
-  const { appId, appLabel, appEmoji } = MOCK_INTERCEPTION;
 
   // Track whether a final event has already been recorded this session.
   // If the component unmounts without one, it counts as a rage-quit.
@@ -103,7 +104,6 @@ export default function GameScreen({ navigation }) {
   async function handleOpenAnyway() {
     eventRecorded.current = true;
     await recordEvent({ appId, appLabel, appEmoji, gameCompleted: true, walkedAway: false });
-    // TODO (task #22): dismiss Screen Time overlay
     navigation.goBack();
   }
 
@@ -126,7 +126,7 @@ export default function GameScreen({ navigation }) {
           <AppText variant="xxl" style={styles.winEmoji}>🌍</AppText>
           <AppText variant="xxl" style={styles.decisionTitle}>you're in a free zone.</AppText>
           <AppText variant="caption" style={styles.decisionSub}>
-            blocking is paused here. enjoy.
+            friction is paused here. enjoy.
           </AppText>
           <View style={styles.decisionButtons}>
             <Button label="got it" variant="primary" onPress={() => navigation.goBack()} />
@@ -165,18 +165,15 @@ export default function GameScreen({ navigation }) {
 
           <View style={styles.decisionButtons}>
             <Button
-              label={`open ${appLabel} anyway`}
-              variant="secondary"
-              onPress={handleOpenAnyway}
-            />
-            <Button
               label="walk away 💪"
               variant="primary"
               onPress={handleWalkAway}
             />
-            <AppText variant="caption" style={styles.decisionHint}>
-              walking away logs a win. just saying.
-            </AppText>
+            <TouchableOpacity onPress={handleOpenAnyway} style={styles.openAnywayBtn} activeOpacity={0.5}>
+              <AppText variant="caption" style={styles.openAnywayText}>
+                open {appLabel} anyway
+              </AppText>
+            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -246,10 +243,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.md,
   },
-  decisionHint: {
-    textAlign: 'center',
+  openAnywayBtn: {
+    alignSelf: 'center',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  openAnywayText: {
     color: colors.textDisabled,
-    marginTop: spacing.xs,
   },
   doneText: {
     color: colors.textSub,

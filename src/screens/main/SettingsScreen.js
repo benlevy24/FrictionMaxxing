@@ -8,17 +8,15 @@ import {
   getSettings,
   saveSettings,
   clearAllData,
-  ALL_APPS,
   DEFAULT_ENABLED_GAMES,
 } from '../../utils/storage';
 import { GAMES } from '../../games/registry';
 import { colors, spacing, radius } from '../../theme';
 
 export default function SettingsScreen({ navigation }) {
-  const [loading, setLoading]         = useState(true);
-  const [blockedApps, setBlockedApps] = useState([]);
+  const [loading, setLoading]           = useState(true);
   const [enabledGames, setEnabledGames] = useState(DEFAULT_ENABLED_GAMES);
-  const [difficulty, setDifficulty]   = useState('medium');
+  const [difficulty, setDifficulty]     = useState('medium');
   const [notifications, setNotifications] = useState({ milestones: false });
 
   useFocusEffect(
@@ -26,9 +24,6 @@ export default function SettingsScreen({ navigation }) {
       let active = true;
       getSettings().then((s) => {
         if (!active) return;
-        setBlockedApps(
-          ALL_APPS.map((app) => ({ ...app, enabled: s.blockedApps.includes(app.id) }))
-        );
         setEnabledGames(s.enabledGames);
         setDifficulty(s.difficulty ?? 'medium');
         setLoading(false);
@@ -36,21 +31,6 @@ export default function SettingsScreen({ navigation }) {
       return () => { active = false; };
     }, [])
   );
-
-  async function toggleApp(id) {
-    const target = blockedApps.find((a) => a.id === id);
-    const willDisable = target?.enabled;
-    const enabledCount = blockedApps.filter((a) => a.enabled).length;
-
-    if (willDisable && enabledCount === 1) {
-      Alert.alert('at least one app must be blocked', 'otherwise what are we even doing here');
-      return;
-    }
-
-    const next = blockedApps.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a));
-    setBlockedApps(next);
-    await saveSettings({ blockedApps: next.filter((a) => a.enabled).map((a) => a.id) });
-  }
 
   async function selectDifficulty(level) {
     setDifficulty(level);
@@ -88,7 +68,6 @@ export default function SettingsScreen({ navigation }) {
             await clearAllData();
             // Reload settings to defaults
             const s = await getSettings();
-            setBlockedApps(ALL_APPS.map((a) => ({ ...a, enabled: s.blockedApps.includes(a.id) })));
             setEnabledGames(s.enabledGames);
             Alert.alert('done', 'stats wiped. fresh start.');
           },
@@ -97,7 +76,6 @@ export default function SettingsScreen({ navigation }) {
     );
   }
 
-  const activeAppCount  = blockedApps.filter((a) => a.enabled).length;
   const activeGameCount = enabledGames.length;
 
   if (loading) return <ScreenWrapper />;
@@ -109,19 +87,6 @@ export default function SettingsScreen({ navigation }) {
         <View style={styles.header}>
           <AppText variant="xxl">settings</AppText>
         </View>
-
-        {/* Blocked apps */}
-        <Section title="blocked apps" subtitle={`${activeAppCount} active`}>
-          {blockedApps.map((app) => (
-            <SettingRow
-              key={app.id}
-              emoji={app.emoji}
-              label={app.label}
-              value={app.enabled}
-              onToggle={() => toggleApp(app.id)}
-            />
-          ))}
-        </Section>
 
         {/* Difficulty */}
         <Section title="difficulty" subtitle="how hard should the games be?">
@@ -184,12 +149,30 @@ export default function SettingsScreen({ navigation }) {
           </TouchableOpacity>
         </Section>
 
-        {/* Setup guide */}
+        {/* Setup */}
         <Section title="setup">
           <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate('Tutorial')}>
             <AppText variant="base" style={styles.linkLabel}>📋  setup guide</AppText>
             <AppText variant="caption" style={styles.linkSub}>
-              step-by-step: connect FrictionMaxxing to your blocked apps
+              connect via Shortcuts — one automation per app
+            </AppText>
+            <AppText variant="base" style={styles.linkChevron}>›</AppText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate('UsageEstimates')}>
+            <AppText variant="base" style={styles.linkLabel}>⏱  usage estimates</AppText>
+            <AppText variant="caption" style={styles.linkSub}>
+              enter your Screen Time averages to track minutes saved
+            </AppText>
+            <AppText variant="base" style={styles.linkChevron}>›</AppText>
+          </TouchableOpacity>
+        </Section>
+
+        {/* Dev */}
+        <Section title="dev" subtitle="testing only">
+          <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate('Game')}>
+            <AppText variant="base" style={styles.linkLabel}>🎮  play a random game</AppText>
+            <AppText variant="caption" style={styles.linkSub}>
+              preview the game screen as if a Shortcut fired
             </AppText>
             <AppText variant="base" style={styles.linkChevron}>›</AppText>
           </TouchableOpacity>

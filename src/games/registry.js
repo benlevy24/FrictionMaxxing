@@ -37,7 +37,7 @@ export const GAMES = [
   },
   {
     id: 'hangman',
-    label: 'Hangman',
+    label: 'Hangperson',
     emoji: '🪢',
     component: ObscureHangmanGame,
   },
@@ -64,6 +64,18 @@ export const GAMES = [
     label: 'Snake',
     emoji: '🐍',
     component: SnakeGame,
+  },
+  {
+    id: 'checkers',
+    label: 'Checkers',
+    emoji: '🔴',
+    component: CheckersGame,
+  },
+  {
+    id: 'chess',
+    label: 'Chess',
+    emoji: '♟️',
+    component: ChessGame,
   },
 ];
 
