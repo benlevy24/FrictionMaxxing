@@ -8,7 +8,7 @@ const STEPS = [
   {
     number: 1,
     title: 'open the Shortcuts app',
-    body: 'tap the Automation tab at the bottom, then tap + to create a new Personal Automation.',
+    body: 'tap the Automation tab at the bottom, then tap + in the top right to create a new Personal Automation.',
     action: { label: 'Open Shortcuts App', url: 'shortcuts://' },
     visual: <AutomationTabVisual />,
   },
@@ -32,8 +32,8 @@ const STEPS = [
   },
   {
     number: 5,
-    title: 'search for "Open URLs"',
-    body: 'type "Open URLs" in the search bar and select it. then paste the URL for your app from the list at the bottom of this guide.',
+    title: 'search for "Open URLs" and paste your app\'s URL',
+    body: 'type "Open URLs" in the search bar and select it. then paste the URL for your app from the list at the bottom of this guide.\n\n⚠️ We know this step is clunky. A future update will let you simply search "FrictionMaxxing" and tap one button — no URLs needed. That requires a Mac to build, so it\'s coming soon.',
     visual: <OpenURLsVisual />,
   },
   {
@@ -94,6 +94,9 @@ export default function TutorialScreen({ navigation }) {
         <View style={styles.footer}>
           <AppText variant="base" style={styles.footerText}>
             repeat steps 1–6 for each app you want to gate. that's it.
+          </AppText>
+          <AppText variant="caption" style={styles.footerNote}>
+            coming soon: a one-tap setup with no URLs required.
           </AppText>
         </View>
 
@@ -408,8 +411,9 @@ const styles = StyleSheet.create({
   searchText:   { color: colors.textSub },
   appIcon:      { width: 28, alignItems: 'center' },
 
-  footer:       { alignItems: 'center', paddingTop: spacing.sm },
+  footer:       { alignItems: 'center', paddingTop: spacing.sm, gap: spacing.xs },
   footerText:   { color: colors.textDisabled, textAlign: 'center' },
+  footerNote:   { color: colors.textDisabled, textAlign: 'center', fontStyle: 'italic' },
 
   urlSection:   { gap: spacing.md },
   urlTitle:     { color: colors.text },
