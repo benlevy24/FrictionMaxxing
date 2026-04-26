@@ -10,12 +10,13 @@ const W = 'w', B = 'b';
 
 // Difficulty:
 //   easy   — standard start, AI plays randomly
-//   medium — standard start, AI gets 2 free moves before you can go
-//   hard   — you start without your queen, AI uses minimax
+//   medium — player starts without one knight, AI uses shallow minimax
+//   hard   — player starts without their queen, AI uses deeper minimax
+// removeW: [row, col] squares on the white side to clear before game starts
 const CONFIGS = {
-  easy:   { aiPreMoves: 0, noQueenStart: false, aiDepth: 0 },
-  medium: { aiPreMoves: 2, noQueenStart: false, aiDepth: 1 },
-  hard:   { aiPreMoves: 2, noQueenStart: true,  aiDepth: 2 },
+  easy:   { removeW: [],       aiDepth: 0, modeLabel: '' },
+  medium: { removeW: [[7,1]], aiDepth: 1, modeLabel: 'you have no knight' },
+  hard:   { removeW: [[7,3]], aiDepth: 2, modeLabel: 'you have no queen'  },
 };
 
 // Use the same outline symbols for both colors — differentiated by text color only.
@@ -33,13 +34,13 @@ const CELL = Math.floor((Dimensions.get('window').width - 32) / 8);
 
 function pc(type, color) { return { type, color }; }
 
-function initialBoard(noQueenStart) {
+function initialBoard(removeW) {
   const b = Array.from({ length: 8 }, () => Array(8).fill(null));
   b[0] = ['R','N','B','Q','K','B','N','R'].map(t => pc(t, B));
   b[1] = Array(8).fill(null).map(() => pc('P', B));
   b[6] = Array(8).fill(null).map(() => pc('P', W));
   b[7] = ['R','N','B','Q','K','B','N','R'].map(t => pc(t, W));
-  if (noQueenStart) b[7][3] = null; // hard mode: player has no queen
+  for (const [r, c] of removeW) b[r][c] = null;
   return b;
 }
 
@@ -238,7 +239,7 @@ function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
 
 export default function ChessGame({ onComplete, difficulty = 'medium' }) {
   const cfg = CONFIGS[difficulty] ?? CONFIGS.medium;
-  const initB = () => initialBoard(cfg.noQueenStart);
+  const initB = () => initialBoard(cfg.removeW);
   const initCR = { wK:true, wQ:true, bK:true, bQ:true };
 
   const [board, setBoard]   = useState(initB);
@@ -246,12 +247,10 @@ export default function ChessGame({ onComplete, difficulty = 'medium' }) {
   const [ep, setEP]         = useState(null);
   const [selected, setSel]  = useState(null);
   const [legal, setLegal]   = useState([]);
-  const [turn, setTurn]     = useState(() => cfg.aiPreMoves>0 ? 'ai_pre' : 'player');
-  const [status, setStatus] = useState('playing'); // 'playing'|'check'|'checkmate'|'stalemate'
+  const [turn, setTurn]     = useState('player');
+  const [status, setStatus] = useState('playing');
   const [taunt, setTaunt]   = useState(() =>
-    cfg.noQueenStart && cfg.aiPreMoves>0 ? 'no queen. and they move first.' :
-    cfg.noQueenStart ? 'playing without your queen.' :
-    cfg.aiPreMoves>0 ? 'opponent gets a head start...' : 'your move.');
+    cfg.modeLabel ? `${cfg.modeLabel}. good luck.` : 'your move.');
 
   // Refs so async timeouts always read latest state
   const bRef  = useRef(board);
@@ -262,33 +261,6 @@ export default function ChessGame({ onComplete, difficulty = 'medium' }) {
     bRef.current=nb; crRef.current=ncr; epRef.current=nep;
     setBoard(nb); setCR(ncr); setEP(nep);
   }
-
-  // ── AI pre-moves (medium difficulty) ────────────────────────────────────
-  useEffect(() => {
-    if (turn !== 'ai_pre') return;
-    let cancelled = false;
-
-    function doPreMove(count) {
-      if (cancelled) return;
-      setTimeout(() => {
-        if (cancelled) return;
-        const move = getAIMove(bRef.current, 1, crRef.current, epRef.current);
-        if (!move) { if (!cancelled) { setTurn('player'); setTaunt('your move.'); } return; }
-        const nb = applyMove(bRef.current, move);
-        const ncr = updateCR(crRef.current, move, bRef.current);
-        const nep = epTarget(move);
-        syncAll(nb, ncr, nep);
-        if (count+1 >= cfg.aiPreMoves) {
-          if (!cancelled) { setTurn('player'); setTaunt('your move. good luck.'); }
-        } else {
-          doPreMove(count+1);
-        }
-      }, 700);
-    }
-
-    doPreMove(0);
-    return () => { cancelled = true; };
-  }, [turn]);
 
   // ── AI regular turn ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -376,7 +348,7 @@ export default function ChessGame({ onComplete, difficulty = 'medium' }) {
       {/* Material balance */}
       <View style={styles.countsRow}>
         <AppText variant="caption" style={{ color: colors.textDisabled }}>
-          {cfg.noQueenStart ? 'no queen mode' : cfg.aiPreMoves>0 ? 'head start mode' : ''}
+          {cfg.modeLabel}
         </AppText>
         <AppText variant="caption" style={{
           color: advantage > 0 ? colors.primary : advantage < 0 ? colors.danger : colors.textDisabled
