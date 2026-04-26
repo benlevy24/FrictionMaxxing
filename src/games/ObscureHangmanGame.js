@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import AppText from '../components/AppText';
 import Button from '../components/Button';
@@ -86,13 +86,13 @@ const WORDS = [
   { word: 'VELLICHOR',       hint: 'strange wistfulness in a used bookstore' },
 ];
 
-// easy: short common words (≤6 letters), 8 wrong guesses
-// medium: full list, 6 wrong guesses (current)
-// hard: long words only (≥10 letters), 5 wrong guesses
+// easy: short common words (≤6 letters), 8 wrong guesses, instant drawing
+// medium: full list, 6 wrong guesses, subtle animation
+// hard: long words only (≥10 letters), 5 wrong guesses, very slow drawing
 const DIFFICULTY_CONFIG = {
-  easy:   { maxWrong: 8, filter: (w) => w.word.length <= 6 },
-  medium: { maxWrong: 6, filter: () => true },
-  hard:   { maxWrong: 5, filter: (w) => w.word.length >= 10 },
+  easy:   { maxWrong: 8, filter: (w) => w.word.length <= 6,  animDuration: 0    },
+  medium: { maxWrong: 6, filter: () => true,                  animDuration: 700  },
+  hard:   { maxWrong: 5, filter: (w) => w.word.length >= 10, animDuration: 2800 },
 };
 
 function pickWord(seed, usedIndices, difficulty) {
@@ -162,7 +162,90 @@ const BODY_PARTS = [
   { type: 'line', x1: FIG_X, y1: LEG_Y, x2: FIG_X + 22, y2: LEG_Y + 28 },
 ];
 
-function HangmanDrawing({ wrongCount }) {
+// animDuration: ms to draw each body part (0 = instant)
+function HangmanDrawing({ wrongCount, animDuration = 0 }) {
+  const [partProgress, setPartProgress] = useState(
+    () => BODY_PARTS.map((_, i) => (i < wrongCount ? 1 : 0))
+  );
+  const intervalRef = useRef(null);
+  const prevWrong = useRef(wrongCount);
+
+  useEffect(() => {
+    // Retry / reset — snap all already-revealed parts to 1, hide the rest
+    if (wrongCount < prevWrong.current) {
+      setPartProgress(BODY_PARTS.map((_, i) => (i < wrongCount ? 1 : 0)));
+      prevWrong.current = wrongCount;
+      return;
+    }
+    if (wrongCount === prevWrong.current) return;
+
+    const partIndex = wrongCount - 1;
+    prevWrong.current = wrongCount;
+
+    clearInterval(intervalRef.current);
+
+    if (animDuration === 0) {
+      setPartProgress((prev) => {
+        const next = [...prev];
+        next[partIndex] = 1;
+        return next;
+      });
+      return;
+    }
+
+    // Animate progress 0 → 1 over animDuration ms at ~40fps
+    const frameMs = 25;
+    const totalFrames = Math.ceil(animDuration / frameMs);
+    let frame = 0;
+
+    setPartProgress((prev) => {
+      const next = [...prev];
+      next[partIndex] = 0;
+      return next;
+    });
+
+    intervalRef.current = setInterval(() => {
+      frame++;
+      const progress = Math.min(frame / totalFrames, 1);
+      setPartProgress((prev) => {
+        const next = [...prev];
+        next[partIndex] = progress;
+        return next;
+      });
+      if (progress >= 1) clearInterval(intervalRef.current);
+    }, frameMs);
+
+    return () => clearInterval(intervalRef.current);
+  }, [wrongCount, animDuration]);
+
+  function renderPart(part, progress, i) {
+    if (progress <= 0) return null;
+
+    if (part.type === 'circle') {
+      const r = part.r * progress;
+      return (
+        <View
+          key={i}
+          style={{
+            position: 'absolute',
+            width: r * 2,
+            height: r * 2,
+            borderRadius: r,
+            borderWidth: 2,
+            borderColor: colors.textSub,
+            left: part.cx - r,
+            top: part.cy - r,
+          }}
+        />
+      );
+    } else {
+      // Grow line from (x1,y1) toward (x2,y2)
+      const tx2 = part.x1 + (part.x2 - part.x1) * progress;
+      const ty2 = part.y1 + (part.y2 - part.y1) * progress;
+      return <View key={i} style={lineStyle(part.x1, part.y1, tx2, ty2)} />;
+    }
+  }
+
   return (
     <View style={{ width: W, height: H }}>
       {/* Static gallows */}
@@ -171,26 +254,7 @@ function HangmanDrawing({ wrongCount }) {
       <View style={lineStyle(0, BASE_Y, W * 0.75, BASE_Y, 3)} />
       <View style={lineStyle(BEAM_X2, BEAM_Y, BEAM_X2, ROPE_END_Y)} />
 
-      {/* Body parts revealed by wrong count */}
-      {BODY_PARTS.slice(0, wrongCount).map((part, i) =>
-        part.type === 'circle' ? (
-          <View
-            key={i}
-            style={{
-              position: 'absolute',
-              width: part.r * 2,
-              height: part.r * 2,
-              borderRadius: part.r,
-              borderWidth: 2,
-              borderColor: colors.textSub,
-              left: part.cx - part.r,
-              top: part.cy - part.r,
-            }}
-          />
-        ) : (
-          <View key={i} style={lineStyle(part.x1, part.y1, part.x2, part.y2)} />
-        )
-      )}
+      {BODY_PARTS.map((part, i) => renderPart(part, partProgress[i], i))}
     </View>
   );
 }
@@ -283,7 +347,7 @@ function pick(arr) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ObscureHangmanGame({ onComplete, difficulty = 'medium' }) {
-  const { maxWrong } = DIFFICULTY_CONFIG[difficulty] ?? DIFFICULTY_CONFIG.medium;
+  const { maxWrong, animDuration } = DIFFICULTY_CONFIG[difficulty] ?? DIFFICULTY_CONFIG.medium;
   const [baseSeed] = useState(() => Date.now());
   const [usedIndices, setUsedIndices] = useState(new Set());
   const [attemptCount, setAttemptCount] = useState(0);
@@ -350,7 +414,7 @@ export default function ObscureHangmanGame({ onComplete, difficulty = 'medium' }
 
       <View style={styles.gameRow}>
         {/* Hangman drawing */}
-        <HangmanDrawing wrongCount={wrongCount} />
+        <HangmanDrawing wrongCount={wrongCount} animDuration={animDuration} />
 
         {/* Hint + wrong letters */}
         <View style={styles.sidePanel}>
