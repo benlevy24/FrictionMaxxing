@@ -33,7 +33,7 @@ const STEPS = [
   {
     number: 5,
     title: 'search for "Open URLs" and paste your app\'s URL',
-    body: 'type "Open URLs" in the search bar and select it. then paste the URL for your app from the list at the bottom of this guide.\n\n⚠️ We know this step is clunky. A future update will let you simply search "FrictionMaxxing" and tap one button — no URLs needed. That requires a Mac to build, so it\'s coming soon.',
+    body: 'type "Open URLs" in the search bar and select it. then paste the URL for your app from the list at the bottom of this guide.\n\nA future update will let you simply search "FrictionMaxxing" and tap one button — no URLs needed.',
     visual: <OpenURLsVisual />,
   },
   {
