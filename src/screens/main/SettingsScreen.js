@@ -91,7 +91,7 @@ export default function SettingsScreen({ navigation }) {
         {/* Difficulty */}
         <Section title="difficulty" subtitle="how hard should the games be?">
           <View style={styles.diffRow}>
-            {['easy', 'medium', 'hard'].map((level) => (
+            {['easy', 'hard'].map((level) => (
               <TouchableOpacity
                 key={level}
                 style={[styles.diffPill, difficulty === level && styles.diffPillActive]}

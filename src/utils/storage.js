@@ -63,7 +63,7 @@ export function dayLabel(dateStr) {
 const DEFAULT_SETTINGS = {
   enabledGames:       DEFAULT_ENABLED_GAMES,
   freeZones:          [],       // [{ id, name, lat, lng, radiusMeters }]
-  difficulty:         'medium', // 'easy' | 'medium' | 'hard'
+  difficulty:         'hard',   // 'easy' | 'hard' (medium exists internally but not exposed in UI)
   installDate:        null,     // set on first write
   onboardingDone:     false,
   appUsageEstimates:  {},       // { [appId]: { weeklyMinutes: number, weeklyPickups: number } }

@@ -9,14 +9,14 @@ import { colors, spacing } from '../theme';
 const W = 'w', B = 'b';
 
 // Difficulty:
-//   easy   — standard start, AI plays randomly
-//   medium — player starts without one knight, AI uses shallow minimax
-//   hard   — player starts without their queen, AI uses deeper minimax
+//   easy   — standard start, AI plays at depth 1 (makes real moves but still beatable)
+//   medium — player starts without one knight, AI depth 1 (hidden from UI, used internally)
+//   hard   — player starts without queen + king-side rook, AI uses deeper minimax
 // removeW: [row, col] squares on the white side to clear before game starts
 const CONFIGS = {
-  easy:   { removeW: [],       aiDepth: 0, modeLabel: '' },
-  medium: { removeW: [[7,1]], aiDepth: 1, modeLabel: 'you have no knight' },
-  hard:   { removeW: [[7,3]], aiDepth: 2, modeLabel: 'you have no queen'  },
+  easy:   { removeW: [],               aiDepth: 1, modeLabel: '' },
+  medium: { removeW: [[7,1]],          aiDepth: 1, modeLabel: 'you have no knight' },
+  hard:   { removeW: [[7,3],[7,7]],    aiDepth: 2, modeLabel: 'you have no queen or rook' },
 };
 
 // Use the same outline symbols for both colors — differentiated by text color only.
