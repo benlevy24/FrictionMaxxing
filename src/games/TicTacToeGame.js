@@ -82,7 +82,7 @@ function getAIMove(board, difficulty) {
   return getBestMove(board); // hard
 }
 
-const WINS_NEEDED = { easy: 1, medium: 1, hard: 2 };
+const WINS_NEEDED = { easy: 1, medium: 1, hard: 5 };
 
 // ── Taunts ────────────────────────────────────────────────────────────────────
 
