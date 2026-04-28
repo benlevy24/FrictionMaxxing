@@ -129,9 +129,9 @@ export default function ConfusingMazeGame({ onComplete, difficulty = 'medium' })
     [baseSeed, attemptCount, rows, cols]
   );
 
-  // What the cell visually LOOKS like (real walls + phantom fakes on easy/medium only)
+  // What the cell visually LOOKS like (real walls + phantom fakes on medium only)
   function displayWall(r, c, dir) {
-    return cells[r][c][dir] || (difficulty !== 'hard' && phantoms.has(`${r},${c},${dir}`));
+    return cells[r][c][dir] || (difficulty === 'medium' && phantoms.has(`${r},${c},${dir}`));
   }
 
   function move(dir) {
