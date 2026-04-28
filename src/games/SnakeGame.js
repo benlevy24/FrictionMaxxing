@@ -95,8 +95,8 @@ export default function SnakeGame({ onComplete, difficulty = 'medium' }) {
       const head = snake[0];
       let newHead = { x: head.x + nextDir.x, y: head.y + nextDir.y };
 
-      // Wall collision — easy wraps, medium/hard die
-      if (difficulty === 'easy') {
+      // Wall collision — easy and hard wrap, medium dies
+      if (difficulty === 'easy' || difficulty === 'hard') {
         newHead = {
           x: (newHead.x + cols) % cols,
           y: (newHead.y + rows) % rows,
