@@ -253,9 +253,10 @@ export default function ChessGame({ onComplete, difficulty = 'medium' }) {
     cfg.modeLabel ? `${cfg.modeLabel}. good luck.` : 'your move.');
 
   // Refs so async timeouts always read latest state
-  const bRef  = useRef(board);
-  const crRef = useRef(cr);
-  const epRef = useRef(ep);
+  const bRef   = useRef(board);
+  const crRef  = useRef(cr);
+  const epRef  = useRef(ep);
+  const turnRef = useRef('player'); // updated synchronously to prevent double-tap
 
   function syncAll(nb, ncr, nep) {
     bRef.current=nb; crRef.current=ncr; epRef.current=nep;
@@ -288,6 +289,7 @@ export default function ChessGame({ onComplete, difficulty = 'medium' }) {
       }
       if (inCheck(nb, W)) { setStatus('check'); setTaunt(pick(CHECK_TAUNTS)); }
       else { setStatus('playing'); setTaunt(pick(MOVE_TAUNTS)); }
+      turnRef.current = 'player';
       setTurn('player');
     }, 700);
     return () => { cancelled = true; };
@@ -295,12 +297,13 @@ export default function ChessGame({ onComplete, difficulty = 'medium' }) {
 
   // ── Player move ──────────────────────────────────────────────────────────
   function handlePress(r, c) {
-    if (turn !== 'player') return;
+    if (turnRef.current !== 'player') return; // ref check prevents double-tap stale-state bug
     const p = board[r][c];
 
     if (selected) {
       const move = legal.find(m => m.to[0]===r && m.to[1]===c);
       if (move) {
+        turnRef.current = 'ai'; // lock synchronously before any state updates
         const nb = applyMove(board, move);
         const ncr = updateCR(cr, move, board);
         const nep = epTarget(move);
@@ -310,6 +313,7 @@ export default function ChessGame({ onComplete, difficulty = 'medium' }) {
         const aiMoves = getLegal(nb, B, ncr, nep);
         if (!aiMoves.length) {
           const mate = inCheck(nb, B);
+          turnRef.current = 'done';
           setTurn('done');
           setStatus(mate ? 'checkmate' : 'stalemate');
           setTaunt(mate ? 'checkmate. you actually won.' : 'stalemate.');
