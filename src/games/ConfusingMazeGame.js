@@ -226,7 +226,7 @@ export default function ConfusingMazeGame({ onComplete, difficulty = 'medium' })
                     <View style={[styles.marker, styles.playerMarker,
                       { width: markerSize, height: markerSize }]} />
                   )}
-                  {visible && isExit && !isPlayer && (
+                  {isExit && !isPlayer && (
                     <View style={[styles.marker, styles.exitMarker,
                       { width: markerSize, height: markerSize }]} />
                   )}
