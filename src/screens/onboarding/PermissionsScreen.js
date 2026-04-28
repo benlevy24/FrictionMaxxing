@@ -51,7 +51,7 @@ export default function PermissionsScreen({ navigation }) {
 
       <View style={styles.notice}>
         <AppText variant="caption" style={styles.noticeText}>
-          takes about 2 minutes per app. you can always find it later under Settings → Setup Guide.
+          takes less than 2 minutes per app. you can always find it later under Settings → Setup Guide.
         </AppText>
       </View>
 
