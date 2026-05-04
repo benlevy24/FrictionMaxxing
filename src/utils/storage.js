@@ -63,7 +63,7 @@ export function dayLabel(dateStr) {
 const DEFAULT_SETTINGS = {
   enabledGames:       DEFAULT_ENABLED_GAMES,
   freeZones:          [],       // [{ id, name, lat, lng, radiusMeters }]
-  scheduleBlock:      { enabled: false, startHour: 8, endHour: 17 }, // friction active window
+  scheduleBlock:      { enabled: false, startHour: 8, endHour: 17, activeDays: [0,1,2,3,4,5,6] }, // friction active window; activeDays: 0=Sun…6=Sat
   blockMode:          'friction',  // 'friction' | 'lockout'
   lockoutMinutes:     1,           // minutes the app stays unlocked after beating the game (1–5)
   triggerMode:        'always',    // 'always' | 'after_limit' — when friction/lockout activates

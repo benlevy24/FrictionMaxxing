@@ -115,12 +115,15 @@ export default function GameScreen({ navigation, route }) {
 
       // If schedule blocking is enabled, check whether we're inside the active window
       if (s.scheduleBlock?.enabled) {
-        const nowHour = new Date().getHours();
-        const { startHour = 8, endHour = 17 } = s.scheduleBlock;
-        const inWindow = startHour < endHour
-          ? nowHour >= startHour && nowHour < endHour          // same-day window
-          : nowHour >= startHour || nowHour < endHour;         // overnight wrap
-        if (!inWindow) {
+        const now     = new Date();
+        const nowHour = now.getHours();
+        const nowDay  = now.getDay(); // 0=Sun … 6=Sat
+        const { startHour = 8, endHour = 17, activeDays = [0,1,2,3,4,5,6] } = s.scheduleBlock;
+        const dayActive  = activeDays.includes(nowDay);
+        const inWindow   = startHour < endHour
+          ? nowHour >= startHour && nowHour < endHour
+          : nowHour >= startHour || nowHour < endHour;
+        if (!dayActive || !inWindow) {
           eventRecorded.current = true;
           setGameState(STATE.FREE_ZONE);
           return;
