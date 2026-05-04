@@ -9,26 +9,45 @@ import { colors, spacing, radius } from '../theme';
 // Hint is a short clue shown during the game.
 
 const WORDS = [
+  // 6–8 letters (easy pool)
+  { word: 'SONDER',          hint: 'realising strangers have full lives too' },
+  { word: 'HIRAETH',         hint: 'Welsh: longing for a lost home' },
+  { word: 'SAUDADE',         hint: 'deep longing for something absent' },
+  { word: 'CALUMNY',         hint: 'making false statements to damage reputation' },
+  { word: 'LIMINAL',         hint: 'relating to a threshold or transition' },
+  { word: 'LACONIC',         hint: 'using very few words' },
+  { word: 'PYRRHIC',         hint: 'victory won at too great a cost' },
+  { word: 'ENNUI',           hint: 'boredom and dissatisfaction' },
+  { word: 'HUBRIS',          hint: 'excessive pride or arrogance' },
+  { word: 'PATHOS',          hint: 'evoking pity or sadness' },
+  { word: 'KITSCH',          hint: 'art considered tacky or overdone' },
+  { word: 'FECKLESS',        hint: 'lacking purpose or vitality' },
+  { word: 'NUMINOUS',        hint: 'having a strong spiritual quality' },
+  { word: 'QUIXOTIC',        hint: 'idealistic and impractical' },
+  { word: 'SUSURRUS',        hint: 'a soft whispering or murmuring' },
+  { word: 'BLOVIATE',        hint: 'talk at length with little substance' },
+  { word: 'SCOFFLAW',        hint: 'person who flouts the law' },
+  { word: 'SANGUINE',        hint: 'optimistic even in dire situations' },
+  { word: 'QUIDDITY',        hint: 'the inherent nature of something' },
+  { word: 'ZUGZWANG',        hint: 'forced to make a damaging move' },
+  { word: 'FAUSTIAN',        hint: 'trading something moral for gain' },
+  { word: 'PIQUANT',         hint: 'pleasantly stimulating or lively' },
+  { word: 'ABYSMAL',         hint: 'extremely bad or deep' },
+  { word: 'WISTFUL',         hint: 'yearning tinged with sadness' },
+  { word: 'OMINOUS',         hint: 'giving the impression of something bad' },
+  { word: 'PERFIDY',         hint: 'treachery; breach of faith' },
+  { word: 'SURFEIT',         hint: 'an excess of something' },
+  { word: 'AVARICE',         hint: 'extreme greed for wealth' },
+  // 9–12 letters (medium pool)
   { word: 'PETRICHOR',       hint: 'that smell after it rains' },
   { word: 'LIMERENCE',       hint: 'obsessive romantic attraction' },
-  { word: 'SUSURRUS',        hint: 'a soft whispering or murmuring' },
   { word: 'EPHEMERAL',       hint: 'lasts only a very short time' },
-  { word: 'MELLIFLUOUS',     hint: 'pleasantly smooth and musical' },
-  { word: 'QUIXOTIC',        hint: 'idealistic and impractical' },
   { word: 'SOLIPSISM',       hint: 'only your own mind is real' },
-  { word: 'LIMINAL',         hint: 'relating to a threshold or transition' },
   { word: 'INEFFABLE',       hint: 'too great to be expressed in words' },
   { word: 'CREPUSCULAR',     hint: 'active at dawn or dusk' },
-  { word: 'SONDER',          hint: 'realising strangers have full lives too' },
-  { word: 'NUMINOUS',        hint: 'having a strong spiritual quality' },
   { word: 'BORBORYGMUS',     hint: 'stomach rumbling sound' },
-  { word: 'DEFENESTRATION',  hint: 'throwing someone out a window' },
-  { word: 'TERGIVERSATION',  hint: 'evasion and equivocation' },
   { word: 'CALLIPYGIAN',     hint: 'having well-shaped buttocks' },
   { word: 'SNOLLYGOSTER',    hint: 'shrewd unprincipled politician' },
-  { word: 'FLIBBERTIGIBBET', hint: 'a flighty talkative person' },
-  { word: 'BLOVIATE',        hint: 'talk at length with little substance' },
-  { word: 'DISCOMBOBULATE',  hint: 'confuse and disconcert' },
   { word: 'CATTYWAMPUS',     hint: 'diagonal or crooked' },
   { word: 'BUMFUZZLE',       hint: 'to confuse or bewilder' },
   { word: 'HORNSWOGGLE',     hint: 'to cheat or swindle' },
@@ -39,60 +58,65 @@ const WORDS = [
   { word: 'BALDERDASH',      hint: 'senseless talk or writing' },
   { word: 'FLAPDOODLE',      hint: 'nonsense, foolish talk' },
   { word: 'RAPSCALLION',     hint: 'a mischievous rascal' },
-  { word: 'SCOFFLAW',        hint: 'person who flouts the law' },
   { word: 'JACKANAPES',      hint: 'an impertinent person' },
-  { word: 'WHIPPERSNAPPER',  hint: 'a young overconfident person' },
   { word: 'CURMUDGEON',      hint: 'bad-tempered grumpy person' },
   { word: 'NINCOMPOOP',      hint: 'a foolish person' },
   { word: 'MOLLYCODDLE',     hint: 'to pamper excessively' },
-  { word: 'PERSPICACIOUS',   hint: 'having sharp judgement' },
   { word: 'OBSEQUIOUS',      hint: 'excessively eager to please' },
   { word: 'LOQUACIOUS',      hint: 'tends to talk a lot' },
   { word: 'PERFIDIOUS',      hint: 'treacherous and deceitful' },
   { word: 'LUGUBRIOUS',      hint: 'looking or sounding mournful' },
-  { word: 'PUSILLANIMOUS',   hint: 'lacking courage; timid' },
-  { word: 'VITUPERATIVE',    hint: 'bitter and abusive' },
   { word: 'TENDENTIOUS',     hint: 'promoting a point of view' },
   { word: 'RECONDITE',       hint: 'obscure and known by few' },
   { word: 'TRUCULENT',       hint: 'eager to argue or fight' },
-  { word: 'SANGUINE',        hint: 'optimistic even in dire situations' },
   { word: 'INSOUCIANCE',     hint: 'casual indifference' },
   { word: 'APOCRYPHAL',      hint: 'of doubtful authenticity' },
-  { word: 'CALUMNY',         hint: 'making false statements to damage reputation' },
-  { word: 'TINTINNABULATION',hint: 'ringing or tinkling of bells' },
-  { word: 'SESQUIPEDALIAN',  hint: 'ironically, a word meaning long words' },
-  { word: 'QUIDDITY',        hint: 'the inherent nature of something' },
   { word: 'VICISSITUDE',     hint: 'a change of circumstance' },
-  { word: 'ZUGZWANG',        hint: 'forced to make a damaging move' },
-  { word: 'SCHADENFREUDE',   hint: 'pleasure from others\' misfortune' },
-  { word: 'WELTANSCHAUUNG',  hint: 'a particular philosophy of life' },
-  { word: 'HIRAETH',         hint: 'Welsh: longing for a lost home' },
-  { word: 'SAUDADE',         hint: 'deep longing for something absent' },
   { word: 'ATAVISTIC',       hint: 'reverting to ancestral behaviour' },
-  { word: 'LABYRINTHINE',    hint: 'like a labyrinth; complicated' },
   { word: 'CHIMERICAL',      hint: 'wildly unrealistic or fanciful' },
   { word: 'MERCURIAL',       hint: 'subject to sudden mood changes' },
   { word: 'SISYPHEAN',       hint: 'endless and ultimately futile task' },
   { word: 'KAFKAESQUE',      hint: 'surreal and bureaucratically oppressive' },
-  { word: 'MACHIAVELLIAN',   hint: 'cunning and unscrupulous' },
-  { word: 'PYRRHIC',         hint: 'victory won at too great a cost' },
   { word: 'PROMETHEAN',      hint: 'boldly creative; life-giving' },
-  { word: 'LACONIC',         hint: 'using very few words' },
-  { word: 'FAUSTIAN',        hint: 'trading something moral for gain' },
   { word: 'DRACONIAN',       hint: 'excessively harsh or severe' },
   { word: 'BYZANTINE',       hint: 'excessively complicated' },
+  { word: 'VELLICHOR',       hint: 'strange wistfulness in a used bookstore' },
+  { word: 'PERSPICUOUS',     hint: 'clearly expressed and easily understood' },
+  { word: 'SOMNOLENT',       hint: 'sleepy; inducing drowsiness' },
+  { word: 'PHANTASMAL',      hint: 'relating to a phantom or illusion' },
+  { word: 'NEFARIOUS',       hint: 'wicked and criminal' },
+  { word: 'CAPRICIOUS',      hint: 'given to sudden changes of mood' },
+  { word: 'MENDACIOUS',      hint: 'not telling the truth; lying' },
+  // 13+ letters (hard pool)
+  { word: 'MELLIFLUOUS',     hint: 'pleasantly smooth and musical' },
+  { word: 'DEFENESTRATION',  hint: 'throwing someone out a window' },
+  { word: 'TERGIVERSATION',  hint: 'evasion and equivocation' },
+  { word: 'FLIBBERTIGIBBET', hint: 'a flighty talkative person' },
+  { word: 'DISCOMBOBULATE',  hint: 'confuse and disconcert' },
+  { word: 'WHIPPERSNAPPER',  hint: 'a young overconfident person' },
+  { word: 'PERSPICACIOUS',   hint: 'having sharp judgement' },
+  { word: 'PUSILLANIMOUS',   hint: 'lacking courage; timid' },
+  { word: 'VITUPERATIVE',    hint: 'bitter and abusive' },
+  { word: 'TINTINNABULATION',hint: 'ringing or tinkling of bells' },
+  { word: 'SESQUIPEDALIAN',  hint: 'ironically, a word meaning long words' },
+  { word: 'SCHADENFREUDE',   hint: 'pleasure from others\' misfortune' },
+  { word: 'WELTANSCHAUUNG',  hint: 'a particular philosophy of life' },
+  { word: 'LABYRINTHINE',    hint: 'like a labyrinth; complicated' },
+  { word: 'MACHIAVELLIAN',   hint: 'cunning and unscrupulous' },
   { word: 'SEMPITERNAL',     hint: 'eternal and unchanging' },
   { word: 'NOCTILUCENT',     hint: 'glowing at night (clouds)' },
-  { word: 'VELLICHOR',       hint: 'strange wistfulness in a used bookstore' },
+  { word: 'LOQUACIOUSNESS',  hint: 'the quality of talking excessively' },
+  { word: 'PHANTASMAGORIA',  hint: 'a sequence of bizarre imagery' },
+  { word: 'ONOMATOPOEIA',    hint: 'a word that sounds like what it means' },
 ];
 
-// easy: short common words (≤6 letters), 8 wrong guesses, instant drawing
+// easy: shorter words (≤8 letters), 8 wrong guesses, instant drawing
 // medium: full list, 6 wrong guesses, subtle animation
-// hard: long words only (≥10 letters), 5 wrong guesses, very slow drawing
+// hard: long words only (≥13 letters), 5 wrong guesses, very slow drawing
 const DIFFICULTY_CONFIG = {
-  easy:   { maxWrong: 8, filter: (w) => w.word.length <= 6,  animDuration: 0    },
+  easy:   { maxWrong: 8, filter: (w) => w.word.length <= 8,  animDuration: 0    },
   medium: { maxWrong: 6, filter: () => true,                  animDuration: 700  },
-  hard:   { maxWrong: 5, filter: (w) => w.word.length >= 10, animDuration: 2800 },
+  hard:   { maxWrong: 5, filter: (w) => w.word.length >= 13, animDuration: 2800 },
 };
 
 function pickWord(seed, usedIndices, difficulty) {
@@ -167,7 +191,6 @@ function HangmanDrawing({ wrongCount, animDuration = 0 }) {
   const [partProgress, setPartProgress] = useState(
     () => BODY_PARTS.map((_, i) => (i < wrongCount ? 1 : 0))
   );
-  const intervalRef = useRef(null);
   const prevWrong = useRef(wrongCount);
 
   useEffect(() => {
@@ -182,8 +205,6 @@ function HangmanDrawing({ wrongCount, animDuration = 0 }) {
     const partIndex = wrongCount - 1;
     prevWrong.current = wrongCount;
 
-    clearInterval(intervalRef.current);
-
     if (animDuration === 0) {
       setPartProgress((prev) => {
         const next = [...prev];
@@ -193,29 +214,24 @@ function HangmanDrawing({ wrongCount, animDuration = 0 }) {
       return;
     }
 
-    // Animate progress 0 → 1 over animDuration ms at ~40fps
-    const frameMs = 25;
-    const totalFrames = Math.ceil(animDuration / frameMs);
-    let frame = 0;
+    // Animate progress 0 → 1 over animDuration ms using rAF (works on web + native)
+    const startTime = performance.now();
+    let rafId;
 
-    setPartProgress((prev) => {
-      const next = [...prev];
-      next[partIndex] = 0;
-      return next;
-    });
-
-    intervalRef.current = setInterval(() => {
-      frame++;
-      const progress = Math.min(frame / totalFrames, 1);
+    function animate(now) {
+      const progress = Math.min((now - startTime) / animDuration, 1);
       setPartProgress((prev) => {
         const next = [...prev];
         next[partIndex] = progress;
         return next;
       });
-      if (progress >= 1) clearInterval(intervalRef.current);
-    }, frameMs);
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
+      }
+    }
 
-    return () => clearInterval(intervalRef.current);
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
   }, [wrongCount, animDuration]);
 
   function renderPart(part, progress, i) {
@@ -409,7 +425,7 @@ export default function ObscureHangmanGame({ onComplete, difficulty = 'medium' }
       showsVerticalScrollIndicator={false}
     >
       <AppText variant="subheading" style={styles.title}>
-        🪢 hangman
+        🪢 hangperson
       </AppText>
 
       <View style={styles.gameRow}>
