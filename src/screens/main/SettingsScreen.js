@@ -18,6 +18,8 @@ export default function SettingsScreen({ navigation }) {
   const [enabledGames, setEnabledGames] = useState(DEFAULT_ENABLED_GAMES);
   const [difficulty, setDifficulty]     = useState('medium');
   const [notifications, setNotifications] = useState({ milestones: false });
+  const [blockMode, setBlockMode]         = useState('friction');
+  const [lockoutMinutes, setLockoutMinutes] = useState(1);
 
   useFocusEffect(
     useCallback(() => {
@@ -26,6 +28,8 @@ export default function SettingsScreen({ navigation }) {
         if (!active) return;
         setEnabledGames(s.enabledGames);
         setDifficulty(s.difficulty ?? 'medium');
+        setBlockMode(s.blockMode ?? 'friction');
+        setLockoutMinutes(s.lockoutMinutes ?? 1);
         setLoading(false);
       });
       return () => { active = false; };
@@ -35,6 +39,17 @@ export default function SettingsScreen({ navigation }) {
   async function selectDifficulty(level) {
     setDifficulty(level);
     await saveSettings({ difficulty: level });
+  }
+
+  async function selectBlockMode(mode) {
+    setBlockMode(mode);
+    await saveSettings({ blockMode: mode });
+  }
+
+  async function adjustLockoutMinutes(delta) {
+    const next = Math.min(5, Math.max(1, lockoutMinutes + delta));
+    setLockoutMinutes(next);
+    await saveSettings({ lockoutMinutes: next });
   }
 
   async function toggleGame(id) {
@@ -87,6 +102,66 @@ export default function SettingsScreen({ navigation }) {
         <View style={styles.header}>
           <AppText variant="xxl">settings</AppText>
         </View>
+
+        {/* Mode */}
+        <Section
+          title="mode"
+          subtitle="friction nags every time. lockout hard-blocks until you beat the game."
+        >
+          <View style={styles.diffRow}>
+            {[
+              { value: 'friction', label: '🔔  friction' },
+              { value: 'lockout',  label: '🔒  lockout'  },
+            ].map(({ value, label }) => (
+              <TouchableOpacity
+                key={value}
+                style={[styles.diffPill, blockMode === value && styles.diffPillActive]}
+                onPress={() => selectBlockMode(value)}
+              >
+                <AppText
+                  variant="base"
+                  style={[styles.diffLabel, blockMode === value && styles.diffLabelActive]}
+                >
+                  {label}
+                </AppText>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {blockMode === 'lockout' && (
+            <View style={styles.lockoutRow}>
+              <AppText variant="caption" style={styles.lockoutLabel}>
+                unlock window
+              </AppText>
+              <View style={styles.lockoutControls}>
+                <TouchableOpacity
+                  onPress={() => adjustLockoutMinutes(-1)}
+                  style={[styles.lockoutArrow, lockoutMinutes <= 1 && styles.lockoutArrowDisabled]}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  disabled={lockoutMinutes <= 1}
+                >
+                  <AppText style={styles.lockoutArrowText}>‹</AppText>
+                </TouchableOpacity>
+                <View style={styles.lockoutValue}>
+                  <AppText variant="subheading" style={styles.lockoutValueText}>
+                    {lockoutMinutes} min
+                  </AppText>
+                </View>
+                <TouchableOpacity
+                  onPress={() => adjustLockoutMinutes(1)}
+                  style={[styles.lockoutArrow, lockoutMinutes >= 5 && styles.lockoutArrowDisabled]}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  disabled={lockoutMinutes >= 5}
+                >
+                  <AppText style={styles.lockoutArrowText}>›</AppText>
+                </TouchableOpacity>
+              </View>
+              <AppText variant="caption" style={styles.lockoutNote}>
+                requires mac build to take effect
+              </AppText>
+            </View>
+          )}
+        </Section>
 
         {/* Difficulty */}
         <Section title="difficulty" subtitle="how hard should the games be?">
@@ -258,6 +333,36 @@ const styles = StyleSheet.create({
   diffPillActive:   { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
   diffLabel:        { color: colors.textSub },
   diffLabelActive:  { color: colors.primary },
+  lockoutRow: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  lockoutLabel:         { color: colors.textSub },
+  lockoutControls:      { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  lockoutArrow: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.md,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  lockoutArrowDisabled: { opacity: 0.3 },
+  lockoutArrowText:     { fontSize: 20, color: colors.text, lineHeight: 24 },
+  lockoutValue: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.primaryMuted,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  lockoutValueText:     { color: colors.primary },
+  lockoutNote:          { color: colors.textDisabled, fontStyle: 'italic' },
   destructiveRow:   { paddingVertical: spacing.md, paddingHorizontal: spacing.md, gap: spacing.xs },
   destructiveLabel: { color: colors.danger },
   destructiveSub:   { color: colors.textDisabled },
