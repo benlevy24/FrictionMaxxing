@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Animated, Modal } from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
 import Button from '../../components/Button';
@@ -30,7 +30,22 @@ const STATE = {
   DONE:      'done',       // user made their choice
 };
 
-const INTERCEPT_DURATION = 3000; // ms before auto-advancing to game
+const INTERCEPT_DURATIONS = { easy: 10000, medium: 20000, hard: 30000 };
+function getInterceptDuration(diff) {
+  return INTERCEPT_DURATIONS[diff] ?? 20000;
+}
+
+const PHONE_DOWN_DELAYS = { easy: 150000, medium: 210000, hard: 300000 }; // 2.5 / 3.5 / 5 min
+function getPhoneDownDelay(diff) {
+  return PHONE_DOWN_DELAYS[diff] ?? 210000;
+}
+
+const PHONE_DOWN_MESSAGES = [
+  "seriously. put the phone down.",
+  "you've been at this a while. it's okay to stop.",
+  "the game will still be here. your life won't wait.",
+  "hey. breathe. put it down.",
+];
 
 const INTERCEPT_MESSAGES_LOW = [
   "here we go.",
@@ -79,6 +94,10 @@ export default function GameScreen({ navigation, route }) {
   const [difficulty, setDifficulty]     = useState('medium');
   const [milestone, setMilestone] = useState(null);
 
+  // Long-session nudge
+  const [showPhoneDown, setShowPhoneDown] = useState(false);
+  const [phoneDownMessage, setPhoneDownMessage] = useState('');
+
   // Intercept screen state
   const [count24h, setCount24h]             = useState(0);
   const [lastAttemptMs, setLastAttemptMs]   = useState(null); // ms since last event for this app
@@ -93,6 +112,20 @@ export default function GameScreen({ navigation, route }) {
   useEffect(() => {
     async function init() {
       const [s, events] = await Promise.all([getSettings(), getEvents()]);
+
+      // If schedule blocking is enabled, check whether we're inside the active window
+      if (s.scheduleBlock?.enabled) {
+        const nowHour = new Date().getHours();
+        const { startHour = 8, endHour = 17 } = s.scheduleBlock;
+        const inWindow = startHour < endHour
+          ? nowHour >= startHour && nowHour < endHour          // same-day window
+          : nowHour >= startHour || nowHour < endHour;         // overnight wrap
+        if (!inWindow) {
+          eventRecorded.current = true;
+          setGameState(STATE.FREE_ZONE);
+          return;
+        }
+      }
 
       // If the user is in a saved free zone, skip the game entirely
       if (s.freeZones?.length) {
@@ -130,7 +163,7 @@ export default function GameScreen({ navigation, route }) {
     progressAnim.setValue(0);
     const anim = Animated.timing(progressAnim, {
       toValue: 1,
-      duration: INTERCEPT_DURATION,
+      duration: getInterceptDuration(difficulty),
       useNativeDriver: false,
     });
     anim.start(({ finished }) => {
@@ -138,7 +171,18 @@ export default function GameScreen({ navigation, route }) {
     });
 
     return () => anim.stop();
-  }, [gameState]);
+  }, [gameState, difficulty]);
+
+  // Long-session nudge — show "put the phone down" modal after threshold
+  useEffect(() => {
+    if (gameState !== STATE.PLAYING) return;
+    const msg = PHONE_DOWN_MESSAGES[Math.floor(Math.random() * PHONE_DOWN_MESSAGES.length)];
+    const timer = setTimeout(() => {
+      setPhoneDownMessage(msg);
+      setShowPhoneDown(true);
+    }, getPhoneDownDelay(difficulty));
+    return () => clearTimeout(timer);
+  }, [gameState, difficulty]);
 
   // Rage-quit detector — fires on unmount if no event was recorded
   useEffect(() => {
@@ -339,6 +383,41 @@ export default function GameScreen({ navigation, route }) {
         </View>
       )}
 
+      {/* Long-session "put the phone down" modal */}
+      <Modal
+        visible={showPhoneDown}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPhoneDown(false)}
+      >
+        <View style={styles.phoneDownOverlay}>
+          <View style={styles.phoneDownSheet}>
+            <AppText style={styles.phoneDownEmoji}>📵</AppText>
+            <AppText variant="subheading" style={styles.phoneDownTitle}>
+              {phoneDownMessage}
+            </AppText>
+            <Button
+              label="walk away 💪"
+              variant="primary"
+              onPress={() => {
+                setShowPhoneDown(false);
+                handleInterceptWalkAway();
+              }}
+              style={styles.phoneDownBtn}
+            />
+            <TouchableOpacity
+              onPress={() => setShowPhoneDown(false)}
+              style={styles.phoneDownKeepBtn}
+              activeOpacity={0.5}
+            >
+              <AppText variant="caption" style={styles.phoneDownKeepText}>
+                keep playing
+              </AppText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Milestone modal */}
       <MilestoneModal
         visible={!!milestone}
@@ -485,6 +564,45 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   interceptExitText: {
+    color: colors.textDisabled,
+    textDecorationLine: 'underline',
+  },
+
+  // ── Phone-down modal ──────────────────────────────────────────────────────────
+  phoneDownOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  phoneDownSheet: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    width: '100%',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  phoneDownEmoji: {
+    fontSize: 48,
+  },
+  phoneDownTitle: {
+    color: colors.text,
+    textAlign: 'center',
+    lineHeight: 28,
+  },
+  phoneDownBtn: {
+    width: '100%',
+    marginTop: spacing.sm,
+  },
+  phoneDownKeepBtn: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  phoneDownKeepText: {
     color: colors.textDisabled,
     textDecorationLine: 'underline',
   },

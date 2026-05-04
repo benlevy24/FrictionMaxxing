@@ -1,0 +1,220 @@
+import { useState, useCallback } from 'react';
+import { View, ScrollView, Switch, TouchableOpacity, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import AppText from '../../components/AppText';
+import Card from '../../components/Card';
+import { getSettings, saveSettings } from '../../utils/storage';
+import { colors, spacing, radius } from '../../theme';
+
+function formatHour(h) {
+  if (h === 0)  return '12 AM';
+  if (h < 12)   return `${h} AM`;
+  if (h === 12) return '12 PM';
+  return `${h - 12} PM`;
+}
+
+function HourPicker({ label, value, onChange }) {
+  function adjust(delta) {
+    // wrap 0–23
+    onChange((value + delta + 24) % 24);
+  }
+
+  return (
+    <View style={styles.pickerRow}>
+      <AppText variant="caption" style={styles.pickerLabel}>{label}</AppText>
+      <View style={styles.pickerControls}>
+        <TouchableOpacity onPress={() => adjust(-1)} style={styles.arrow} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <AppText style={styles.arrowText}>‹</AppText>
+        </TouchableOpacity>
+        <View style={styles.hourDisplay}>
+          <AppText variant="subheading" style={styles.hourText}>{formatHour(value)}</AppText>
+        </View>
+        <TouchableOpacity onPress={() => adjust(1)} style={styles.arrow} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <AppText style={styles.arrowText}>›</AppText>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+export default function ScheduleScreen({ navigation }) {
+  const [enabled,    setEnabled]    = useState(false);
+  const [startHour,  setStartHour]  = useState(8);
+  const [endHour,    setEndHour]    = useState(17);
+  const [loading,    setLoading]    = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      getSettings().then((s) => {
+        if (!active) return;
+        const sb = s.scheduleBlock ?? {};
+        setEnabled(sb.enabled  ?? false);
+        setStartHour(sb.startHour ?? 8);
+        setEndHour(sb.endHour   ?? 17);
+        setLoading(false);
+      });
+      return () => { active = false; };
+    }, [])
+  );
+
+  async function persist(patch) {
+    const next = {
+      enabled,
+      startHour,
+      endHour,
+      ...patch,
+    };
+    await saveSettings({ scheduleBlock: next });
+  }
+
+  async function handleToggle() {
+    const next = !enabled;
+    setEnabled(next);
+    await persist({ enabled: next });
+  }
+
+  async function handleStartHour(h) {
+    setStartHour(h);
+    await persist({ startHour: h });
+  }
+
+  async function handleEndHour(h) {
+    setEndHour(h);
+    await persist({ endHour: h });
+  }
+
+  // Human-readable summary of the active window
+  function windowSummary() {
+    if (startHour === endHour) return 'friction always on';
+    if (startHour < endHour) {
+      return `friction on ${formatHour(startHour)} – ${formatHour(endHour)}`;
+    }
+    // overnight wrap (e.g. 10 PM – 6 AM)
+    return `friction on ${formatHour(startHour)} – ${formatHour(endHour)} (overnight)`;
+  }
+
+  if (loading) return <ScreenWrapper />;
+
+  return (
+    <ScreenWrapper>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+
+        <TouchableOpacity style={styles.backRow} onPress={() => navigation.goBack()}>
+          <AppText variant="caption" style={styles.backText}>‹ settings</AppText>
+        </TouchableOpacity>
+
+        <View style={styles.header}>
+          <AppText variant="xxl">schedule</AppText>
+          <AppText variant="caption" style={styles.subtitle}>
+            limit friction to certain hours of the day
+          </AppText>
+        </View>
+
+        {/* Enable toggle */}
+        <Card style={styles.toggleCard}>
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleText}>
+              <AppText variant="base">active hours only</AppText>
+              <AppText variant="caption" style={styles.toggleSub}>
+                outside this window, apps open freely
+              </AppText>
+            </View>
+            <Switch
+              value={enabled}
+              onValueChange={handleToggle}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.text}
+            />
+          </View>
+        </Card>
+
+        {/* Time pickers — only meaningful when enabled */}
+        <Card style={[styles.pickerCard, !enabled && styles.pickerCardDisabled]}>
+          <HourPicker
+            label="friction starts"
+            value={startHour}
+            onChange={enabled ? handleStartHour : () => {}}
+          />
+          <View style={styles.divider} />
+          <HourPicker
+            label="friction ends"
+            value={endHour}
+            onChange={enabled ? handleEndHour : () => {}}
+          />
+        </Card>
+
+        {/* Summary */}
+        {enabled && (
+          <AppText variant="caption" style={styles.summary}>
+            {windowSummary()}
+          </AppText>
+        )}
+
+        {!enabled && (
+          <AppText variant="caption" style={styles.disabledNote}>
+            enable above to set your friction window
+          </AppText>
+        )}
+
+      </ScrollView>
+    </ScreenWrapper>
+  );
+}
+
+const styles = StyleSheet.create({
+  scroll:       { paddingBottom: spacing.xxl, gap: spacing.lg },
+  backRow:      { marginTop: spacing.md },
+  backText:     { color: colors.primary },
+  header:       { gap: spacing.xs },
+  subtitle:     { color: colors.textSub, lineHeight: 20 },
+
+  toggleCard:   { padding: 0, overflow: 'hidden' },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    gap: spacing.md,
+  },
+  toggleText:   { flex: 1, gap: 2 },
+  toggleSub:    { color: colors.textDisabled },
+
+  pickerCard:         { gap: 0, padding: 0, overflow: 'hidden' },
+  pickerCardDisabled: { opacity: 0.4 },
+
+  pickerRow: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+  },
+  pickerLabel:    { color: colors.textSub },
+  pickerControls: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  arrow: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.md,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  arrowText:    { fontSize: 20, color: colors.text, lineHeight: 24 },
+  hourDisplay: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.primaryMuted,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  hourText:    { color: colors.primary },
+
+  divider:     { height: 1, backgroundColor: colors.border, marginHorizontal: spacing.md },
+
+  summary:     { color: colors.primary, textAlign: 'center' },
+  disabledNote:{ color: colors.textDisabled, textAlign: 'center' },
+});

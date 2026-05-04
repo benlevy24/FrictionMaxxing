@@ -63,6 +63,7 @@ export function dayLabel(dateStr) {
 const DEFAULT_SETTINGS = {
   enabledGames:       DEFAULT_ENABLED_GAMES,
   freeZones:          [],       // [{ id, name, lat, lng, radiusMeters }]
+  scheduleBlock:      { enabled: false, startHour: 8, endHour: 17 }, // friction active window
   difficulty:         'hard',   // 'easy' | 'hard' (medium exists internally but not exposed in UI)
   installDate:        null,     // set on first write
   onboardingDone:     false,

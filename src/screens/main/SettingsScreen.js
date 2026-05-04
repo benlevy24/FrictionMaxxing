@@ -135,15 +135,25 @@ export default function SettingsScreen({ navigation }) {
           />
         </Section>
 
-        {/* Geo-blocking */}
-        <Section title="geo-blocking" subtitle="location-based">
+        {/* Geo-blocking + Schedule */}
+        <Section title="free time" subtitle="when friction is paused">
           <TouchableOpacity
             style={styles.linkRow}
             onPress={() => navigation.navigate('GeoBlocking')}
           >
             <AppText variant="base" style={styles.linkLabel}>🌍  free zones</AppText>
             <AppText variant="caption" style={styles.linkSub}>
-              block friction at saved locations (home, gym, etc.)
+              pause friction at saved locations (home, gym, etc.)
+            </AppText>
+            <AppText variant="base" style={styles.linkChevron}>›</AppText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => navigation.navigate('Schedule')}
+          >
+            <AppText variant="base" style={styles.linkLabel}>🕐  schedule</AppText>
+            <AppText variant="caption" style={styles.linkSub}>
+              set hours when friction is active (e.g. 8 AM – 5 PM)
             </AppText>
             <AppText variant="base" style={styles.linkChevron}>›</AppText>
           </TouchableOpacity>
