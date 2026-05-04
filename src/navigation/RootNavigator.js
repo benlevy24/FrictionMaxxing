@@ -7,6 +7,7 @@ import TutorialScreen from '../screens/main/TutorialScreen';
 import GeoBlockingScreen from '../screens/main/GeoBlockingScreen';
 import UsageEstimatesScreen from '../screens/main/UsageEstimatesScreen';
 import ScheduleScreen from '../screens/main/ScheduleScreen';
+import LockoutTutorialScreen from '../screens/main/LockoutTutorialScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -36,6 +37,7 @@ export default function RootNavigator() {
         <Stack.Screen name="GeoBlocking" component={GeoBlockingScreen} />
         <Stack.Screen name="UsageEstimates" component={UsageEstimatesScreen} />
         <Stack.Screen name="Schedule" component={ScheduleScreen} />
+        <Stack.Screen name="LockoutTutorial" component={LockoutTutorialScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

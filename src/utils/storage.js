@@ -66,6 +66,7 @@ const DEFAULT_SETTINGS = {
   scheduleBlock:      { enabled: false, startHour: 8, endHour: 17 }, // friction active window
   blockMode:          'friction',  // 'friction' | 'lockout'
   lockoutMinutes:     1,           // minutes the app stays unlocked after beating the game (1–5)
+  triggerMode:        'always',    // 'always' | 'after_limit' — when friction/lockout activates
   difficulty:         'hard',   // 'easy' | 'hard' (medium exists internally but not exposed in UI)
   installDate:        null,     // set on first write
   onboardingDone:     false,

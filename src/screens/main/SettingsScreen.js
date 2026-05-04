@@ -18,8 +18,9 @@ export default function SettingsScreen({ navigation }) {
   const [enabledGames, setEnabledGames] = useState(DEFAULT_ENABLED_GAMES);
   const [difficulty, setDifficulty]     = useState('medium');
   const [notifications, setNotifications] = useState({ milestones: false });
-  const [blockMode, setBlockMode]         = useState('friction');
+  const [blockMode, setBlockMode]           = useState('friction');
   const [lockoutMinutes, setLockoutMinutes] = useState(1);
+  const [triggerMode, setTriggerMode]       = useState('always');
 
   useFocusEffect(
     useCallback(() => {
@@ -30,6 +31,7 @@ export default function SettingsScreen({ navigation }) {
         setDifficulty(s.difficulty ?? 'medium');
         setBlockMode(s.blockMode ?? 'friction');
         setLockoutMinutes(s.lockoutMinutes ?? 1);
+        setTriggerMode(s.triggerMode ?? 'always');
         setLoading(false);
       });
       return () => { active = false; };
@@ -44,6 +46,11 @@ export default function SettingsScreen({ navigation }) {
   async function selectBlockMode(mode) {
     setBlockMode(mode);
     await saveSettings({ blockMode: mode });
+  }
+
+  async function selectTriggerMode(mode) {
+    setTriggerMode(mode);
+    await saveSettings({ triggerMode: mode });
   }
 
   async function adjustLockoutMinutes(delta) {
@@ -128,6 +135,35 @@ export default function SettingsScreen({ navigation }) {
             ))}
           </View>
 
+          {/* Trigger — when does friction/lockout activate? */}
+          <View style={styles.lockoutRow}>
+            <AppText variant="caption" style={styles.lockoutLabel}>activate</AppText>
+            <View style={styles.diffRow}>
+              {[
+                { value: 'always',      label: '🔔  always on' },
+                { value: 'after_limit', label: '⏱  after screen time limit' },
+              ].map(({ value, label }) => (
+                <TouchableOpacity
+                  key={value}
+                  style={[styles.diffPill, triggerMode === value && styles.diffPillActive]}
+                  onPress={() => selectTriggerMode(value)}
+                >
+                  <AppText
+                    variant="caption"
+                    style={[styles.diffLabel, triggerMode === value && styles.diffLabelActive]}
+                  >
+                    {label}
+                  </AppText>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {triggerMode === 'after_limit' && (
+              <AppText variant="caption" style={styles.lockoutNote}>
+                fires when you try to blow past your iOS Screen Time limit — requires mac build
+              </AppText>
+            )}
+          </View>
+
           {blockMode === 'lockout' && (
             <View style={styles.lockoutRow}>
               <AppText variant="caption" style={styles.lockoutLabel}>
@@ -159,6 +195,16 @@ export default function SettingsScreen({ navigation }) {
               <AppText variant="caption" style={styles.lockoutNote}>
                 requires mac build to take effect
               </AppText>
+              <TouchableOpacity
+                style={styles.linkRow}
+                onPress={() => navigation.navigate('LockoutTutorial')}
+              >
+                <AppText variant="base" style={styles.linkLabel}>📋  lockout setup guide</AppText>
+                <AppText variant="caption" style={styles.linkSub}>
+                  how to enable hard-blocking with Screen Time permission
+                </AppText>
+                <AppText variant="base" style={styles.linkChevron}>›</AppText>
+              </TouchableOpacity>
             </View>
           )}
         </Section>
