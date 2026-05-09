@@ -18,17 +18,36 @@ import {
 } from '../../utils/storage';
 import { isInFreeZone } from '../../utils/location';
 import { ALL_APPS } from '../../utils/storage';
+import { scheduleTimeConstraintNotifications } from '../../utils/notifications';
 import { colors, spacing, radius } from '../../theme';
 
 // Game flow states
 const STATE = {
-  LOADING:   'loading',    // fetching settings + location check
-  INTERCEPT: 'intercept',  // One Sec-style loading screen with stats
-  FREE_ZONE: 'free_zone',  // user is in a free zone — skip the game
-  PLAYING:   'playing',    // game in progress
-  DECISION:  'decision',   // game beaten — open anyway or walk away?
-  DONE:      'done',       // user made their choice
+  LOADING:         'loading',          // fetching settings + location check
+  INTERCEPT:       'intercept',        // One Sec-style loading screen with stats
+  FREE_ZONE:       'free_zone',        // user is in a free zone — skip the game
+  PLAYING:         'playing',          // game in progress
+  DECISION:        'decision',         // game beaten — open anyway or walk away?
+  TIME_CONSTRAINT: 'time_constraint',  // pick a session duration before opening
+  REENTRY_WAIT:    'reentry_wait',     // mandatory loading screen before app opens
+  DONE:            'done',             // user made their choice
 };
+
+const TIME_CONSTRAINT_PRESETS = [
+  { label: '30 sec',  seconds: 30  },
+  { label: '1 min',   seconds: 60  },
+  { label: '90 sec',  seconds: 90  },
+  { label: '2.5 min', seconds: 150 },
+  { label: '5 min',   seconds: 300 },
+];
+
+function formatDuration(seconds) {
+  if (!seconds) return '';
+  if (seconds < 60) return `${seconds} sec`;
+  if (seconds === 90) return '90 sec';
+  const mins = seconds / 60;
+  return `${Number.isInteger(mins) ? mins : mins.toFixed(1)} min`;
+}
 
 const INTERCEPT_DURATIONS = { easy: 10000, medium: 20000, hard: 30000 };
 function getInterceptDuration(diff) {
@@ -98,6 +117,11 @@ export default function GameScreen({ navigation, route }) {
   const [showPhoneDown, setShowPhoneDown] = useState(false);
   const [phoneDownMessage, setPhoneDownMessage] = useState('');
 
+  // Time constraint
+  const [timeConstraintEnabled, setTimeConstraintEnabled] = useState(false);
+  const selectedDurationRef = useRef(null); // seconds chosen in TIME_CONSTRAINT picker
+  const reentryProgressAnim = useRef(new Animated.Value(0)).current;
+
   // Intercept screen state
   const [count24h, setCount24h]             = useState(0);
   const [lastAttemptMs, setLastAttemptMs]   = useState(null); // ms since last event for this app
@@ -141,6 +165,7 @@ export default function GameScreen({ navigation, route }) {
       }
 
       setDifficulty(s.difficulty ?? 'medium');
+      setTimeConstraintEnabled(s.timeConstraint?.enabled ?? false);
       const game = pickRandomGame(s.enabledGames);
       setSelectedGame(game);
 
@@ -175,6 +200,28 @@ export default function GameScreen({ navigation, route }) {
 
     return () => anim.stop();
   }, [gameState, difficulty]);
+
+  // Reentry wait — mandatory loading screen after picking a time constraint duration
+  useEffect(() => {
+    if (gameState !== STATE.REENTRY_WAIT) return;
+
+    reentryProgressAnim.setValue(0);
+    const anim = Animated.timing(reentryProgressAnim, {
+      toValue: 1,
+      duration: getInterceptDuration(difficulty),
+      useNativeDriver: false,
+    });
+    const duration = selectedDurationRef.current;
+    anim.start(async ({ finished }) => {
+      if (!finished) return;
+      eventRecorded.current = true;
+      await recordEvent({ appId, appLabel, appEmoji, gameCompleted: true, walkedAway: false });
+      await scheduleTimeConstraintNotifications(appLabel, duration);
+      navigation.goBack();
+    });
+
+    return () => anim.stop();
+  }, [gameState]);
 
   // Long-session nudge — show "put the phone down" modal after threshold
   useEffect(() => {
@@ -235,9 +282,18 @@ export default function GameScreen({ navigation, route }) {
   }
 
   async function handleOpenAnyway() {
+    if (timeConstraintEnabled) {
+      setGameState(STATE.TIME_CONSTRAINT);
+      return;
+    }
     eventRecorded.current = true;
     await recordEvent({ appId, appLabel, appEmoji, gameCompleted: true, walkedAway: false });
     navigation.goBack();
+  }
+
+  function handleSelectDuration(seconds) {
+    selectedDurationRef.current = seconds;
+    setGameState(STATE.REENTRY_WAIT);
   }
 
   function handleMilestoneDismiss() {
@@ -378,6 +434,69 @@ export default function GameScreen({ navigation, route }) {
         </View>
       )}
 
+      {/* Time constraint — pick a session duration before the app opens */}
+      {gameState === STATE.TIME_CONSTRAINT && (
+        <View style={styles.centered}>
+          <AppText variant="xxl" style={styles.winEmoji}>⏱</AppText>
+          <AppText variant="xxl" style={styles.decisionTitle}>set a time limit.</AppText>
+          <AppText variant="caption" style={styles.decisionSub}>
+            you'll get a nudge when time's up. beat another game to keep going.
+          </AppText>
+
+          <View style={styles.tcGrid}>
+            {TIME_CONSTRAINT_PRESETS.map(({ label, seconds }) => (
+              <TouchableOpacity
+                key={seconds}
+                style={styles.tcPill}
+                onPress={() => handleSelectDuration(seconds)}
+                activeOpacity={0.7}
+              >
+                <AppText variant="base" style={styles.tcPillText}>{label}</AppText>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TouchableOpacity onPress={handleWalkAway} style={styles.openAnywayBtn} activeOpacity={0.5}>
+            <AppText variant="caption" style={styles.openAnywayText}>
+              walk away 💪
+            </AppText>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Reentry wait — mandatory loading before app opens after picking a duration */}
+      {gameState === STATE.REENTRY_WAIT && (
+        <View style={styles.interceptWrapper}>
+          <View style={styles.interceptTop}>
+            <AppText style={styles.interceptEmoji}>{appEmoji}</AppText>
+            <AppText variant="subheading" style={styles.interceptAppName}>
+              {appLabel}
+            </AppText>
+            <AppText variant="caption" style={styles.interceptSubtitle}>
+              starting your {formatDuration(selectedDurationRef.current)} session...
+            </AppText>
+          </View>
+
+          <View style={styles.progressTrack}>
+            <Animated.View
+              style={[
+                styles.progressFill,
+                {
+                  width: reentryProgressAnim.interpolate({
+                    inputRange:  [0, 1],
+                    outputRange: ['0%', '100%'],
+                  }),
+                },
+              ]}
+            />
+          </View>
+
+          <AppText variant="caption" style={styles.interceptMessage}>
+            the clock starts when you get in.
+          </AppText>
+        </View>
+      )}
+
       {/* Done state */}
       {gameState === STATE.DONE && !milestone && (
         <View style={styles.centered}>
@@ -488,6 +607,28 @@ const styles = StyleSheet.create({
   },
   doneText: {
     color: colors.textSub,
+  },
+
+  // ── Time constraint picker ────────────────────────────────────────────────────
+  tcGrid: {
+    width: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'center',
+    marginTop: spacing.md,
+  },
+  tcPill: {
+    width: '45%',
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+  },
+  tcPillText: {
+    color: colors.text,
   },
 
   // ── Intercept screen ──────────────────────────────────────────────────────────

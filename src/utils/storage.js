@@ -73,6 +73,7 @@ const DEFAULT_SETTINGS = {
   appUsageEstimates:  {},       // { [appId]: { weeklyMinutes: number, weeklyPickups: number } }
   customApps:         [],       // [{ id, label, emoji }] — user-added apps beyond the defaults
   hiddenAppIds:       [],       // apps manually removed from the gated apps display
+  timeConstraint:     { enabled: false }, // caps each session; user picks a duration before opening an app
 };
 
 export async function getSettings() {

@@ -21,6 +21,7 @@ export default function SettingsScreen({ navigation }) {
   const [blockMode, setBlockMode]           = useState('friction');
   const [lockoutMinutes, setLockoutMinutes] = useState(1);
   const [triggerMode, setTriggerMode]       = useState('always');
+  const [timeConstraint, setTimeConstraint] = useState({ enabled: false });
 
   useFocusEffect(
     useCallback(() => {
@@ -32,6 +33,7 @@ export default function SettingsScreen({ navigation }) {
         setBlockMode(s.blockMode ?? 'friction');
         setLockoutMinutes(s.lockoutMinutes ?? 1);
         setTriggerMode(s.triggerMode ?? 'always');
+        setTimeConstraint(s.timeConstraint ?? { enabled: false });
         setLoading(false);
       });
       return () => { active = false; };
@@ -57,6 +59,12 @@ export default function SettingsScreen({ navigation }) {
     const next = Math.min(5, Math.max(1, lockoutMinutes + delta));
     setLockoutMinutes(next);
     await saveSettings({ lockoutMinutes: next });
+  }
+
+  async function toggleTimeConstraint() {
+    const next = { ...timeConstraint, enabled: !timeConstraint.enabled };
+    setTimeConstraint(next);
+    await saveSettings({ timeConstraint: next });
   }
 
   async function toggleGame(id) {
@@ -207,6 +215,20 @@ export default function SettingsScreen({ navigation }) {
               </TouchableOpacity>
             </View>
           )}
+        </Section>
+
+        {/* Time constraint */}
+        <Section
+          title="time constraint"
+          subtitle="caps each session so you can't spiral — pick a duration before the app opens"
+        >
+          <SettingRow
+            emoji="⏱"
+            label="time constraint"
+            sublabel="beat a game to get more time — sessions don't auto-chain"
+            value={timeConstraint.enabled}
+            onToggle={toggleTimeConstraint}
+          />
         </Section>
 
         {/* Difficulty */}
