@@ -7,7 +7,6 @@ import TutorialScreen from '../screens/main/TutorialScreen';
 import GeoBlockingScreen from '../screens/main/GeoBlockingScreen';
 import UsageEstimatesScreen from '../screens/main/UsageEstimatesScreen';
 import ScheduleScreen from '../screens/main/ScheduleScreen';
-import LockoutTutorialScreen from '../screens/main/LockoutTutorialScreen';
 import GroupBudgetsScreen from '../screens/main/GroupBudgetsScreen';
 import GroupEditScreen from '../screens/main/GroupEditScreen';
 
@@ -39,7 +38,6 @@ export default function RootNavigator() {
         <Stack.Screen name="GeoBlocking" component={GeoBlockingScreen} />
         <Stack.Screen name="UsageEstimates" component={UsageEstimatesScreen} />
         <Stack.Screen name="Schedule" component={ScheduleScreen} />
-        <Stack.Screen name="LockoutTutorial" component={LockoutTutorialScreen} />
         <Stack.Screen name="GroupBudgets" component={GroupBudgetsScreen} />
         <Stack.Screen name="GroupEdit" component={GroupEditScreen} />
       </Stack.Navigator>

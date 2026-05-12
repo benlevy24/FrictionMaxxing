@@ -64,9 +64,7 @@ const DEFAULT_SETTINGS = {
   enabledGames:       DEFAULT_ENABLED_GAMES,
   freeZones:          [],       // [{ id, name, lat, lng, radiusMeters }]
   scheduleBlock:      { enabled: false, startHour: 8, endHour: 17, activeDays: [0,1,2,3,4,5,6] }, // friction active window; activeDays: 0=Sun…6=Sat
-  blockMode:          'friction',  // 'friction' | 'lockout'
-  lockoutMinutes:     1,           // minutes the app stays unlocked after beating the game (1–5)
-  triggerMode:        'always',    // 'always' | 'after_limit' — when friction/lockout activates
+  triggerMode:        'always',    // 'always' | 'after_limit' — when friction activates
   difficulty:         'hard',   // 'easy' | 'hard' (medium exists internally but not exposed in UI)
   installDate:        null,     // set on first write
   onboardingDone:     false,
@@ -75,6 +73,7 @@ const DEFAULT_SETTINGS = {
   hiddenAppIds:       [],       // apps manually removed from the gated apps display
   timeConstraint:     { enabled: false }, // caps each session; user picks a duration before opening an app
   groupBudgets:       [],                 // [{ id, name, limitMinutes, appIds: string[] }]
+  dailyUsageTimer:    { enabled: false, minutes: 30 }, // start intercepting after X min of use today (per-app); enforcement needs DeviceActivityMonitor (#20)
 };
 
 export async function getSettings() {

@@ -4,7 +4,7 @@ import AppText from '../../components/AppText';
 import { ALL_APPS } from '../../utils/storage';
 import { colors, spacing, radius } from '../../theme';
 
-const STEPS = [
+const FRICTION_STEPS = [
   {
     number: 1,
     title: 'open the Shortcuts app',
@@ -60,7 +60,7 @@ export default function TutorialScreen({ navigation }) {
           </AppText>
         </View>
 
-        {STEPS.map((step) => (
+        {FRICTION_STEPS.map((step) => (
           <StepCard key={step.number} step={step} />
         ))}
 

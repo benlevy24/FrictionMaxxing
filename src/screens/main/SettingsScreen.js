@@ -18,10 +18,9 @@ export default function SettingsScreen({ navigation }) {
   const [enabledGames, setEnabledGames] = useState(DEFAULT_ENABLED_GAMES);
   const [difficulty, setDifficulty]     = useState('medium');
   const [notifications, setNotifications] = useState({ milestones: false });
-  const [blockMode, setBlockMode]           = useState('friction');
-  const [lockoutMinutes, setLockoutMinutes] = useState(1);
   const [triggerMode, setTriggerMode]       = useState('always');
   const [timeConstraint, setTimeConstraint] = useState({ enabled: false });
+  const [dailyUsageTimer, setDailyUsageTimer] = useState({ enabled: false, minutes: 30 });
 
   useFocusEffect(
     useCallback(() => {
@@ -30,10 +29,9 @@ export default function SettingsScreen({ navigation }) {
         if (!active) return;
         setEnabledGames(s.enabledGames);
         setDifficulty(s.difficulty ?? 'medium');
-        setBlockMode(s.blockMode ?? 'friction');
-        setLockoutMinutes(s.lockoutMinutes ?? 1);
         setTriggerMode(s.triggerMode ?? 'always');
         setTimeConstraint(s.timeConstraint ?? { enabled: false });
+        setDailyUsageTimer(s.dailyUsageTimer ?? { enabled: false, minutes: 30 });
         setLoading(false);
       });
       return () => { active = false; };
@@ -45,26 +43,27 @@ export default function SettingsScreen({ navigation }) {
     await saveSettings({ difficulty: level });
   }
 
-  async function selectBlockMode(mode) {
-    setBlockMode(mode);
-    await saveSettings({ blockMode: mode });
-  }
-
   async function selectTriggerMode(mode) {
     setTriggerMode(mode);
     await saveSettings({ triggerMode: mode });
-  }
-
-  async function adjustLockoutMinutes(delta) {
-    const next = Math.min(5, Math.max(1, lockoutMinutes + delta));
-    setLockoutMinutes(next);
-    await saveSettings({ lockoutMinutes: next });
   }
 
   async function toggleTimeConstraint() {
     const next = { ...timeConstraint, enabled: !timeConstraint.enabled };
     setTimeConstraint(next);
     await saveSettings({ timeConstraint: next });
+  }
+
+  async function toggleDailyUsageTimer() {
+    const next = { ...dailyUsageTimer, enabled: !dailyUsageTimer.enabled };
+    setDailyUsageTimer(next);
+    await saveSettings({ dailyUsageTimer: next });
+  }
+
+  async function adjustDailyUsageMinutes(delta) {
+    const next = { ...dailyUsageTimer, minutes: Math.min(120, Math.max(5, dailyUsageTimer.minutes + delta)) };
+    setDailyUsageTimer(next);
+    await saveSettings({ dailyUsageTimer: next });
   }
 
   async function toggleGame(id) {
@@ -118,101 +117,35 @@ export default function SettingsScreen({ navigation }) {
           <AppText variant="xxl">settings</AppText>
         </View>
 
-        {/* Mode */}
+        {/* Activation */}
         <Section
-          title="mode"
-          subtitle="friction nags every time. lockout hard-blocks until you beat the game."
+          title="activation"
+          subtitle="when should friction fire?"
         >
           <View style={styles.diffRow}>
             {[
-              { value: 'friction', label: '🔔  friction' },
-              { value: 'lockout',  label: '🔒  lockout'  },
+              { value: 'always',      label: '🔔  always on' },
+              { value: 'after_limit', label: '⏱  after screen time limit' },
             ].map(({ value, label }) => (
               <TouchableOpacity
                 key={value}
-                style={[styles.diffPill, blockMode === value && styles.diffPillActive]}
-                onPress={() => selectBlockMode(value)}
+                style={[styles.diffPill, triggerMode === value && styles.diffPillActive]}
+                onPress={() => selectTriggerMode(value)}
               >
                 <AppText
                   variant="base"
-                  style={[styles.diffLabel, blockMode === value && styles.diffLabelActive]}
+                  style={[styles.diffLabel, triggerMode === value && styles.diffLabelActive]}
                 >
                   {label}
                 </AppText>
               </TouchableOpacity>
             ))}
           </View>
-
-          {/* Trigger — when does friction/lockout activate? */}
-          <View style={styles.lockoutRow}>
-            <AppText variant="caption" style={styles.lockoutLabel}>activate</AppText>
-            <View style={styles.diffRow}>
-              {[
-                { value: 'always',      label: '🔔  always on' },
-                { value: 'after_limit', label: '⏱  after screen time limit' },
-              ].map(({ value, label }) => (
-                <TouchableOpacity
-                  key={value}
-                  style={[styles.diffPill, triggerMode === value && styles.diffPillActive]}
-                  onPress={() => selectTriggerMode(value)}
-                >
-                  <AppText
-                    variant="caption"
-                    style={[styles.diffLabel, triggerMode === value && styles.diffLabelActive]}
-                  >
-                    {label}
-                  </AppText>
-                </TouchableOpacity>
-              ))}
-            </View>
-            {triggerMode === 'after_limit' && (
+          {triggerMode === 'after_limit' && (
+            <View style={styles.lockoutRow}>
               <AppText variant="caption" style={styles.lockoutNote}>
                 fires when you try to blow past your iOS Screen Time limit — requires mac build
               </AppText>
-            )}
-          </View>
-
-          {blockMode === 'lockout' && (
-            <View style={styles.lockoutRow}>
-              <AppText variant="caption" style={styles.lockoutLabel}>
-                unlock window
-              </AppText>
-              <View style={styles.lockoutControls}>
-                <TouchableOpacity
-                  onPress={() => adjustLockoutMinutes(-1)}
-                  style={[styles.lockoutArrow, lockoutMinutes <= 1 && styles.lockoutArrowDisabled]}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  disabled={lockoutMinutes <= 1}
-                >
-                  <AppText style={styles.lockoutArrowText}>‹</AppText>
-                </TouchableOpacity>
-                <View style={styles.lockoutValue}>
-                  <AppText variant="subheading" style={styles.lockoutValueText}>
-                    {lockoutMinutes} min
-                  </AppText>
-                </View>
-                <TouchableOpacity
-                  onPress={() => adjustLockoutMinutes(1)}
-                  style={[styles.lockoutArrow, lockoutMinutes >= 5 && styles.lockoutArrowDisabled]}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  disabled={lockoutMinutes >= 5}
-                >
-                  <AppText style={styles.lockoutArrowText}>›</AppText>
-                </TouchableOpacity>
-              </View>
-              <AppText variant="caption" style={styles.lockoutNote}>
-                requires mac build to take effect
-              </AppText>
-              <TouchableOpacity
-                style={styles.linkRow}
-                onPress={() => navigation.navigate('LockoutTutorial')}
-              >
-                <AppText variant="base" style={styles.linkLabel}>📋  lockout setup guide</AppText>
-                <AppText variant="caption" style={styles.linkSub}>
-                  how to enable hard-blocking with Screen Time permission
-                </AppText>
-                <AppText variant="base" style={styles.linkChevron}>›</AppText>
-              </TouchableOpacity>
             </View>
           )}
         </Section>
@@ -220,15 +153,60 @@ export default function SettingsScreen({ navigation }) {
         {/* Time constraint */}
         <Section
           title="time constraint"
-          subtitle="caps each session so you can't spiral — pick a duration before the app opens"
+          subtitle="cap each session before more friction"
         >
           <SettingRow
             emoji="⏱"
             label="time constraint"
-            sublabel="beat a game to get more time — sessions don't auto-chain"
+            sublabel="beat a game for a timed session"
             value={timeConstraint.enabled}
             onToggle={toggleTimeConstraint}
           />
+        </Section>
+
+        {/* Daily usage timer */}
+        <Section
+          title="daily limit"
+          subtitle="start intercepting after you've used an app for X minutes today"
+        >
+          <SettingRow
+            emoji="⏱"
+            label="daily limit"
+            sublabel="friction kicks in once you hit the limit — resets at midnight"
+            value={dailyUsageTimer.enabled}
+            onToggle={toggleDailyUsageTimer}
+          />
+          {dailyUsageTimer.enabled && (
+            <View style={styles.lockoutRow}>
+              <AppText variant="caption" style={styles.lockoutLabel}>limit per app</AppText>
+              <View style={styles.lockoutControls}>
+                <TouchableOpacity
+                  onPress={() => adjustDailyUsageMinutes(-5)}
+                  style={[styles.lockoutArrow, dailyUsageTimer.minutes <= 5 && styles.lockoutArrowDisabled]}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  disabled={dailyUsageTimer.minutes <= 5}
+                >
+                  <AppText style={styles.lockoutArrowText}>‹</AppText>
+                </TouchableOpacity>
+                <View style={styles.lockoutValue}>
+                  <AppText variant="subheading" style={styles.lockoutValueText}>
+                    {dailyUsageTimer.minutes} min
+                  </AppText>
+                </View>
+                <TouchableOpacity
+                  onPress={() => adjustDailyUsageMinutes(5)}
+                  style={[styles.lockoutArrow, dailyUsageTimer.minutes >= 120 && styles.lockoutArrowDisabled]}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  disabled={dailyUsageTimer.minutes >= 120}
+                >
+                  <AppText style={styles.lockoutArrowText}>›</AppText>
+                </TouchableOpacity>
+              </View>
+              <AppText variant="caption" style={styles.lockoutNote}>
+                requires mac build to enforce — saves your preference now
+              </AppText>
+            </View>
+          )}
         </Section>
 
         {/* Difficulty */}

@@ -23,7 +23,7 @@ const STEPS = [
   {
     number: 4,
     title: 'that\'s it',
-    body: 'FrictionMaxxing handles the rest. when lockout mode triggers, the app is hard-blocked until you beat the game. after beating it, the app unlocks for your chosen window, then re-locks automatically.',
+    body: 'FrictionMaxxing handles the rest. when lockout triggers, the app is hard-blocked — beat the game, then walk away or open for your chosen window (1–5 min in Settings). after the window closes, it re-locks and the whole thing starts over next time you open it.',
   },
 ];
 
@@ -81,15 +81,15 @@ export default function LockoutTutorialScreen({ navigation }) {
             <View style={styles.compareCol}>
               <AppText variant="base" style={styles.compareHeader}>🔔  friction</AppText>
               <AppText variant="caption" style={styles.compareBody}>game fires every open</AppText>
-              <AppText variant="caption" style={styles.compareBody}>beat it → walk away or open anyway</AppText>
+              <AppText variant="caption" style={styles.compareBody}>beat it → walk away or open (no re-lock)</AppText>
               <AppText variant="caption" style={styles.compareBody}>set up via iOS Shortcuts</AppText>
               <AppText variant="caption" style={styles.compareBody}>works now</AppText>
             </View>
             <View style={styles.compareDivider} />
             <View style={styles.compareCol}>
               <AppText variant="base" style={styles.compareHeader}>🔒  lockout</AppText>
-              <AppText variant="caption" style={styles.compareBody}>app is hard-blocked</AppText>
-              <AppText variant="caption" style={styles.compareBody}>beat it → unlocked for 1–5 min</AppText>
+              <AppText variant="caption" style={styles.compareBody}>app is hard-blocked at OS level</AppText>
+              <AppText variant="caption" style={styles.compareBody}>beat it → walk away or get N min, then re-locks</AppText>
               <AppText variant="caption" style={styles.compareBody}>set up via Screen Time permission</AppText>
               <AppText variant="caption" style={[styles.compareBody, styles.compareComingSoon]}>coming soon</AppText>
             </View>
