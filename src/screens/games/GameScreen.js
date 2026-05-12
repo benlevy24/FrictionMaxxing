@@ -429,7 +429,7 @@ export default function GameScreen({ navigation, route }) {
             />
           </View>
 
-          {/* Countdown number */}
+          {/* Countdown number + reach stats */}
           <View style={styles.interceptStats}>
             <View style={styles.statRow}>
               <AppText style={styles.statNumber}>{timeRemaining}</AppText>
@@ -437,6 +437,21 @@ export default function GameScreen({ navigation, route }) {
                 {timeRemaining === 1 ? 'second' : 'seconds'}
               </AppText>
             </View>
+            <View style={styles.statRow}>
+              <AppText variant="caption" style={styles.statLabel}>
+                {count24h} {count24h === 1 ? 'reach' : 'reaches'} in the last 24 hours
+              </AppText>
+            </View>
+            {lastAttemptMs !== null && (
+              <View style={styles.statRow}>
+                <AppText variant="caption" style={styles.statLast}>
+                  last reach:{' '}
+                  <AppText variant="caption" style={styles.statLastHighlight}>
+                    {formatTimeAgo(lastAttemptMs)}
+                  </AppText>
+                </AppText>
+              </View>
+            )}
           </View>
 
           {/* Cheeky message */}
