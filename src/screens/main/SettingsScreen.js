@@ -60,8 +60,13 @@ export default function SettingsScreen({ navigation }) {
     await saveSettings({ dailyUsageTimer: next });
   }
 
+  const DAILY_LIMIT_STEPS = [1, 2, 5, 10, 15, 20, 30, 45, 60, 90, 120];
+
   async function adjustDailyUsageMinutes(delta) {
-    const next = { ...dailyUsageTimer, minutes: Math.min(120, Math.max(5, dailyUsageTimer.minutes + delta)) };
+    const idx = DAILY_LIMIT_STEPS.indexOf(dailyUsageTimer.minutes);
+    const currentIdx = idx === -1 ? 2 : idx; // default to 5 if not found
+    const nextIdx = Math.min(DAILY_LIMIT_STEPS.length - 1, Math.max(0, currentIdx + delta));
+    const next = { ...dailyUsageTimer, minutes: DAILY_LIMIT_STEPS[nextIdx] };
     setDailyUsageTimer(next);
     await saveSettings({ dailyUsageTimer: next });
   }
@@ -153,7 +158,7 @@ export default function SettingsScreen({ navigation }) {
         {/* Time constraint */}
         <Section
           title="time constraint"
-          subtitle="cap each session before more friction"
+          subtitle="beat a game for a timed session"
         >
           <SettingRow
             emoji="⏱"
@@ -164,15 +169,15 @@ export default function SettingsScreen({ navigation }) {
           />
         </Section>
 
-        {/* Daily usage timer */}
+        {/* Daily limit */}
         <Section
-          title="daily limit"
-          subtitle="start intercepting after you've used an app for X minutes today"
+          title="friction threshold"
+          subtitle="friction kicks in after passing the threshold"
         >
           <SettingRow
             emoji="⏱"
-            label="daily limit"
-            sublabel="friction kicks in once you hit the limit — resets at midnight"
+            label="friction threshold"
+            sublabel="friction kicks in after passing the threshold"
             value={dailyUsageTimer.enabled}
             onToggle={toggleDailyUsageTimer}
           />
@@ -181,10 +186,10 @@ export default function SettingsScreen({ navigation }) {
               <AppText variant="caption" style={styles.lockoutLabel}>limit per app</AppText>
               <View style={styles.lockoutControls}>
                 <TouchableOpacity
-                  onPress={() => adjustDailyUsageMinutes(-5)}
-                  style={[styles.lockoutArrow, dailyUsageTimer.minutes <= 5 && styles.lockoutArrowDisabled]}
+                  onPress={() => adjustDailyUsageMinutes(-1)}
+                  style={[styles.lockoutArrow, dailyUsageTimer.minutes <= 1 && styles.lockoutArrowDisabled]}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  disabled={dailyUsageTimer.minutes <= 5}
+                  disabled={dailyUsageTimer.minutes <= 1}
                 >
                   <AppText style={styles.lockoutArrowText}>‹</AppText>
                 </TouchableOpacity>
@@ -194,7 +199,7 @@ export default function SettingsScreen({ navigation }) {
                   </AppText>
                 </View>
                 <TouchableOpacity
-                  onPress={() => adjustDailyUsageMinutes(5)}
+                  onPress={() => adjustDailyUsageMinutes(1)}
                   style={[styles.lockoutArrow, dailyUsageTimer.minutes >= 120 && styles.lockoutArrowDisabled]}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                   disabled={dailyUsageTimer.minutes >= 120}
@@ -203,7 +208,7 @@ export default function SettingsScreen({ navigation }) {
                 </TouchableOpacity>
               </View>
               <AppText variant="caption" style={styles.lockoutNote}>
-                requires mac build to enforce — saves your preference now
+                different from iOS Screen Time — this fires friction, not a block. requires mac build to enforce.
               </AppText>
             </View>
           )}
