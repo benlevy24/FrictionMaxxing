@@ -134,6 +134,9 @@ export default function ShareCardModal({ visible, onClose, stats, weekly }) {
             <AppText style={styles.tagline}>
               day {daysSinceInstall} of needing a game{'\n'}to stop doomscrolling
             </AppText>
+            <AppText style={styles.suffered}>
+              had to beat a rigged game just to open the app to post this
+            </AppText>
             <AppText style={styles.footerUrl}>frictionmaxxing.app</AppText>
           </View>
 
@@ -347,6 +350,13 @@ const styles = StyleSheet.create({
     color: CARD.textSub,
     textAlign: 'center',
     lineHeight: 20,
+    fontStyle: 'italic',
+  },
+  suffered: {
+    fontFamily: 'Comic Sans MS',
+    fontSize: 10,
+    color: CARD.textDim,
+    textAlign: 'center',
     fontStyle: 'italic',
   },
   footerUrl: {
