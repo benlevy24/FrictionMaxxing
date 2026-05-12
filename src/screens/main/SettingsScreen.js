@@ -300,6 +300,16 @@ export default function SettingsScreen({ navigation }) {
             </AppText>
             <AppText variant="base" style={styles.linkChevron}>›</AppText>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => navigation.navigate('GroupBudgets')}
+          >
+            <AppText variant="base" style={styles.linkLabel}>⏱  group budgets</AppText>
+            <AppText variant="caption" style={styles.linkSub}>
+              shared daily time pool per app category (social, entertainment, etc.)
+            </AppText>
+            <AppText variant="base" style={styles.linkChevron}>›</AppText>
+          </TouchableOpacity>
         </Section>
 
         {/* Setup */}

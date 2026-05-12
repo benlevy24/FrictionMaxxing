@@ -74,6 +74,7 @@ const DEFAULT_SETTINGS = {
   customApps:         [],       // [{ id, label, emoji }] — user-added apps beyond the defaults
   hiddenAppIds:       [],       // apps manually removed from the gated apps display
   timeConstraint:     { enabled: false }, // caps each session; user picks a duration before opening an app
+  groupBudgets:       [],                 // [{ id, name, limitMinutes, appIds: string[] }]
 };
 
 export async function getSettings() {
