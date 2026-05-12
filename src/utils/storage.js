@@ -20,7 +20,7 @@ export const ALL_APPS = [
 ];
 
 export const DEFAULT_ENABLED_GAMES = [
-  'tictactoe', 'maze', 'hangman', 'math', 'stroop', 'pong', 'snake', 'checkers', 'chess',
+  'tictactoe', 'maze', 'hangman', 'math', 'stroop', 'pong', 'snake', 'checkers', 'chess', 'gwam',
 ];
 
 // ── Storage keys ──────────────────────────────────────────────────────────────
@@ -64,7 +64,7 @@ const DEFAULT_SETTINGS = {
   enabledGames:       DEFAULT_ENABLED_GAMES,
   freeZones:          [],       // [{ id, name, lat, lng, radiusMeters }]
   scheduleBlock:      { enabled: false, startHour: 8, endHour: 17, activeDays: [0,1,2,3,4,5,6] }, // friction active window; activeDays: 0=Sun…6=Sat
-  triggerMode:        'always',    // 'always' | 'after_limit' — when friction activates
+  frictionMode:       'always',    // 'always' | 'threshold' | 'time_cap'
   difficulty:         'hard',   // 'easy' | 'hard' (medium exists internally but not exposed in UI)
   installDate:        null,     // set on first write
   onboardingDone:     false,

@@ -18,7 +18,7 @@ export default function SettingsScreen({ navigation }) {
   const [enabledGames, setEnabledGames] = useState(DEFAULT_ENABLED_GAMES);
   const [difficulty, setDifficulty]     = useState('medium');
   const [notifications, setNotifications] = useState({ milestones: false });
-  const [triggerMode, setTriggerMode]       = useState('always');
+  const [frictionMode, setFrictionMode]     = useState('always');
   const [timeConstraint, setTimeConstraint] = useState({ enabled: false });
   const [dailyUsageTimer, setDailyUsageTimer] = useState({ enabled: false, minutes: 30 });
 
@@ -29,7 +29,7 @@ export default function SettingsScreen({ navigation }) {
         if (!active) return;
         setEnabledGames(s.enabledGames);
         setDifficulty(s.difficulty ?? 'medium');
-        setTriggerMode(s.triggerMode ?? 'always');
+        setFrictionMode(s.frictionMode ?? 'always');
         setTimeConstraint(s.timeConstraint ?? { enabled: false });
         setDailyUsageTimer(s.dailyUsageTimer ?? { enabled: false, minutes: 30 });
         setLoading(false);
@@ -43,9 +43,9 @@ export default function SettingsScreen({ navigation }) {
     await saveSettings({ difficulty: level });
   }
 
-  async function selectTriggerMode(mode) {
-    setTriggerMode(mode);
-    await saveSettings({ triggerMode: mode });
+  async function selectFrictionMode(mode) {
+    setFrictionMode(mode);
+    await saveSettings({ frictionMode: mode });
   }
 
   async function toggleTimeConstraint() {
@@ -122,68 +122,35 @@ export default function SettingsScreen({ navigation }) {
           <AppText variant="xxl">settings</AppText>
         </View>
 
-        {/* Activation */}
+        {/* Mode */}
         <Section
-          title="activation"
-          subtitle="when should friction fire?"
+          title="mode"
+          subtitle="how friction fires"
         >
           <View style={styles.diffRow}>
             {[
-              { value: 'always',      label: '🔔  always on' },
-              { value: 'after_limit', label: '⏱  after screen time limit' },
+              { value: 'always',     label: '🔔  always on'  },
+              { value: 'threshold',  label: '⏱  threshold'   },
+              { value: 'hard_limit', label: '🔒  time cap'  },
             ].map(({ value, label }) => (
               <TouchableOpacity
                 key={value}
-                style={[styles.diffPill, triggerMode === value && styles.diffPillActive]}
-                onPress={() => selectTriggerMode(value)}
+                style={[styles.diffPill, frictionMode === value && styles.diffPillActive]}
+                onPress={() => selectFrictionMode(value)}
               >
                 <AppText
-                  variant="base"
-                  style={[styles.diffLabel, triggerMode === value && styles.diffLabelActive]}
+                  variant="caption"
+                  style={[styles.diffLabel, frictionMode === value && styles.diffLabelActive]}
                 >
                   {label}
                 </AppText>
               </TouchableOpacity>
             ))}
           </View>
-          {triggerMode === 'after_limit' && (
-            <View style={styles.lockoutRow}>
-              <AppText variant="caption" style={styles.lockoutNote}>
-                fires when you try to blow past your iOS Screen Time limit — requires mac build
-              </AppText>
-            </View>
-          )}
-        </Section>
 
-        {/* Time constraint */}
-        <Section
-          title="time constraint"
-          subtitle="beat a game for a timed session"
-        >
-          <SettingRow
-            emoji="⏱"
-            label="time constraint"
-            sublabel="beat a game for a timed session"
-            value={timeConstraint.enabled}
-            onToggle={toggleTimeConstraint}
-          />
-        </Section>
-
-        {/* Daily limit */}
-        <Section
-          title="friction threshold"
-          subtitle="friction kicks in after passing the threshold"
-        >
-          <SettingRow
-            emoji="⏱"
-            label="friction threshold"
-            sublabel="friction kicks in after passing the threshold"
-            value={dailyUsageTimer.enabled}
-            onToggle={toggleDailyUsageTimer}
-          />
-          {dailyUsageTimer.enabled && (
+          {frictionMode === 'threshold' && (
             <View style={styles.lockoutRow}>
-              <AppText variant="caption" style={styles.lockoutLabel}>limit per app</AppText>
+              <AppText variant="caption" style={styles.lockoutLabel}>per app, per day</AppText>
               <View style={styles.lockoutControls}>
                 <TouchableOpacity
                   onPress={() => adjustDailyUsageMinutes(-1)}
@@ -208,11 +175,31 @@ export default function SettingsScreen({ navigation }) {
                 </TouchableOpacity>
               </View>
               <AppText variant="caption" style={styles.lockoutNote}>
-                different from iOS Screen Time — this fires friction, not a block. requires mac build to enforce.
+                fires friction once you've passed the daily limit — requires mac build
               </AppText>
             </View>
           )}
+
+          {frictionMode === 'hard_limit' && (
+            <TouchableOpacity
+              style={styles.linkRow}
+              onPress={() => navigation.navigate('GroupBudgets')}
+            >
+              <AppText variant="base" style={styles.linkLabel}>⚙️  manage groups</AppText>
+              <AppText variant="caption" style={styles.linkSub}>
+                set daily budgets — once a group runs out, walk away is the only option
+              </AppText>
+              <AppText variant="base" style={styles.linkChevron}>›</AppText>
+            </TouchableOpacity>
+          )}
         </Section>
+
+        {/* Time constraint */}
+        <Section
+          title="time constraint"
+          subtitle="beat a game, limit doomscrolling"
+          toggle={{ value: timeConstraint.enabled, onToggle: toggleTimeConstraint }}
+        />
 
         {/* Difficulty */}
         <Section title="difficulty" subtitle="how hard should the games be?">
@@ -339,14 +326,24 @@ export default function SettingsScreen({ navigation }) {
   );
 }
 
-function Section({ title, subtitle, children }) {
+function Section({ title, subtitle, toggle, children }) {
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <AppText variant="subheading">{title}</AppText>
-        {subtitle && <AppText variant="caption">{subtitle}</AppText>}
+        <View style={styles.sectionHeaderText}>
+          <AppText variant="subheading">{title}</AppText>
+          {subtitle && <AppText variant="caption">{subtitle}</AppText>}
+        </View>
+        {toggle && (
+          <Switch
+            value={toggle.value}
+            onValueChange={toggle.onToggle}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={colors.text}
+          />
+        )}
       </View>
-      <Card style={styles.sectionCard}>{children}</Card>
+      {children && <Card style={styles.sectionCard}>{children}</Card>}
     </View>
   );
 }
@@ -373,7 +370,8 @@ const styles = StyleSheet.create({
   scroll:         { paddingBottom: spacing.xxl, gap: spacing.lg },
   header:         { marginTop: spacing.xl },
   section:        { gap: spacing.sm },
-  sectionHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  sectionHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sectionHeaderText: { flex: 1, gap: 2 },
   sectionCard:    { padding: 0, overflow: 'hidden' },
   row: {
     flexDirection: 'row',

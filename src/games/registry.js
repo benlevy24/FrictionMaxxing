@@ -14,6 +14,7 @@ import PongGame from './PongGame';
 import SnakeGame from './SnakeGame';
 import CheckersGame from './CheckersGame';
 import ChessGame from './ChessGame';
+import GwamGrowerGame from './GwamGrowerGame';
 
 // Each entry shape:
 // {
@@ -76,6 +77,12 @@ export const GAMES = [
     label: 'Chess',
     emoji: '♟️',
     component: ChessGame,
+  },
+  {
+    id: 'gwam',
+    label: 'GWAM Grower',
+    emoji: '⌨️',
+    component: GwamGrowerGame,
   },
 ];
 

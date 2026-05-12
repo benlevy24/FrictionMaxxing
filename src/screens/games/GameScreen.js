@@ -15,7 +15,6 @@ import {
   getSettings,
   getEvents,
   recordEvent,
-  getToday,
 } from '../../utils/storage';
 import { isInFreeZone } from '../../utils/location';
 import { ALL_APPS } from '../../utils/storage';
@@ -26,7 +25,6 @@ import { colors, spacing, radius } from '../../theme';
 const STATE = {
   LOADING:         'loading',          // fetching settings + location check
   INTERCEPT:       'intercept',        // One Sec-style loading screen with stats
-  LOCKOUT_BUFFER:  'lockout_buffer',   // escalating countdown before game in lockout mode
   FREE_ZONE:       'free_zone',        // user is in a free zone — skip the game
   PLAYING:         'playing',          // game in progress
   DECISION:        'decision',         // game beaten — open anyway or walk away?
@@ -68,33 +66,6 @@ const PHONE_DOWN_MESSAGES = [
   "hey. breathe. put it down.",
 ];
 
-const LOCKOUT_BUFFER_MESSAGES_LOW = [
-  "access denied. for now.",
-  "this is the price of admission.",
-  "you can wait. or you can walk.",
-  "one reach, ten seconds. seems fair.",
-];
-const LOCKOUT_BUFFER_MESSAGES_MID = [
-  "the buffer grows with every reach.",
-  "this is getting expensive.",
-  "you're building up quite a tab here.",
-  "each one of these seconds is your own fault.",
-];
-const LOCKOUT_BUFFER_MESSAGES_HIGH = [
-  "you've earned every one of these seconds.",
-  "how many times are we going to do this today.",
-  "at this point the app should just say no.",
-  "the buffer doesn't judge. but we do.",
-];
-
-function pickLockoutMessage(reachNum) {
-  const pool = reachNum >= 5
-    ? LOCKOUT_BUFFER_MESSAGES_HIGH
-    : reachNum >= 3
-      ? LOCKOUT_BUFFER_MESSAGES_MID
-      : LOCKOUT_BUFFER_MESSAGES_LOW;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
 
 const INTERCEPT_MESSAGES_LOW = [
   "here we go.",
@@ -137,6 +108,7 @@ export default function GameScreen({ navigation, route }) {
   const appId    = rawId;
   const appLabel = decodeURIComponent(rawLabel);
   const appEmoji = ALL_APPS.find((a) => a.id === appId)?.emoji ?? '📱';
+  const timeCapExhausted = route?.params?.timeCapExhausted === 'true';
 
   const [gameState, setGameState] = useState(STATE.LOADING);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -152,13 +124,6 @@ export default function GameScreen({ navigation, route }) {
   const selectedDurationRef = useRef(null); // seconds chosen in TIME_CONSTRAINT or lockout session picker
   const reentryProgressAnim = useRef(new Animated.Value(0)).current;
 
-  // Lockout buffer
-  const [blockMode, setBlockMode]                   = useState('friction');
-  const [reachNumber, setReachNumber]               = useState(1);     // 1-indexed reach count today
-  const [bufferSeconds, setBufferSeconds]           = useState(10);    // total buffer duration
-  const [timeRemaining, setTimeRemaining]           = useState(10);    // live countdown display
-  const [countdownDone, setCountdownDone]           = useState(false);
-  const [selectedSessionSeconds, setSelectedSessionSeconds] = useState(null);
 
   // Intercept screen state
   const [count24h, setCount24h]             = useState(0);
@@ -202,8 +167,6 @@ export default function GameScreen({ navigation, route }) {
         }
       }
 
-      const mode = s.blockMode ?? 'friction';
-      setBlockMode(mode);
       setDifficulty(s.difficulty ?? 'medium');
       setTimeConstraintEnabled(s.timeConstraint?.enabled ?? false);
       const game = pickRandomGame(s.enabledGames);
@@ -218,22 +181,8 @@ export default function GameScreen({ navigation, route }) {
 
       setCount24h(recent.length);
       setLastAttemptMs(lastEvent ? now - lastEvent.timestamp : null);
-
-      if (mode === 'lockout') {
-        // Escalating buffer: reach #N today = N × 10s
-        const today = getToday();
-        const prevReaches = events.filter((e) => e.appId === appId && e.date === today).length;
-        const num = prevReaches + 1;
-        const secs = num * 10;
-        setReachNumber(num);
-        setBufferSeconds(secs);
-        setTimeRemaining(secs);
-        setInterceptMessage(pickLockoutMessage(num));
-        setGameState(STATE.LOCKOUT_BUFFER);
-      } else {
-        setInterceptMessage(pickInterceptMessage(recent.length));
-        setGameState(STATE.INTERCEPT);
-      }
+      setInterceptMessage(pickInterceptMessage(recent.length));
+      setGameState(STATE.INTERCEPT);
     }
     init();
   }, []);
@@ -254,37 +203,6 @@ export default function GameScreen({ navigation, route }) {
 
     return () => anim.stop();
   }, [gameState, difficulty]);
-
-  // Lockout buffer: animate progress + tick countdown; auto-advance when both done + session picked
-  useEffect(() => {
-    if (gameState !== STATE.LOCKOUT_BUFFER) return;
-
-    progressAnim.setValue(0);
-    const anim = Animated.timing(progressAnim, {
-      toValue: 1,
-      duration: bufferSeconds * 1000,
-      useNativeDriver: false,
-    });
-    anim.start(({ finished }) => {
-      if (finished) setCountdownDone(true);
-    });
-
-    const interval = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) { clearInterval(interval); return 0; }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => { anim.stop(); clearInterval(interval); };
-  }, [gameState]);
-
-  // Advance to game once countdown is done AND session is picked
-  useEffect(() => {
-    if (gameState === STATE.LOCKOUT_BUFFER && countdownDone && selectedSessionSeconds !== null) {
-      setGameState(STATE.PLAYING);
-    }
-  }, [countdownDone, selectedSessionSeconds, gameState]);
 
   // Reentry wait — mandatory loading screen after picking a time constraint duration
   useEffect(() => {
@@ -367,12 +285,6 @@ export default function GameScreen({ navigation, route }) {
   }
 
   async function handleOpenAnyway() {
-    if (blockMode === 'lockout') {
-      // Session was already picked during the buffer — go straight to reentry wait
-      selectedDurationRef.current = selectedSessionSeconds;
-      setGameState(STATE.REENTRY_WAIT);
-      return;
-    }
     if (timeConstraintEnabled) {
       setGameState(STATE.TIME_CONSTRAINT);
       return;
@@ -398,116 +310,6 @@ export default function GameScreen({ navigation, route }) {
       {/* Loading — brief, fetching settings + location check */}
       {gameState === STATE.LOADING && (
         <View style={styles.centered} />
-      )}
-
-      {/* Lockout buffer — escalating countdown + session picker */}
-      {gameState === STATE.LOCKOUT_BUFFER && (
-        <View style={styles.interceptWrapper}>
-          {/* App identity */}
-          <View style={styles.interceptTop}>
-            <AppText style={styles.interceptEmoji}>{appEmoji}</AppText>
-            <AppText variant="subheading" style={styles.interceptAppName}>
-              {appLabel}
-            </AppText>
-            <AppText variant="caption" style={styles.interceptSubtitle}>
-              reach #{reachNumber} today
-            </AppText>
-          </View>
-
-          {/* Progress bar — same as intercept */}
-          <View style={styles.progressTrack}>
-            <Animated.View
-              style={[
-                styles.progressFill,
-                {
-                  width: progressAnim.interpolate({
-                    inputRange:  [0, 1],
-                    outputRange: ['0%', '100%'],
-                  }),
-                },
-              ]}
-            />
-          </View>
-
-          {/* Countdown number + reach stats */}
-          <View style={styles.interceptStats}>
-            <View style={styles.statRow}>
-              <AppText style={styles.statNumber}>{timeRemaining}</AppText>
-              <AppText variant="caption" style={styles.statLabel}>
-                {timeRemaining === 1 ? 'second' : 'seconds'}
-              </AppText>
-            </View>
-            <View style={styles.statRow}>
-              <AppText variant="caption" style={styles.statLabel}>
-                {count24h} {count24h === 1 ? 'reach' : 'reaches'} in the last 24 hours
-              </AppText>
-            </View>
-            {lastAttemptMs !== null && (
-              <View style={styles.statRow}>
-                <AppText variant="caption" style={styles.statLast}>
-                  last reach:{' '}
-                  <AppText variant="caption" style={styles.statLastHighlight}>
-                    {formatTimeAgo(lastAttemptMs)}
-                  </AppText>
-                </AppText>
-              </View>
-            )}
-          </View>
-
-          {/* Cheeky message */}
-          <AppText variant="caption" style={styles.interceptMessage}>
-            {interceptMessage}
-          </AppText>
-
-          {/* Session picker — active during countdown, clearly labeled as independent */}
-          <View style={styles.lockoutPickerSection}>
-            <AppText variant="caption" style={styles.lockoutPickerLabel}>
-              how long do you want?
-            </AppText>
-            <AppText variant="caption" style={styles.lockoutPickerNote}>
-              (picking this doesn't skip the wait)
-            </AppText>
-            <View style={styles.tcGrid}>
-              {TIME_CONSTRAINT_PRESETS.map(({ label, seconds }) => {
-                const isSelected = selectedSessionSeconds === seconds;
-                return (
-                  <TouchableOpacity
-                    key={seconds}
-                    style={[styles.tcPill, isSelected && styles.tcPillSelected]}
-                    onPress={() => {
-                      selectedDurationRef.current = seconds;
-                      setSelectedSessionSeconds(seconds);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <AppText
-                      variant="base"
-                      style={[styles.tcPillText, isSelected && styles.tcPillTextSelected]}
-                    >
-                      {label}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {countdownDone && selectedSessionSeconds === null && (
-              <AppText variant="caption" style={styles.lockoutPickNow}>
-                ↑ pick one to proceed
-              </AppText>
-            )}
-          </View>
-
-          {/* Early exit */}
-          <TouchableOpacity
-            onPress={handleInterceptWalkAway}
-            style={styles.interceptExitBtn}
-            activeOpacity={0.6}
-          >
-            <AppText variant="caption" style={styles.interceptExitText}>
-              i don't want to open {appLabel}
-            </AppText>
-          </TouchableOpacity>
-        </View>
       )}
 
       {/* Intercept screen — One Sec-style pause before the game */}
@@ -616,24 +418,30 @@ export default function GameScreen({ navigation, route }) {
         <View style={styles.centered}>
           <AppText variant="xxl" style={styles.winEmoji}>🎉</AppText>
           <AppText variant="xxl" style={styles.decisionTitle}>you beat it.</AppText>
-          <AppText variant="caption" style={styles.decisionSub}>
-            now you get to choose. no judgment. (okay, a little judgment.)
-          </AppText>
-
-          <View style={styles.decisionButtons}>
-            <Button
-              label="walk away 💪"
-              variant="primary"
-              onPress={handleWalkAway}
-            />
-            <TouchableOpacity onPress={handleOpenAnyway} style={styles.openAnywayBtn} activeOpacity={0.5}>
-              <AppText variant="caption" style={styles.openAnywayText}>
-                {blockMode === 'lockout' && selectedSessionSeconds
-                  ? `open ${appLabel} for ${formatDuration(selectedSessionSeconds)}`
-                  : `open ${appLabel} anyway`}
+          {timeCapExhausted ? (
+            <>
+              <AppText variant="caption" style={styles.decisionSub}>
+                that's your lot for {appLabel} today. the limit is the limit.
               </AppText>
-            </TouchableOpacity>
-          </View>
+              <View style={styles.decisionButtons}>
+                <Button label="walk away 💪" variant="primary" onPress={handleWalkAway} />
+              </View>
+            </>
+          ) : (
+            <>
+              <AppText variant="caption" style={styles.decisionSub}>
+                now you get to choose. no judgment. (okay, a little judgment.)
+              </AppText>
+              <View style={styles.decisionButtons}>
+                <Button label="walk away 💪" variant="primary" onPress={handleWalkAway} />
+                <TouchableOpacity onPress={handleOpenAnyway} style={styles.openAnywayBtn} activeOpacity={0.5}>
+                  <AppText variant="caption" style={styles.openAnywayText}>
+                    open {appLabel} anyway
+                  </AppText>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </View>
       )}
 
@@ -812,23 +620,7 @@ const styles = StyleSheet.create({
     color: colors.textSub,
   },
 
-  // ── Lockout buffer session picker ─────────────────────────────────────────────
-  lockoutPickerSection: {
-    width: '100%',
-    gap: spacing.sm,
-    alignItems: 'center',
-  },
-  lockoutPickerLabel: {
-    color: colors.textSub,
-  },
-  lockoutPickerNote: {
-    color: colors.textDisabled,
-    fontStyle: 'italic',
-  },
-  lockoutPickNow: {
-    color: colors.primary,
-    marginTop: spacing.xs,
-  },
+  // ── Time constraint picker ────────────────────────────────────────────────────
   tcPillSelected: {
     borderColor: colors.primary,
     backgroundColor: colors.primaryMuted,
