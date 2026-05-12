@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { View, ScrollView, Share, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import ShareCardModal from '../../components/ShareCardModal';
 import { useFocusEffect } from '@react-navigation/native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
@@ -25,6 +26,7 @@ export default function StatsScreen({ navigation }) {
   const [hasEstimates, setHasEstimates]   = useState(false);
   const [selectedDay, setSelectedDay]     = useState(null);
   const [legendTooltip, setLegendTooltip] = useState(null);
+  const [showShareCard, setShowShareCard] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -58,19 +60,8 @@ export default function StatsScreen({ navigation }) {
 
   const maxIntercepted = Math.max(...weekly.map((d) => d.intercepted), 1);
 
-  async function handleShare() {
-    const message =
-      `day ${allTime.daysSinceInstall} of needing a maze to stop doomscrolling.\n\n` +
-      `🚧 ${allTime.intercepted} intercepts\n` +
-      `🚶 ${allTime.walkedAway} walked away\n` +
-      `🏳️ ${allTime.rageQuit} rage-quits (the games are genuinely unfair)\n` +
-      `🧐 ${allTime.openedAnyway} opened anyway (i'm only human)\n\n` +
-      `${allTimeRate}% friction success rate. ${allTime.streakCurrent > 0 ? `${allTime.streakCurrent} day streak.` : `streak: none. keep trying.`}\n\n` +
-      `yes i downloaded an app that gives me annoying games before i can doomscroll.\n` +
-      `no i'm not okay. get it at frictionmaxxing.app`;
-    try {
-      await Share.share({ message });
-    } catch { /* cancelled */ }
+  function handleShare() {
+    setShowShareCard(true);
   }
 
   return (
@@ -277,6 +268,14 @@ export default function StatsScreen({ navigation }) {
         </AppText>
 
       </ScrollView>
+
+      <ShareCardModal
+        visible={showShareCard}
+        onClose={() => setShowShareCard(false)}
+        stats={allTime}
+        weekly={weekly}
+      />
+
     </ScreenWrapper>
   );
 }
