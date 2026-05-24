@@ -14,6 +14,7 @@ import {
 import {
   getSettings,
   getEvents,
+  getToday,
   recordEvent,
 } from '../../utils/storage';
 import { isInFreeZone } from '../../utils/location';
@@ -24,6 +25,8 @@ import { colors, spacing, radius } from '../../theme';
 // Game flow states
 const STATE = {
   LOADING:         'loading',          // fetching settings + location check
+  QUOTA_GATE:      'quota_gate',       // daily game quota not met — play games first
+  QUOTA_ONE_DONE:  'quota_one_done',   // one-at-a-time mode: game done, close and come back
   INTERCEPT:       'intercept',        // One Sec-style loading screen with stats
   FREE_ZONE:       'free_zone',        // user is in a free zone — skip the game
   PLAYING:         'playing',          // game in progress
@@ -115,6 +118,11 @@ export default function GameScreen({ navigation, route }) {
   const [difficulty, setDifficulty]     = useState('medium');
   const [milestone, setMilestone] = useState(null);
 
+  // Quota tracking
+  const [quotaRequired, setQuotaRequired]   = useState(0);
+  const [quotaCompleted, setQuotaCompleted] = useState(0);
+  const isQuotaGame = useRef(false); // true while playing a quota-fulfillment game
+
   // Long-session nudge
   const [showPhoneDown, setShowPhoneDown] = useState(false);
   const [phoneDownMessage, setPhoneDownMessage] = useState('');
@@ -168,7 +176,7 @@ export default function GameScreen({ navigation, route }) {
       }
 
       setDifficulty(s.difficulty ?? 'medium');
-      setTimeConstraintEnabled(s.timeConstraint?.enabled ?? false);
+      setTimeConstraintEnabled(s.timeConstraint?.enabled ?? true);
       const game = pickRandomGame(s.enabledGames);
       setSelectedGame(game);
 
@@ -182,6 +190,26 @@ export default function GameScreen({ navigation, route }) {
       setCount24h(recent.length);
       setLastAttemptMs(lastEvent ? now - lastEvent.timestamp : null);
       setInterceptMessage(pickInterceptMessage(recent.length));
+
+      // Check daily game quota
+      // Total games required per day (including the intercept game itself):
+      //   easy=5, medium=7, hard=10
+      // Gate fires until user has pre-beaten (total - 1) games; the intercept game counts as the last.
+      const QUOTA_TOTALS = { easy: 5, medium: 7, hard: 10 };
+      const quota = s.dailyQuota ?? { enabled: false };
+      if (quota.enabled) {
+        const diff = s.difficulty ?? 'medium';
+        const quotaTotal = QUOTA_TOTALS[diff] ?? 5;
+        const gateThreshold = quotaTotal - 1; // pre-games needed before intercept unlocks
+        const completedToday = events.filter((e) => e.gameCompleted && e.date === getToday()).length;
+        setQuotaRequired(quotaTotal);
+        setQuotaCompleted(completedToday);
+        if (completedToday < gateThreshold) {
+          setGameState(STATE.QUOTA_GATE);
+          return;
+        }
+      }
+
       setGameState(STATE.INTERCEPT);
     }
     init();
@@ -263,7 +291,22 @@ export default function GameScreen({ navigation, route }) {
     else               navigation.goBack();
   }
 
-  function handleGameComplete() {
+  async function handleGameComplete() {
+    if (isQuotaGame.current) {
+      isQuotaGame.current = false;
+      await recordEvent({ appId, appLabel, appEmoji, gameCompleted: true, walkedAway: false });
+      const newCompleted = quotaCompleted + 1;
+      setQuotaCompleted(newCompleted);
+
+      if (newCompleted >= quotaRequired - 1) {
+        // Pre-games done — proceed to normal intercept (which is the final quota game)
+        setGameState(STATE.INTERCEPT);
+      } else {
+        // Close after each game — user opens the app again to keep accumulating
+        setGameState(STATE.QUOTA_ONE_DONE);
+      }
+      return;
+    }
     setGameState(STATE.DECISION);
   }
 
@@ -310,6 +353,56 @@ export default function GameScreen({ navigation, route }) {
       {/* Loading — brief, fetching settings + location check */}
       {gameState === STATE.LOADING && (
         <View style={styles.centered} />
+      )}
+
+      {/* Quota gate — daily game quota not yet met */}
+      {gameState === STATE.QUOTA_GATE && (
+        <View style={styles.centered}>
+          <AppText variant="xxl" style={styles.winEmoji}>📚</AppText>
+          <AppText variant="xxl" style={styles.decisionTitle}>do your games first.</AppText>
+          <AppText variant="caption" style={styles.decisionSub}>
+            {quotaCompleted} of {quotaRequired} done today.
+            {'\n'}beat one game — open the app again to keep going.
+          </AppText>
+          <View style={styles.decisionButtons}>
+            <Button
+              label="play a game →"
+              variant="primary"
+              onPress={() => {
+                isQuotaGame.current = true;
+                setGameState(STATE.PLAYING);
+              }}
+            />
+            <TouchableOpacity
+              onPress={handleInterceptWalkAway}
+              style={styles.openAnywayBtn}
+              activeOpacity={0.5}
+            >
+              <AppText variant="caption" style={styles.openAnywayText}>
+                never mind, i don't need {appLabel}
+              </AppText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Quota one-at-a-time done — 1 game beaten, close and come back */}
+      {gameState === STATE.QUOTA_ONE_DONE && (
+        <View style={styles.centered}>
+          <AppText variant="xxl" style={styles.winEmoji}>✓</AppText>
+          <AppText variant="xxl" style={styles.decisionTitle}>
+            {quotaCompleted} of {quotaRequired} done.
+          </AppText>
+          <AppText variant="caption" style={styles.decisionSub}>
+            {quotaCompleted >= quotaRequired - 1
+              ? `one more — open ${appLabel} again to finish.`
+              : `open any blocked app again to keep going.`
+            }
+          </AppText>
+          <View style={styles.decisionButtons}>
+            <Button label="got it" variant="primary" onPress={() => navigation.goBack()} />
+          </View>
+        </View>
       )}
 
       {/* Intercept screen — One Sec-style pause before the game */}

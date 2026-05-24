@@ -19,8 +19,9 @@ export default function SettingsScreen({ navigation }) {
   const [difficulty, setDifficulty]     = useState('medium');
   const [notifications, setNotifications] = useState({ milestones: false });
   const [frictionMode, setFrictionMode]     = useState('always');
-  const [timeConstraint, setTimeConstraint] = useState({ enabled: false });
+  const [timeConstraint, setTimeConstraint] = useState({ enabled: true });
   const [dailyUsageTimer, setDailyUsageTimer] = useState({ enabled: false, minutes: 30 });
+  const [dailyQuota, setDailyQuota] = useState({ enabled: false });
 
   useFocusEffect(
     useCallback(() => {
@@ -30,8 +31,9 @@ export default function SettingsScreen({ navigation }) {
         setEnabledGames(s.enabledGames);
         setDifficulty(s.difficulty ?? 'medium');
         setFrictionMode(s.frictionMode ?? 'always');
-        setTimeConstraint(s.timeConstraint ?? { enabled: false });
+        setTimeConstraint(s.timeConstraint ?? { enabled: true });
         setDailyUsageTimer(s.dailyUsageTimer ?? { enabled: false, minutes: 30 });
+        setDailyQuota(s.dailyQuota ?? { enabled: false });
         setLoading(false);
       });
       return () => { active = false; };
@@ -52,6 +54,12 @@ export default function SettingsScreen({ navigation }) {
     const next = { ...timeConstraint, enabled: !timeConstraint.enabled };
     setTimeConstraint(next);
     await saveSettings({ timeConstraint: next });
+  }
+
+  async function toggleDailyQuota() {
+    const next = { ...dailyQuota, enabled: !dailyQuota.enabled };
+    setDailyQuota(next);
+    await saveSettings({ dailyQuota: next });
   }
 
   async function toggleDailyUsageTimer() {
@@ -197,9 +205,25 @@ export default function SettingsScreen({ navigation }) {
         {/* Time constraint */}
         <Section
           title="time constraint"
-          subtitle="beat a game, limit doomscrolling"
+          subtitle="beat a game, then pick how long you're allowed in"
           toggle={{ value: timeConstraint.enabled, onToggle: toggleTimeConstraint }}
         />
+
+        {/* Daily game quota */}
+        <Section
+          title="game minimum"
+          subtitle="beat a minimum number of games before any app opens"
+          toggle={{ value: dailyQuota.enabled, onToggle: toggleDailyQuota }}
+        >
+          {dailyQuota.enabled && (
+            <View style={styles.lockoutRow}>
+              <AppText variant="caption" style={styles.lockoutNote}>
+                easy: 5 games · hard: 10 games{'\n'}
+                each app open plays 1 game then closes — accumulate across apps
+              </AppText>
+            </View>
+          )}
+        </Section>
 
         {/* Difficulty */}
         <Section title="difficulty" subtitle="how hard should the games be?">

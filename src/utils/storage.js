@@ -71,9 +71,10 @@ const DEFAULT_SETTINGS = {
   appUsageEstimates:  {},       // { [appId]: { weeklyMinutes: number, weeklyPickups: number } }
   customApps:         [],       // [{ id, label, emoji }] — user-added apps beyond the defaults
   hiddenAppIds:       [],       // apps manually removed from the gated apps display
-  timeConstraint:     { enabled: false }, // caps each session; user picks a duration before opening an app
+  timeConstraint:     { enabled: true },  // caps each session; user picks a duration before opening an app
   groupBudgets:       [],                 // [{ id, name, limitMinutes, appIds: string[] }]
   dailyUsageTimer:    { enabled: false, minutes: 30 }, // start intercepting after X min of use today (per-app); enforcement needs DeviceActivityMonitor (#20)
+  dailyQuota:         { enabled: false }, // must beat N games today before any gated app opens (N = 5/7/10 by difficulty); each app open plays 1 game then closes
 };
 
 export async function getSettings() {
