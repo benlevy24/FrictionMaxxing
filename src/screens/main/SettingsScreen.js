@@ -156,6 +156,14 @@ export default function SettingsScreen({ navigation }) {
             ))}
           </View>
 
+          {frictionMode === 'always' && (
+            <View style={styles.lockoutRow}>
+              <AppText variant="caption" style={styles.lockoutNote}>
+                friction fires every time you open a gated app — no exceptions
+              </AppText>
+            </View>
+          )}
+
           {frictionMode === 'threshold' && (
             <View style={styles.lockoutRow}>
               <AppText variant="caption" style={styles.lockoutLabel}>per app, per day</AppText>
@@ -291,16 +299,6 @@ export default function SettingsScreen({ navigation }) {
             <AppText variant="base" style={styles.linkLabel}>🕐  schedule</AppText>
             <AppText variant="caption" style={styles.linkSub}>
               set hours when friction is active (e.g. 8 AM – 5 PM)
-            </AppText>
-            <AppText variant="base" style={styles.linkChevron}>›</AppText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.linkRow}
-            onPress={() => navigation.navigate('GroupBudgets')}
-          >
-            <AppText variant="base" style={styles.linkLabel}>⏱  group budgets</AppText>
-            <AppText variant="caption" style={styles.linkSub}>
-              shared daily time pool per app category (social, entertainment, etc.)
             </AppText>
             <AppText variant="base" style={styles.linkChevron}>›</AppText>
           </TouchableOpacity>
