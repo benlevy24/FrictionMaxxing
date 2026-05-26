@@ -48,7 +48,7 @@ export default function MainTabNavigator() {
         component={InsightsScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} />,
-          tabBarLabel: 'insights',
+          tabBarLabel: 'stats',
         }}
       />
       <Tab.Screen

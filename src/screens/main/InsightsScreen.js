@@ -26,11 +26,12 @@ const MODES = ['today', 'week', 'all time'];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const CHART_START = 6;
+const CHART_START = 0;
 const CHART_END   = 23;
 
 function formatHour(h) {
   if (h === 0)  return '12a';
+  if (h === 23) return '11:59p';
   if (h < 12)   return `${h}a`;
   if (h === 12) return '12p';
   return `${h - 12}p`;
@@ -153,7 +154,7 @@ function CalendarPicker({ selectedDate, datesWithEvents, onSelect, onClose }) {
 
 // ── Today view ────────────────────────────────────────────────────────────────
 
-function TodayView({ allEvents, estimates, goalMinutes }) {
+function TodayView({ allEvents, estimates, goalMinutes, streak }) {
   const todayStr = getToday();
   const [selectedDate,   setSelectedDate]   = useState(todayStr);
   const [showCalendar,   setShowCalendar]   = useState(false);
@@ -205,12 +206,28 @@ function TodayView({ allEvents, estimates, goalMinutes }) {
         )}
       </View>
 
-      {/* Quick stats */}
-      <View style={s.quickRow}>
+      {/* Quick stats — 2×2 grid */}
+      <View style={s.quickGrid}>
         <QuickStat emoji="🚧" value={dayStats.intercepted}  label="pickups" />
         <QuickStat emoji="🚶" value={dayStats.walkedAway}   label="walked away" />
         <QuickStat emoji="🧐" value={dayStats.openedAnyway} label="opened anyway" />
+        <QuickStat emoji="🏳️" value={dayStats.rageQuit}    label="rage-quit" />
       </View>
+
+      {/* Daily high score */}
+      <Card style={s.streakCard}>
+        <View style={s.streakRow}>
+          <View style={s.streakItem}>
+            <AppText variant="caption">daily high score</AppText>
+            <AppText variant="xxl" style={s.streakCurrent}>
+              {streak.current} {streak.current > 0 ? '🔥' : '✨'}
+            </AppText>
+            <AppText variant="caption" style={s.streakUnit}>
+              {streak.current === 1 ? 'day' : 'days'} without "opening anyway"
+            </AppText>
+          </View>
+        </View>
+      </Card>
 
       {/* Screen time vs goal */}
       <Card>
@@ -244,8 +261,8 @@ function TodayView({ allEvents, estimates, goalMinutes }) {
 
       {/* Intercepts by hour */}
       <Card>
-        <AppText variant="subheading" style={s.sectionTitle}>intercepts by hour</AppText>
-        <AppText variant="caption" style={s.sectionSub}>when you reached for a gated app</AppText>
+        <AppText variant="subheading" style={s.sectionTitle}>app pickups by hour</AppText>
+        <AppText variant="caption" style={s.sectionSub}>12am – 11:59pm</AppText>
         {dayStats.intercepted === 0 ? (
           <AppText variant="caption" style={s.emptyText}>
             {isToday ? 'no interceptions yet today 💪' : 'no interceptions on this day.'}
@@ -255,12 +272,13 @@ function TodayView({ allEvents, estimates, goalMinutes }) {
             {chartHours.map(({ hour, count }) => {
               const barH  = count > 0 ? Math.max(Math.round((count / maxCount) * 72), 4) : 2;
               const isNow = hour === nowHour;
+              const showLabel = hour % 6 === 0 || hour === 23;
               return (
                 <View key={hour} style={s.hourCol}>
                   <View style={s.hourBarContainer}>
                     <View style={[s.hourBar, { height: barH }, count > 0 && s.hourBarActive, isNow && s.hourBarNow]} />
                   </View>
-                  {(hour - CHART_START) % 3 === 0
+                  {showLabel
                     ? <AppText variant="xs" style={[s.hourLabel, isNow && s.hourLabelNow]}>{formatHour(hour)}</AppText>
                     : <View style={s.hourLabelSpacer} />
                   }
@@ -269,6 +287,12 @@ function TodayView({ allEvents, estimates, goalMinutes }) {
             })}
           </View>
         )}
+        <View style={s.comingSoonBox}>
+          <AppText variant="xs" style={s.comingSoonTitle}>coming soon with Screen Time permission</AppText>
+          <AppText variant="xs" style={s.comingSoonItem}>· total phone pickups (all apps, not just gated ones)</AppText>
+          <AppText variant="xs" style={s.comingSoonItem}>· notifications received per hour</AppText>
+          <AppText variant="xs" style={s.comingSoonItem}>· actual screen time by hour, per app</AppText>
+        </View>
       </Card>
 
       {/* App bubbles */}
@@ -470,10 +494,9 @@ function WeekView({ allEvents, estimates, navigation }) {
 
 // ── All time view ─────────────────────────────────────────────────────────────
 
-function AllTimeView({ allEvents, installDate, weekly }) {
+function AllTimeView({ allEvents, installDate, weekly, streak }) {
   const [showShareCard, setShowShareCard] = useState(false);
 
-  const streak  = computeStreak(allEvents);
   const allTime = deriveAllTimeStats(allEvents, streak, installDate);
   const rate    = allTime.intercepted > 0
     ? Math.round(((allTime.walkedAway + allTime.rageQuit) / allTime.intercepted) * 100)
@@ -494,19 +517,15 @@ function AllTimeView({ allEvents, installDate, weekly }) {
         <SummaryBox emoji="🏳️" value={allTime.rageQuit}    label="rage-quit" />
       </View>
 
-      {/* Streak */}
+      {/* All-time high score */}
       <Card style={s.streakCard}>
         <View style={s.streakRow}>
           <View style={s.streakItem}>
-            <AppText variant="caption">current streak</AppText>
-            <AppText variant="xxl" style={s.streakCurrent}>
-              {allTime.streakCurrent} {allTime.streakCurrent > 0 ? '🔥' : '✨'}
-            </AppText>
-          </View>
-          <View style={s.divider} />
-          <View style={s.streakItem}>
-            <AppText variant="caption">best streak</AppText>
+            <AppText variant="caption">all-time high score</AppText>
             <AppText variant="xxl" style={s.streakBest}>{allTime.streakBest} 🏆</AppText>
+            <AppText variant="caption" style={s.streakUnit}>
+              {allTime.streakBest === 1 ? 'day' : 'days'} without "opening anyway"
+            </AppText>
           </View>
         </View>
       </Card>
@@ -526,7 +545,7 @@ function AllTimeView({ allEvents, installDate, weekly }) {
       {/* Share */}
       <Button label="share my stats 📤" variant="secondary" onPress={() => setShowShareCard(true)} />
       <AppText variant="caption" style={s.shareWarning}>
-        ⚠️ sharing to a gated app counts as opening it. your streak is at stake. worth it?
+        ⚠️ sharing to a gated app counts as opening it. your high score is at stake. worth it?
       </AppText>
 
       <ShareCardModal
@@ -590,8 +609,8 @@ export default function InsightsScreen({ navigation }) {
 
   if (loading) return <ScreenWrapper />;
 
-  // weekly is needed by both WeekView and AllTimeView (share card)
   const weekly = deriveWeeklyStats(allEvents);
+  const streak = computeStreak(allEvents);
 
   return (
     <ScreenWrapper>
@@ -599,7 +618,7 @@ export default function InsightsScreen({ navigation }) {
 
         {/* Header */}
         <View style={s.header}>
-          <AppText variant="xxl">insights</AppText>
+          <AppText variant="xxl">stats</AppText>
         </View>
 
         {/* Mode toggle */}
@@ -624,6 +643,7 @@ export default function InsightsScreen({ navigation }) {
             allEvents={allEvents}
             estimates={estimates}
             goalMinutes={goalMinutes}
+            streak={streak}
           />
         )}
         {mode === 'week' && (
@@ -638,6 +658,7 @@ export default function InsightsScreen({ navigation }) {
             allEvents={allEvents}
             installDate={installDate}
             weekly={weekly}
+            streak={streak}
           />
         )}
 
@@ -668,7 +689,8 @@ const s = StyleSheet.create({
 
   // Quick stats
   quickRow:   { flexDirection: 'row', gap: spacing.sm },
-  quickCard:  { flex: 1, alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.md },
+  quickGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  quickCard:  { width: '47.5%', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.md },
   quickEmoji: { fontSize: 18 },
   quickValue: { color: colors.text },
   quickLabel: { textAlign: 'center', lineHeight: 16 },
@@ -756,6 +778,7 @@ const s = StyleSheet.create({
   divider:      { width: 1, height: 60, backgroundColor: colors.border, marginHorizontal: spacing.md },
   streakCurrent:{ color: colors.primary },
   streakBest:   { color: colors.warning },
+  streakUnit:   { color: colors.textDisabled, textAlign: 'center' },
   rateLabel:    { marginBottom: spacing.sm },
   rateBarBg:    { height: 8, backgroundColor: colors.border, borderRadius: radius.full, overflow: 'hidden' },
   rateBarFill:  { height: '100%', backgroundColor: colors.primary, borderRadius: radius.full },
@@ -763,6 +786,11 @@ const s = StyleSheet.create({
   rateValue:    { marginTop: spacing.xs, color: colors.textSub, textAlign: 'right' },
   rateDef:      { marginTop: spacing.sm, color: colors.textDisabled, lineHeight: 18 },
   shareWarning: { textAlign: 'center', color: colors.textDisabled, lineHeight: 18 },
+
+  // Coming soon note
+  comingSoonBox:   { marginTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.sm, gap: 4 },
+  comingSoonTitle: { color: colors.textDisabled, marginBottom: 2 },
+  comingSoonItem:  { color: colors.textDisabled, lineHeight: 18 },
 
   // Shared
   emptyText: { color: colors.textSub, paddingVertical: spacing.sm },

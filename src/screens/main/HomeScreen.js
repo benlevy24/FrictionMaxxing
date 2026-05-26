@@ -90,13 +90,13 @@ export default function HomeScreen() {
         <Card style={[styles.streakCard, streak.current > 0 && styles.streakCardActive]}>
           <View style={styles.streakRow}>
             <View>
-              <AppText variant="caption">current streak</AppText>
+              <AppText variant="caption">daily high score</AppText>
               <AppText variant="xxl" style={styles.streakNumber}>
                 {streak.current} {streak.current > 0 ? '🔥' : '✨'}
               </AppText>
               <AppText variant="caption">
                 {streak.current === 0
-                  ? 'walk away to start your streak'
+                  ? 'walk away to start your daily high score'
                   : `consecutive day${streak.current !== 1 ? 's' : ''} you resisted`}
               </AppText>
             </View>

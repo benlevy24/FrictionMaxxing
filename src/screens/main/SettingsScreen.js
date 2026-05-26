@@ -100,7 +100,7 @@ export default function SettingsScreen({ navigation }) {
   function handleResetStats() {
     Alert.alert(
       'reset all stats?',
-      'this deletes your streak, walk-aways, and all history. cannot be undone.',
+      'this deletes your high score, walk-aways, and all history. cannot be undone.',
       [
         { text: 'cancel', style: 'cancel' },
         {
@@ -338,7 +338,7 @@ export default function SettingsScreen({ navigation }) {
           <TouchableOpacity style={styles.destructiveRow} onPress={handleResetStats}>
             <AppText variant="base" style={styles.destructiveLabel}>🗑️  reset all stats</AppText>
             <AppText variant="caption" style={styles.destructiveSub}>
-              wipes streak, walk-aways, and all history
+              wipes high score, walk-aways, and all history
             </AppText>
           </TouchableOpacity>
         </Section>
