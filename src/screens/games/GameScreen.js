@@ -136,6 +136,7 @@ export default function GameScreen({ navigation, route }) {
   // Intercept screen state
   const [count24h, setCount24h]             = useState(0);
   const [lastAttemptMs, setLastAttemptMs]   = useState(null); // ms since last event for this app
+  const [avgDailyMinutes, setAvgDailyMinutes] = useState(null); // null = no estimate on file
   const [interceptMessage, setInterceptMessage] = useState('');
   const progressAnim = useRef(new Animated.Value(0)).current;
 
@@ -190,6 +191,12 @@ export default function GameScreen({ navigation, route }) {
       setCount24h(recent.length);
       setLastAttemptMs(lastEvent ? now - lastEvent.timestamp : null);
       setInterceptMessage(pickInterceptMessage(recent.length));
+
+      // Daily screen time estimate for this app (weeklyMinutes / 7)
+      const est = s.appUsageEstimates?.[appId];
+      if (est?.weeklyMinutes) {
+        setAvgDailyMinutes(Math.round(est.weeklyMinutes / 7));
+      }
 
       // Check daily game quota
       // Total games required per day (including the intercept game itself):
@@ -448,6 +455,18 @@ export default function GameScreen({ navigation, route }) {
                   last attempt:{' '}
                   <AppText variant="caption" style={styles.statLastHighlight}>
                     {formatTimeAgo(lastAttemptMs)}
+                  </AppText>
+                </AppText>
+              </View>
+            )}
+            {avgDailyMinutes !== null && (
+              <View style={styles.statRow}>
+                <AppText variant="caption" style={styles.statLast}>
+                  avg daily screen time:{' '}
+                  <AppText variant="caption" style={styles.statLastHighlight}>
+                    {avgDailyMinutes >= 60
+                      ? `${Math.floor(avgDailyMinutes / 60)}h ${avgDailyMinutes % 60}m`
+                      : `${avgDailyMinutes}m`}
                   </AppText>
                 </AppText>
               </View>

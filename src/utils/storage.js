@@ -75,6 +75,7 @@ const DEFAULT_SETTINGS = {
   groupBudgets:       [],                 // [{ id, name, limitMinutes, appIds: string[] }]
   dailyUsageTimer:    { enabled: false, minutes: 30 }, // start intercepting after X min of use today (per-app); enforcement needs DeviceActivityMonitor (#20)
   dailyQuota:         { enabled: false }, // must beat N games today before any gated app opens (N = 5/7/10 by difficulty); each app open plays 1 game then closes
+  screentimeGoalMinutes: 120,             // daily screen time goal shown in Activity tab (default 2 hours)
 };
 
 export async function getSettings() {
@@ -187,14 +188,14 @@ export function computeStreak(events) {
   return { current, best: Math.max(current, best) };
 }
 
-export function deriveTodayStats(events) {
-  const today = getToday();
-  const todayEvents = events.filter((e) => e.date === today);
+export function deriveTodayStats(events, date = null) {
+  const d = date ?? getToday();
+  const dayEvents = events.filter((e) => e.date === d);
   return {
-    intercepted:  todayEvents.length,
-    walkedAway:   todayEvents.filter((e) =>  e.gameCompleted &&  e.walkedAway).length,
-    openedAnyway: todayEvents.filter((e) =>  e.gameCompleted && !e.walkedAway).length,
-    rageQuit:     todayEvents.filter((e) => !e.gameCompleted).length,
+    intercepted:  dayEvents.length,
+    walkedAway:   dayEvents.filter((e) =>  e.gameCompleted &&  e.walkedAway).length,
+    openedAnyway: dayEvents.filter((e) =>  e.gameCompleted && !e.walkedAway).length,
+    rageQuit:     dayEvents.filter((e) => !e.gameCompleted).length,
   };
 }
 
@@ -248,6 +249,68 @@ export function deriveMinutesSaved(events, appUsageEstimates = {}) {
     total += est.weeklyMinutes / est.weeklyPickups;
   }
   return Math.round(total);
+}
+
+// Returns an array of 24 buckets (index = hour 0–23) with intercept count per hour for a given date.
+export function deriveHourlyStats(events, date = null) {
+  const d = date ?? getToday();
+  const dayEvents = events.filter((e) => e.date === d);
+  const hours = Array.from({ length: 24 }, (_, h) => ({ hour: h, count: 0 }));
+  for (const e of dayEvents) {
+    const h = new Date(e.timestamp).getHours();
+    hours[h].count++;
+  }
+  return hours;
+}
+
+// Returns a Set of date strings ('YYYY-MM-DD') that have at least one event.
+export function getDatesWithEvents(events) {
+  const dates = new Set();
+  for (const e of events) dates.add(e.date);
+  return dates;
+}
+
+// Returns apps sorted by daily estimated screen time (desc).
+// Uses appUsageEstimates.weeklyMinutes / 7 as the daily average.
+// Apps with no estimate are still included (sorted to bottom by intercept count for the given date.
+export function deriveMostUsedApps(events, appUsageEstimates = {}, date = null) {
+  const d = date ?? getToday();
+  const todayEvents = events.filter((e) => e.date === d);
+
+  // Build unique app set from estimates + today's events
+  const appMap = new Map();
+
+  // Seed from estimates
+  for (const [appId, est] of Object.entries(appUsageEstimates)) {
+    if (!appMap.has(appId)) {
+      // Try to get label/emoji from events, fall back to appId
+      const ev = events.find((e) => e.appId === appId);
+      appMap.set(appId, {
+        id: appId,
+        label: ev?.appLabel ?? appId,
+        emoji: ev?.appEmoji ?? '📱',
+        avgDailyMinutes: est.weeklyMinutes ? Math.round(est.weeklyMinutes / 7) : 0,
+        pickups: 0,
+      });
+    }
+  }
+
+  // Seed from today's events (apps not in estimates)
+  for (const e of todayEvents) {
+    if (!appMap.has(e.appId)) {
+      appMap.set(e.appId, {
+        id: e.appId,
+        label: e.appLabel,
+        emoji: e.appEmoji,
+        avgDailyMinutes: 0,
+        pickups: 0,
+      });
+    }
+    appMap.get(e.appId).pickups++;
+  }
+
+  return [...appMap.values()]
+    .sort((a, b) => b.avgDailyMinutes - a.avgDailyMinutes || b.pickups - a.pickups);
 }
 
 export function deriveAllTimeStats(events, streak, installDate) {

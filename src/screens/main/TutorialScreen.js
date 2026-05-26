@@ -86,7 +86,7 @@ export default function TutorialScreen({ navigation }) {
             );
           })}
           <AppText variant="caption" style={styles.urlNote}>
-            don't see your app? add it in Settings → Usage Estimates, then use:{'\n'}
+            don't see your app? go to Settings → Usage Estimates → add custom app, then use:{'\n'}
             {'frictionmaxxing://game?appId=yourapp&label=YourApp'}
           </AppText>
         </View>

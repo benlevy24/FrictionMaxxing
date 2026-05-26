@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 import HomeScreen from '../screens/main/HomeScreen';
-import StatsScreen from '../screens/main/StatsScreen';
+import InsightsScreen from '../screens/main/InsightsScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
 import { colors, spacing } from '../theme';
 
@@ -44,11 +44,11 @@ export default function MainTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Stats"
-        component={StatsScreen}
+        name="Insights"
+        component={InsightsScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} />,
-          tabBarLabel: 'stats',
+          tabBarLabel: 'insights',
         }}
       />
       <Tab.Screen

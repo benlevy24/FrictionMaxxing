@@ -7,18 +7,23 @@ import { colors, spacing } from '../../theme';
 const STEPS = [
   {
     emoji: '📱',
-    title: 'pick your poison',
-    body: 'choose which apps you want to make annoying to open. instagram, tiktok, doomscrolling — all of them.',
+    title: 'open a gated app',
+    body: 'set up a Shortcuts automation for any app you want to slow down. after that, every time you open it, iOS redirects you here automatically. no manual list — apps show up as you use them.',
+  },
+  {
+    emoji: '⏳',
+    title: 'a moment to reconsider',
+    body: 'before the game even starts, you see how many times you\'ve tried to open this app in the last 24 hours and when your last attempt was. sometimes that\'s enough. you can walk away right here — no game required.',
   },
   {
     emoji: '🎮',
-    title: 'get a game',
-    body: 'every time you open a gated app, iOS Shortcuts redirects you here for a random mini-game. and yes, some of them are designed to be frustrating.',
+    title: 'beat a game',
+    body: 'if you\'re still here, you get a random mini-game. tic-tac-toe, a maze, hangperson, math problems — 10 games in rotation. some are designed to be frustrating on purpose.',
   },
   {
-    emoji: '🏳️',
-    title: 'beat it or give up',
-    body: 'finish the game and you get in. or close the app and do something else. your call.',
+    emoji: '🤔',
+    title: 'your call',
+    body: 'beat the game and you still get to choose: walk away (the real win) or open the app anyway. no judgment either way. well. a little judgment.',
   },
 ];
 
