@@ -76,8 +76,24 @@ function getRandomMove(board) {
   return empty[Math.floor(Math.random() * empty.length)] ?? -1;
 }
 
+function getBlockingMove(board) {
+  for (const [a, b, c] of WINS) {
+    const vals = [board[a], board[b], board[c]];
+    if (vals.filter((v) => v === 'X').length === 2 && vals.includes(null)) {
+      return [a, b, c][vals.indexOf(null)];
+    }
+  }
+  return -1;
+}
+
 function getAIMove(board, difficulty) {
-  if (difficulty === 'easy') return getRandomMove(board);
+  if (difficulty === 'easy') {
+    // Block if player is about to win (70% of the time), otherwise random.
+    // Creates more ties without making the AI unbeatable.
+    const block = getBlockingMove(board);
+    if (block !== -1 && Math.random() < 0.7) return block;
+    return getRandomMove(board);
+  }
   if (difficulty === 'medium') return Math.random() < 0.6 ? getBestMove(board) : getRandomMove(board);
   return getBestMove(board); // hard
 }

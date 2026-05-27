@@ -15,7 +15,7 @@ const HOW_IT_WORKS = [
   },
   {
     emoji: '🔓',
-    text: 'nothing is hard-blocked — it\'s friction, not a lock. the choice is always yours.',
+    text: 'by default, it\'s friction, not a lock — the choice is always yours. if you want harder stops, lockout mode is in Settings.',
   },
 ];
 

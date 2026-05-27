@@ -13,7 +13,7 @@ const STEPS = [
   {
     emoji: '⏳',
     title: 'a moment to reconsider',
-    body: 'before the game even starts, you see how many times you\'ve tried to open this app in the last 24 hours and when your last attempt was. sometimes that\'s enough. you can walk away right here — no game required.',
+    body: 'before the game even starts, you see how many times you\'ve tried to open this app in the last 24 hours, when your last attempt was, and your average daily screen time for the app. sometimes that\'s enough. you can walk away right here — no game required.',
   },
   {
     emoji: '🎮',
