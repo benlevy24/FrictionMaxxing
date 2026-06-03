@@ -200,12 +200,19 @@ export default function HomeScreen({ navigation }) {
 
         {/* Stat chips */}
         {/* [POST-MAC #20] "vs avg" chip: once screenTimePermissionGranted, replace minutesSavedToday
-            with (historical pre-app daily average − today's real screen time) for a true before/after. */}
+            with (historical pre-app daily average − today's real screen time) for a true before/after.
+            That delta can be negative (used MORE than avg) — the emoji/sign logic below handles both. */}
         <View style={styles.chipsRow}>
           <StatChip emoji="🫳" value={today.intercepted} label="pickups" />
           <StatChip
-            emoji="⬇️"
-            value={hasEstimates && minutesSavedToday > 0 ? `−${fmtMin(minutesSavedToday)}` : '—'}
+            emoji={minutesSavedToday > 0 ? '⬇️' : minutesSavedToday < 0 ? '⬆️' : '⬇️'}
+            value={
+              !hasEstimates || minutesSavedToday === 0
+                ? '—'
+                : minutesSavedToday > 0
+                  ? `−${fmtMin(minutesSavedToday)}`
+                  : `+${fmtMin(Math.abs(minutesSavedToday))}`
+            }
             label="vs avg"
             dim={!hasEstimates || minutesSavedToday === 0}
           />
