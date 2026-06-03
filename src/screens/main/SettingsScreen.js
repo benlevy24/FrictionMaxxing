@@ -233,7 +233,7 @@ export default function SettingsScreen({ navigation }) {
           {timeConstraint.enabled && (
             <View style={styles.lockoutRow}>
               <AppText variant="caption" style={styles.lockoutNote}>
-                30s · 1m · 1.5m · 2.5m · 5m{'\n'}
+                30 sec · 1 min · 90 sec · 2.5 min · 5 min{'\n'}
                 you choose the session length after beating the game
               </AppText>
             </View>

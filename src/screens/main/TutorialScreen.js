@@ -222,24 +222,6 @@ function CreateShortcutVisual() {
   );
 }
 
-function SearchVisual() {
-  return (
-    <View style={styles.visual}>
-      <View style={styles.listBox}>
-        <View style={styles.searchBar}>
-          <AppText variant="caption" style={styles.searchText}>🔍  FrictionMaxxing</AppText>
-        </View>
-        <View style={[styles.listRow, styles.listRowHighlight]}>
-          <View style={styles.appIcon}><AppText>🛑</AppText></View>
-          <AppText variant="base" style={{ flex: 1 }}>
-            Activate FrictionMaxxing (when app opens)
-          </AppText>
-        </View>
-      </View>
-    </View>
-  );
-}
-
 function OpenURLsVisual() {
   return (
     <View style={styles.visual}>
