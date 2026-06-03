@@ -22,6 +22,7 @@ export default function SettingsScreen({ navigation }) {
   const [timeConstraint, setTimeConstraint] = useState({ enabled: true });
   const [dailyUsageTimer, setDailyUsageTimer] = useState({ enabled: false, minutes: 30 });
   const [dailyQuota, setDailyQuota] = useState({ enabled: false });
+  const [groupTimeCap, setGroupTimeCap]     = useState({ enabled: false });
 
   useFocusEffect(
     useCallback(() => {
@@ -30,10 +31,11 @@ export default function SettingsScreen({ navigation }) {
         if (!active) return;
         setEnabledGames(s.enabledGames);
         setDifficulty(s.difficulty ?? 'medium');
-        setFrictionMode(s.frictionMode ?? 'always');
+        setFrictionMode(s.frictionMode === 'hard_limit' ? 'always' : (s.frictionMode ?? 'always'));
         setTimeConstraint(s.timeConstraint ?? { enabled: true });
         setDailyUsageTimer(s.dailyUsageTimer ?? { enabled: false, minutes: 30 });
         setDailyQuota(s.dailyQuota ?? { enabled: false });
+        setGroupTimeCap(s.groupTimeCap ?? { enabled: false });
         setLoading(false);
       });
       return () => { active = false; };
@@ -60,6 +62,12 @@ export default function SettingsScreen({ navigation }) {
     const next = { ...dailyQuota, enabled: !dailyQuota.enabled };
     setDailyQuota(next);
     await saveSettings({ dailyQuota: next });
+  }
+
+  async function toggleGroupTimeCap() {
+    const next = { ...groupTimeCap, enabled: !groupTimeCap.enabled };
+    setGroupTimeCap(next);
+    await saveSettings({ groupTimeCap: next });
   }
 
   async function toggleDailyUsageTimer() {
@@ -133,13 +141,12 @@ export default function SettingsScreen({ navigation }) {
         {/* Mode */}
         <Section
           title="mode"
-          subtitle="how friction fires"
+          subtitle="when does friction fire?"
         >
           <View style={styles.diffRow}>
             {[
-              { value: 'always',     label: '🔔  always on'  },
-              { value: 'threshold',  label: '⏱  threshold'   },
-              { value: 'hard_limit', label: '🔒  group time cap'  },
+              { value: 'always',    label: '🔔  always on' },
+              { value: 'threshold', label: '⏱  threshold'  },
             ].map(({ value, label }) => (
               <TouchableOpacity
                 key={value}
@@ -195,15 +202,22 @@ export default function SettingsScreen({ navigation }) {
               </AppText>
             </View>
           )}
+        </Section>
 
-          {frictionMode === 'hard_limit' && (
+        {/* Group time cap */}
+        <Section
+          title="🛑  group time cap"
+          subtitle="once a group's daily budget runs out, walk away is the only option"
+          toggle={{ value: groupTimeCap.enabled, onToggle: toggleGroupTimeCap }}
+        >
+          {groupTimeCap.enabled && (
             <TouchableOpacity
               style={styles.linkRow}
               onPress={() => navigation.navigate('GroupBudgets')}
             >
               <AppText variant="base" style={styles.linkLabel}>⚙️  manage groups</AppText>
               <AppText variant="caption" style={styles.linkSub}>
-                set daily budgets — once a group runs out, walk away is the only option
+                assign apps to groups and set a shared daily minute budget
               </AppText>
               <AppText variant="base" style={styles.linkChevron}>›</AppText>
             </TouchableOpacity>
@@ -212,7 +226,7 @@ export default function SettingsScreen({ navigation }) {
 
         {/* Time constraint */}
         <Section
-          title="time constraint"
+          title="⏳  time constraint"
           subtitle="beat a game, then pick how long you're allowed in"
           toggle={{ value: timeConstraint.enabled, onToggle: toggleTimeConstraint }}
         >
@@ -228,7 +242,7 @@ export default function SettingsScreen({ navigation }) {
 
         {/* Daily game quota */}
         <Section
-          title="game minimum"
+          title="🎲  game minimum"
           subtitle="beat a minimum number of games before any app opens"
           toggle={{ value: dailyQuota.enabled, onToggle: toggleDailyQuota }}
         >
@@ -243,7 +257,7 @@ export default function SettingsScreen({ navigation }) {
         </Section>
 
         {/* Difficulty */}
-        <Section title="difficulty" subtitle="how hard should the games be?">
+        <Section title="🥵  difficulty" subtitle="how hard should the games be?">
           <View style={styles.diffRow}>
             {['easy', 'hard'].map((level) => (
               <TouchableOpacity
