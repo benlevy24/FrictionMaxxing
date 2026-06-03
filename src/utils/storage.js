@@ -68,14 +68,29 @@ const DEFAULT_SETTINGS = {
   difficulty:         'hard',   // 'easy' | 'hard' (medium exists internally but not exposed in UI)
   installDate:        null,     // set on first write
   onboardingDone:     false,
-  appUsageEstimates:  {},       // { [appId]: { weeklyMinutes: number, weeklyPickups: number } }
+  appUsageEstimates:  {},       // { [appId]: { weeklyMinutes: number, weeklyPickups: number } } — manual stopgap; replaced by real data once screenTimePermissionGranted = true
   customApps:         [],       // [{ id, label, emoji }] — user-added apps beyond the defaults
   hiddenAppIds:       [],       // apps manually removed from the gated apps display
   timeConstraint:     { enabled: true },  // caps each session; user picks a duration before opening an app
   groupBudgets:       [],                 // [{ id, name, limitMinutes, appIds: string[] }]
   dailyUsageTimer:    { enabled: false, minutes: 30 }, // start intercepting after X min of use today (per-app); enforcement needs DeviceActivityMonitor (#20)
   dailyQuota:         { enabled: false }, // must beat N games today before any gated app opens (N = 5/7/10 by difficulty); each app open plays 1 game then closes
-  screentimeGoalMinutes: 120,             // daily screen time goal shown in Activity tab (default 2 hours)
+  screentimeGoalMinutes: 120,             // daily screen time goal shown as ring on home screen (default 2 hours)
+
+  // ── Screen Time permission flag (set to true in Mac task #20) ────────────────
+  // When true, all "avg daily est." labels, Usage Estimates prompts, and estimate-based
+  // calculations should be replaced with real DeviceActivityReport data:
+  //
+  //   HomeScreen ring        → real today's screen time (not weeklyMinutes/7 average)
+  //   HomeScreen scatter     → real per-app daily screen time on y-axis
+  //   InsightsScreen week    → real minutes saved (not estimate-based)
+  //   GameScreen intercept   → real avg daily screen time per app (not weeklyMinutes/7)
+  //   UsageEstimatesScreen   → hide the per-app estimate inputs; keep only the goal stepper
+  //
+  // The DeviceActivityMonitor Swift extension (task #20) should write real screen time
+  // into a shared App Group UserDefaults that the JS layer reads via a native module.
+  // Flip this flag to true once that bridge is wired up and returning valid data.
+  screenTimePermissionGranted: false,
 };
 
 export async function getSettings() {
@@ -259,6 +274,26 @@ export function deriveHourlyStats(events, date = null) {
   for (const e of dayEvents) {
     const h = new Date(e.timestamp).getHours();
     hours[h].count++;
+  }
+  return hours;
+}
+
+// Returns per-hour data for a given date, with per-app breakdown and topApp per slot.
+// Shape: [{ hour, count, topApp: { id, emoji, label, count } | null, apps: [...] }]
+export function deriveHourlyByApp(events, date = null) {
+  const d = date ?? getToday();
+  const dayEvents = events.filter((e) => e.date === d);
+  const hours = Array.from({ length: 24 }, (_, h) => ({ hour: h, count: 0, topApp: null, apps: [] }));
+  for (const e of dayEvents) {
+    const h = new Date(e.timestamp).getHours();
+    hours[h].count++;
+    const existing = hours[h].apps.find((a) => a.id === e.appId);
+    if (existing) { existing.count++; }
+    else { hours[h].apps.push({ id: e.appId, emoji: e.appEmoji, label: e.appLabel, count: 1 }); }
+  }
+  for (const slot of hours) {
+    slot.apps.sort((a, b) => b.count - a.count);
+    slot.topApp = slot.apps[0] ?? null;
   }
   return hours;
 }

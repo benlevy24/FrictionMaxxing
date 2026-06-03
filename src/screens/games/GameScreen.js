@@ -192,7 +192,9 @@ export default function GameScreen({ navigation, route }) {
       setLastAttemptMs(lastEvent ? now - lastEvent.timestamp : null);
       setInterceptMessage(pickInterceptMessage(recent.length));
 
-      // Daily screen time estimate for this app (weeklyMinutes / 7)
+      // Daily screen time estimate for this app (weeklyMinutes / 7).
+      // [POST-MAC #20] replace with real per-app daily average from DeviceActivityReport.
+      // When screenTimePermissionGranted = true, read actual avg from the native bridge instead.
       const est = s.appUsageEstimates?.[appId];
       if (est?.weeklyMinutes) {
         setAvgDailyMinutes(Math.round(est.weeklyMinutes / 7));
@@ -459,18 +461,18 @@ export default function GameScreen({ navigation, route }) {
                 </AppText>
               </View>
             )}
-            {avgDailyMinutes !== null && (
-              <View style={styles.statRow}>
-                <AppText variant="caption" style={styles.statLast}>
-                  avg daily screen time:{' '}
-                  <AppText variant="caption" style={styles.statLastHighlight}>
-                    {avgDailyMinutes >= 60
-                      ? `${Math.floor(avgDailyMinutes / 60)}h ${avgDailyMinutes % 60}m`
-                      : `${avgDailyMinutes}m`}
-                  </AppText>
+            <View style={styles.statRow}>
+              <AppText variant="caption" style={styles.statLast}>
+                avg daily screen time:{' '}
+                <AppText variant="caption" style={avgDailyMinutes !== null ? styles.statLastHighlight : styles.statPlaceholder}>
+                  {avgDailyMinutes !== null
+                    ? (avgDailyMinutes >= 60
+                        ? `${Math.floor(avgDailyMinutes / 60)}h ${avgDailyMinutes % 60}m`
+                        : `${avgDailyMinutes}m`)
+                    : 'not set — add in Usage Estimates · real-time after Screen Time permission'}
                 </AppText>
-              </View>
-            )}
+              </AppText>
+            </View>
           </View>
 
           {/* Cheeky message */}
@@ -825,6 +827,10 @@ const styles = StyleSheet.create({
   },
   statLastHighlight: {
     color: colors.text,
+  },
+  statPlaceholder: {
+    color: colors.textDisabled,
+    fontStyle: 'italic',
   },
   interceptMessage: {
     color: colors.textSub,

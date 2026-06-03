@@ -11,8 +11,6 @@ import {
   getEvents,
   getToday,
   deriveTodayStats,
-  deriveHourlyStats,
-  deriveMostUsedApps,
   getDatesWithEvents,
   deriveWeeklyStats,
   deriveByAppStats,
@@ -22,12 +20,9 @@ import {
 } from '../../utils/storage';
 import { colors, spacing, radius } from '../../theme';
 
-const MODES = ['today', 'week', 'all time'];
+const MODES = ['today', 'week', 'all-time'];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-const CHART_START = 0;
-const CHART_END   = 23;
 
 function formatHour(h) {
   if (h === 0)  return '12a';
@@ -35,16 +30,6 @@ function formatHour(h) {
   if (h < 12)   return `${h}a`;
   if (h === 12) return '12p';
   return `${h - 12}p`;
-}
-
-function formatMinutes(mins) {
-  if (!mins) return '0m';
-  if (mins >= 60) {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return m > 0 ? `${h}h ${m}m` : `${h}h`;
-  }
-  return `${mins}m`;
 }
 
 function parseDate(str) {
@@ -154,21 +139,16 @@ function CalendarPicker({ selectedDate, datesWithEvents, onSelect, onClose }) {
 
 // ── Today view ────────────────────────────────────────────────────────────────
 
-function TodayView({ allEvents, estimates, goalMinutes, streak }) {
+function TodayView({ allEvents, streak }) {
   const todayStr = getToday();
-  const [selectedDate,   setSelectedDate]   = useState(todayStr);
-  const [showCalendar,   setShowCalendar]   = useState(false);
+  const [selectedDate,    setSelectedDate]    = useState(todayStr);
+  const [showCalendar,    setShowCalendar]    = useState(false);
   const [datesWithEvents] = useState(() => getDatesWithEvents(allEvents));
-
-  const [dayStats,  setDayStats]  = useState(null);
-  const [hourly,    setHourly]    = useState([]);
-  const [mostUsed,  setMostUsed]  = useState([]);
+  const [dayStats,        setDayStats]        = useState(null);
 
   useEffect(() => {
     setDayStats(deriveTodayStats(allEvents, selectedDate));
-    setHourly(deriveHourlyStats(allEvents, selectedDate));
-    setMostUsed(deriveMostUsedApps(allEvents, estimates, selectedDate));
-  }, [selectedDate, allEvents, estimates]);
+  }, [selectedDate, allEvents]);
 
   if (!dayStats) return null;
 
@@ -177,17 +157,9 @@ function TodayView({ allEvents, estimates, goalMinutes, streak }) {
   const dateLabel = new Date(parsed.year, parsed.month, parsed.day)
     .toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
-  const chartHours = hourly.slice(CHART_START, CHART_END + 1);
-  const maxCount   = Math.max(...chartHours.map((h) => h.count), 1);
-  const nowHour    = isToday ? new Date().getHours() : -1;
-
-  const hasEstimates = Object.values(estimates).some((e) => e.weeklyMinutes > 0);
-  const totalDailyEst = Object.values(estimates).reduce(
-    (sum, e) => sum + (e.weeklyMinutes ? Math.round(e.weeklyMinutes / 7) : 0), 0
-  );
-  const goalPct  = hasEstimates ? Math.min(totalDailyEst / goalMinutes, 1) : 0;
-  const overGoal = totalDailyEst > goalMinutes;
-  const bubbleApps = mostUsed.filter((a) => a.pickups > 0).slice(0, 5);
+  const dailyRate = dayStats.intercepted > 0
+    ? Math.round(((dayStats.walkedAway + dayStats.rageQuit) / dayStats.intercepted) * 100)
+    : 0;
 
   return (
     <>
@@ -208,7 +180,7 @@ function TodayView({ allEvents, estimates, goalMinutes, streak }) {
 
       {/* Quick stats — 2×2 grid */}
       <View style={s.quickGrid}>
-        <QuickStat emoji="🚧" value={dayStats.intercepted}  label="pickups" />
+        <QuickStat emoji="🚧" value={dayStats.intercepted}  label="intercepted" />
         <QuickStat emoji="🚶" value={dayStats.walkedAway}   label="walked away" />
         <QuickStat emoji="🧐" value={dayStats.openedAnyway} label="opened anyway" />
         <QuickStat emoji="🏳️" value={dayStats.rageQuit}    label="rage-quit" />
@@ -229,129 +201,18 @@ function TodayView({ allEvents, estimates, goalMinutes, streak }) {
         </View>
       </Card>
 
-      {/* Screen time vs goal */}
+      {/* Daily friction success rate */}
       <Card>
-        <View style={s.screentimeHeader}>
-          <AppText variant="subheading">screen time</AppText>
-          {hasEstimates && (
-            <AppText variant="caption" style={s.goalLabel}>goal: {formatMinutes(goalMinutes)}</AppText>
-          )}
+        <AppText variant="caption" style={s.rateLabel}>friction success rate today</AppText>
+        <View style={s.rateBarBg}>
+          <View style={[s.rateBarFill, { width: `${dailyRate}%` }]} />
         </View>
-        {hasEstimates ? (
-          <>
-            <View style={s.rateBarBg}>
-              <View style={[s.rateBarFill, { width: `${goalPct * 100}%` }, overGoal && s.rateBarOver]} />
-            </View>
-            <View style={s.screentimeRow}>
-              <AppText variant="xl" style={[s.screentimeValue, overGoal && s.screentimeOver]}>
-                {formatMinutes(totalDailyEst)}
-              </AppText>
-              <AppText variant="caption" style={s.screentimeEst}>avg daily est.</AppText>
-            </View>
-            <AppText variant="caption" style={s.screentimeNote}>
-              based on your Screen Time averages — real-time data available after Screen Time permission
-            </AppText>
-          </>
-        ) : (
-          <AppText variant="caption" style={s.emptyText}>
-            add Screen Time averages in Settings → Usage Estimates to see this
-          </AppText>
-        )}
-      </Card>
-
-      {/* Intercepts by hour */}
-      <Card>
-        <AppText variant="subheading" style={s.sectionTitle}>app pickups by hour</AppText>
-        <AppText variant="caption" style={s.sectionSub}>12am – 11:59pm</AppText>
-        {dayStats.intercepted === 0 ? (
-          <AppText variant="caption" style={s.emptyText}>
-            {isToday ? 'no interceptions yet today 💪' : 'no interceptions on this day.'}
-          </AppText>
-        ) : (
-          <View style={s.hourlyChart}>
-            {chartHours.map(({ hour, count }) => {
-              const barH  = count > 0 ? Math.max(Math.round((count / maxCount) * 72), 4) : 2;
-              const isNow = hour === nowHour;
-              const showLabel = hour % 6 === 0 || hour === 23;
-              return (
-                <View key={hour} style={s.hourCol}>
-                  <View style={s.hourBarContainer}>
-                    <View style={[s.hourBar, { height: barH }, count > 0 && s.hourBarActive, isNow && s.hourBarNow]} />
-                  </View>
-                  {showLabel
-                    ? <AppText variant="xs" style={[s.hourLabel, isNow && s.hourLabelNow]}>{formatHour(hour)}</AppText>
-                    : <View style={s.hourLabelSpacer} />
-                  }
-                </View>
-              );
-            })}
-          </View>
-        )}
-        <View style={s.comingSoonBox}>
-          <AppText variant="xs" style={s.comingSoonTitle}>coming soon with Screen Time permission</AppText>
-          <AppText variant="xs" style={s.comingSoonItem}>· total phone pickups (all apps, not just gated ones)</AppText>
-          <AppText variant="xs" style={s.comingSoonItem}>· notifications received per hour</AppText>
-          <AppText variant="xs" style={s.comingSoonItem}>· actual screen time by hour, per app</AppText>
-        </View>
-      </Card>
-
-      {/* App bubbles */}
-      {bubbleApps.length > 0 && (
-        <Card>
-          <AppText variant="subheading" style={s.sectionTitle}>most reached for</AppText>
-          <AppText variant="caption" style={s.sectionSub}>top apps by pickup count</AppText>
-          <View style={s.bubblesRow}>
-            {bubbleApps.map((app) => {
-              const base = bubbleApps[0].pickups || 1;
-              const size = Math.max(40, Math.round(64 * (app.pickups / base)));
-              return (
-                <View key={app.id} style={s.bubbleWrap}>
-                  <View style={[s.bubble, { width: size, height: size, borderRadius: size / 2 }]}>
-                    <AppText style={{ fontSize: Math.max(16, size * 0.42) }}>{app.emoji}</AppText>
-                  </View>
-                  <AppText variant="xs" style={s.bubbleLabel} numberOfLines={1}>{app.label}</AppText>
-                  <AppText variant="xs" style={s.bubbleCount}>{app.pickups}×</AppText>
-                </View>
-              );
-            })}
-          </View>
-        </Card>
-      )}
-
-      {/* Most used apps */}
-      <Card>
-        <AppText variant="subheading" style={s.sectionTitle}>most used apps</AppText>
-        {!hasEstimates ? (
-          <AppText variant="caption" style={s.emptyText}>
-            add Screen Time averages in Usage Estimates to see screen time here
-          </AppText>
-        ) : (
-          <View style={s.appList}>
-            {mostUsed.filter((a) => a.avgDailyMinutes > 0).map((app, i) => {
-              const pct = totalDailyEst > 0 ? app.avgDailyMinutes / totalDailyEst : 0;
-              return (
-                <View key={app.id} style={s.appRow}>
-                  <AppText style={s.appRank}>{i + 1}</AppText>
-                  <AppText style={s.appEmoji}>{app.emoji}</AppText>
-                  <View style={s.appInfo}>
-                    <View style={s.appLabelRow}>
-                      <AppText variant="sm">{app.label}</AppText>
-                      <AppText variant="sm" style={s.appTime}>{formatMinutes(app.avgDailyMinutes)}</AppText>
-                    </View>
-                    <View style={s.appBarBg}>
-                      <View style={[s.appBarFill, { width: `${Math.round(pct * 100)}%` }]} />
-                    </View>
-                    {app.pickups > 0 && (
-                      <AppText variant="xs" style={s.appSub}>
-                        {app.pickups} pickup{app.pickups !== 1 ? 's' : ''}
-                      </AppText>
-                    )}
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        )}
+        <AppText variant="sm" style={s.rateValue}>{dailyRate}%</AppText>
+        <AppText variant="caption" style={s.rateDef}>
+          {dayStats.intercepted === 0
+            ? 'no interceptions yet — check back after your first friction session'
+            : "of today's interceptions, how often you didn't end up in the app — walked away or rage-quit."}
+        </AppText>
       </Card>
 
       {showCalendar && (
@@ -369,12 +230,20 @@ function TodayView({ allEvents, estimates, goalMinutes, streak }) {
 // ── Week view ─────────────────────────────────────────────────────────────────
 
 function WeekView({ allEvents, estimates, navigation }) {
-  const [selectedDay,    setSelectedDay]    = useState(null);
-  const [legendTooltip,  setLegendTooltip]  = useState(null);
+  const [selectedDay, setSelectedDay] = useState(null);
 
   const weekly      = deriveWeeklyStats(allEvents);
   const byApp       = deriveByAppStats(allEvents);
-  const minutesSaved = deriveMinutesSaved(allEvents, estimates);
+  // Filter to the last 7 days for the week-scoped minutes saved figure.
+  const weekStartStr = (() => {
+    const d = new Date(); d.setDate(d.getDate() - 6);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  })();
+  const weekEvents = allEvents.filter((e) => e.date >= weekStartStr);
+  // [POST-MAC #20] deriveMinutesSaved can use real per-session lengths from DeviceActivityReport
+  // instead of the weeklyMinutes/weeklyPickups estimate ratio. hasEstimates check becomes
+  // settings.screenTimePermissionGranted — minutes saved card always shows when real data is available.
+  const minutesSaved = deriveMinutesSaved(weekEvents, estimates);
   const hasEstimates = Object.values(estimates).some((e) => e.weeklyMinutes > 0);
   const maxIntercepted = Math.max(...weekly.map((d) => d.intercepted), 1);
 
@@ -390,7 +259,7 @@ function WeekView({ allEvents, estimates, navigation }) {
               : `${minutesSaved}m`}
           </AppText>
           <AppText variant="caption" style={s.minutesSub}>
-            based on your Screen Time averages × times you didn't open the app
+            (walk-aways + rage-quits this week) × (avg session length: weeklyMinutes ÷ weeklyPickups per app)
           </AppText>
         </Card>
       ) : (
@@ -406,9 +275,11 @@ function WeekView({ allEvents, estimates, navigation }) {
         <AppText variant="subheading" style={s.sectionTitle}>last 7 days</AppText>
         <View style={s.chart}>
           {weekly.map((d) => {
-            const barH   = Math.round((d.intercepted / maxIntercepted) * 80);
-            const fillH  = d.intercepted > 0 ? Math.round((d.succeeded / d.intercepted) * barH) : 0;
-            const isSel  = selectedDay?.date === d.date;
+            const barH    = Math.round((d.intercepted / maxIntercepted) * 80);
+            const walkedH = d.intercepted > 0 ? Math.round((d.walkedAway   / d.intercepted) * barH) : 0;
+            const rageH   = d.intercepted > 0 ? Math.round((d.rageQuit     / d.intercepted) * barH) : 0;
+            const openedH = d.intercepted > 0 ? Math.round((d.openedAnyway / d.intercepted) * barH) : 0;
+            const isSel   = selectedDay?.date === d.date;
             return (
               <TouchableOpacity
                 key={d.date}
@@ -418,7 +289,9 @@ function WeekView({ allEvents, estimates, navigation }) {
               >
                 <View style={s.barContainer}>
                   <View style={[s.barBg, { height: Math.max(barH, 2) }, isSel && s.barBgSelected]}>
-                    <View style={[s.barFill, { height: fillH }]} />
+                    <View style={{ height: openedH, backgroundColor: colors.danger }} />
+                    <View style={{ height: rageH, backgroundColor: colors.warning }} />
+                    <View style={{ height: walkedH, backgroundColor: colors.success }} />
                   </View>
                 </View>
                 <AppText variant="xs" style={[s.barLabel, isSel && s.barLabelSelected]}>{d.day}</AppText>
@@ -441,21 +314,20 @@ function WeekView({ allEvents, estimates, navigation }) {
         )}
 
         <View style={s.legend}>
-          <TouchableOpacity style={s.legendItem} onPress={() => setLegendTooltip(legendTooltip === 'intercepted' ? null : 'intercepted')}>
-            <View style={[s.legendDot, { backgroundColor: colors.border }]} />
-            <AppText variant="xs" style={[s.legendText, legendTooltip === 'intercepted' && s.legendTextActive]}>intercepted</AppText>
-          </TouchableOpacity>
-          <TouchableOpacity style={s.legendItem} onPress={() => setLegendTooltip(legendTooltip === 'resisted' ? null : 'resisted')}>
-            <View style={[s.legendDot, { backgroundColor: colors.primary }]} />
-            <AppText variant="xs" style={[s.legendText, legendTooltip === 'resisted' && s.legendTextActive]}>resisted</AppText>
-          </TouchableOpacity>
+          <View style={s.legendItem}>
+            <View style={[s.legendDot, { backgroundColor: colors.success }]} />
+            <AppText variant="xs" style={s.legendText}>walked away</AppText>
+          </View>
+          <View style={s.legendItem}>
+            <View style={[s.legendDot, { backgroundColor: colors.warning }]} />
+            <AppText variant="xs" style={s.legendText}>rage-quit</AppText>
+          </View>
+          <View style={s.legendItem}>
+            <View style={[s.legendDot, { backgroundColor: colors.danger }]} />
+            <AppText variant="xs" style={s.legendText}>opened anyway</AppText>
+          </View>
         </View>
-        {legendTooltip === 'resisted' && (
-          <AppText variant="xs" style={s.tooltipText}>times you didn't end up in the app — walked away or rage-quit the game</AppText>
-        )}
-        {legendTooltip === 'intercepted' && (
-          <AppText variant="xs" style={s.tooltipText}>total times the friction game popped up that day</AppText>
-        )}
+        <AppText variant="xs" style={s.tooltipText}>bar height = total intercepted. tap a bar to see the breakdown.</AppText>
       </Card>
 
       {/* Per-app breakdown */}
@@ -583,11 +455,10 @@ function SummaryBox({ emoji, value, label }) {
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function InsightsScreen({ navigation }) {
-  const [mode,       setMode]       = useState('today');
-  const [loading,    setLoading]    = useState(true);
-  const [allEvents,  setAllEvents]  = useState([]);
-  const [estimates,  setEstimates]  = useState({});
-  const [goalMinutes, setGoalMinutes] = useState(120);
+  const [mode,        setMode]        = useState('today');
+  const [loading,     setLoading]     = useState(true);
+  const [allEvents,   setAllEvents]   = useState([]);
+  const [estimates,   setEstimates]   = useState({});
   const [installDate, setInstallDate] = useState(null);
 
   useFocusEffect(
@@ -598,7 +469,6 @@ export default function InsightsScreen({ navigation }) {
         if (!active) return;
         setAllEvents(events);
         setEstimates(settings.appUsageEstimates ?? {});
-        setGoalMinutes(settings.screentimeGoalMinutes ?? 120);
         setInstallDate(settings.installDate ?? null);
         setLoading(false);
       }
@@ -641,8 +511,6 @@ export default function InsightsScreen({ navigation }) {
         {mode === 'today' && (
           <TodayView
             allEvents={allEvents}
-            estimates={estimates}
-            goalMinutes={goalMinutes}
             streak={streak}
           />
         )}
@@ -653,7 +521,7 @@ export default function InsightsScreen({ navigation }) {
             navigation={navigation}
           />
         )}
-        {mode === 'all time' && (
+        {mode === 'all-time' && (
           <AllTimeView
             allEvents={allEvents}
             installDate={installDate}

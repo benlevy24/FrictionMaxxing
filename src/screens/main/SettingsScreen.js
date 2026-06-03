@@ -139,7 +139,7 @@ export default function SettingsScreen({ navigation }) {
             {[
               { value: 'always',     label: '🔔  always on'  },
               { value: 'threshold',  label: '⏱  threshold'   },
-              { value: 'hard_limit', label: '🔒  time cap'  },
+              { value: 'hard_limit', label: '🔒  group time cap'  },
             ].map(({ value, label }) => (
               <TouchableOpacity
                 key={value}
@@ -166,7 +166,7 @@ export default function SettingsScreen({ navigation }) {
 
           {frictionMode === 'threshold' && (
             <View style={styles.lockoutRow}>
-              <AppText variant="caption" style={styles.lockoutLabel}>per app, per day</AppText>
+              <AppText variant="caption" style={styles.lockoutLabel}>daily limit per app</AppText>
               <View style={styles.lockoutControls}>
                 <TouchableOpacity
                   onPress={() => adjustDailyUsageMinutes(-1)}
@@ -191,7 +191,7 @@ export default function SettingsScreen({ navigation }) {
                 </TouchableOpacity>
               </View>
               <AppText variant="caption" style={styles.lockoutNote}>
-                fires friction once you've passed the daily limit — requires mac build
+                once you've spent {dailyUsageTimer.minutes} min in any gated app today, friction fires every time you try to reopen it. the same limit applies to all gated apps — per-app customization coming later.{'\n\n'}enforcement requires DeviceActivityMonitor (mac build task #20). this setting is saved but not yet active.
               </AppText>
             </View>
           )}
@@ -215,7 +215,16 @@ export default function SettingsScreen({ navigation }) {
           title="time constraint"
           subtitle="beat a game, then pick how long you're allowed in"
           toggle={{ value: timeConstraint.enabled, onToggle: toggleTimeConstraint }}
-        />
+        >
+          {timeConstraint.enabled && (
+            <View style={styles.lockoutRow}>
+              <AppText variant="caption" style={styles.lockoutNote}>
+                30s · 1m · 1.5m · 2.5m · 5m{'\n'}
+                you choose the session length after beating the game
+              </AppText>
+            </View>
+          )}
+        </Section>
 
         {/* Daily game quota */}
         <Section

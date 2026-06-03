@@ -7,10 +7,17 @@ import Card from '../../components/Card';
 import { getSettings, saveSettings, ALL_APPS } from '../../utils/storage';
 import { colors, spacing, radius } from '../../theme';
 
+// [POST-MAC #20] Once screenTimePermissionGranted = true:
+//   - Hide the per-app estimate inputs (weeklyMinutes, weeklyPickups) entirely — iOS provides real data.
+//   - Keep only the daily goal stepper (screentimeGoalMinutes) — that's always a user preference.
+//   - Update the screen subtitle to remove "enter your Screen Time averages" copy.
+const GOAL_STEPS = [15, 30, 45, 60, 90, 120, 150, 180, 210, 240];
+
 export default function UsageEstimatesScreen({ navigation }) {
-  const [estimates, setEstimates]     = useState({});
-  const [customApps, setCustomApps]   = useState([]);
-  const [newAppName, setNewAppName]   = useState('');
+  const [estimates,    setEstimates]    = useState({});
+  const [customApps,   setCustomApps]   = useState([]);
+  const [newAppName,   setNewAppName]   = useState('');
+  const [goalMinutes,  setGoalMinutes]  = useState(120);
 
   useFocusEffect(
     useCallback(() => {
@@ -19,10 +26,27 @@ export default function UsageEstimatesScreen({ navigation }) {
         if (!active) return;
         setEstimates(s.appUsageEstimates ?? {});
         setCustomApps(s.customApps ?? []);
+        setGoalMinutes(s.screentimeGoalMinutes ?? 120);
       });
       return () => { active = false; };
     }, [])
   );
+
+  function fmtGoal(m) {
+    if (m < 60) return `${m} min`;
+    const h = Math.floor(m / 60);
+    const r = m % 60;
+    return r ? `${h}h ${r}m` : `${h}h`;
+  }
+
+  async function adjustGoal(delta) {
+    const idx     = GOAL_STEPS.indexOf(goalMinutes);
+    const cur     = idx === -1 ? 4 : idx; // default to index 4 (120 min)
+    const nextIdx = Math.min(GOAL_STEPS.length - 1, Math.max(0, cur + delta));
+    const next    = GOAL_STEPS[nextIdx];
+    setGoalMinutes(next);
+    await saveSettings({ screentimeGoalMinutes: next });
+  }
 
   async function handleChange(appId, field, raw) {
     const value = parseInt(raw, 10);
@@ -71,6 +95,35 @@ export default function UsageEstimatesScreen({ navigation }) {
             enter your weekly totals from Screen Time. the app uses them to estimate how many minutes you saved each time you walked away or rage-quit.
           </AppText>
         </View>
+
+        {/* Daily screen time goal */}
+        <Card style={styles.goalCard}>
+          <AppText variant="subheading">daily screen time goal</AppText>
+          <AppText variant="caption" style={styles.goalNote}>
+            shown as the ring on the home screen. once Screen Time permission is granted after the Mac build, the ring will track today's actual usage against this goal automatically.
+          </AppText>
+          <View style={styles.goalRow}>
+            <TouchableOpacity
+              onPress={() => adjustGoal(-1)}
+              style={[styles.goalArrow, goalMinutes <= GOAL_STEPS[0] && styles.goalArrowDisabled]}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              disabled={goalMinutes <= GOAL_STEPS[0]}
+            >
+              <AppText style={styles.goalArrowText}>‹</AppText>
+            </TouchableOpacity>
+            <View style={styles.goalValue}>
+              <AppText variant="xxl" style={styles.goalValueText}>{fmtGoal(goalMinutes)}</AppText>
+            </View>
+            <TouchableOpacity
+              onPress={() => adjustGoal(1)}
+              style={[styles.goalArrow, goalMinutes >= GOAL_STEPS[GOAL_STEPS.length - 1] && styles.goalArrowDisabled]}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              disabled={goalMinutes >= GOAL_STEPS[GOAL_STEPS.length - 1]}
+            >
+              <AppText style={styles.goalArrowText}>›</AppText>
+            </TouchableOpacity>
+          </View>
+        </Card>
 
         {/* How to find on iPhone */}
         <Card style={styles.howCard}>
@@ -194,6 +247,15 @@ const styles = StyleSheet.create({
   backBtn:      { alignSelf: 'flex-start' },
   backText:     { color: colors.primary },
   subtitle:     { color: colors.textSub, lineHeight: 22 },
+
+  goalCard:         { gap: spacing.md },
+  goalNote:         { color: colors.textSub, lineHeight: 18 },
+  goalRow:          { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  goalArrow:        { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border },
+  goalArrowDisabled:{ opacity: 0.3 },
+  goalArrowText:    { fontSize: 22, color: colors.text, lineHeight: 26 },
+  goalValue:        { flex: 1, alignItems: 'center', paddingVertical: spacing.sm, borderRadius: radius.md, backgroundColor: colors.primaryMuted, borderWidth: 1, borderColor: colors.primary },
+  goalValueText:    { color: colors.primary },
 
   howCard:      { gap: spacing.xs },
   howTitle:     { color: colors.text, marginBottom: spacing.xs },
