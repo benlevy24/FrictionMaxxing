@@ -11,7 +11,7 @@ import {
   deriveTodayStats,
   deriveHourlyByApp,
   deriveMostUsedApps,
-  computeStreak,
+  deriveMinutesSaved,
 } from '../../utils/storage';
 import { colors, spacing, radius } from '../../theme';
 
@@ -89,8 +89,8 @@ export default function HomeScreen({ navigation }) {
   const [mostUsed,     setMostUsed]     = useState([]);
   const [estimates,    setEstimates]    = useState({});
   const [goalMinutes,  setGoalMinutes]  = useState(120);
-  const [streak,       setStreak]       = useState({ current: 0, best: 0 });
-  const [selectedHour, setSelectedHour] = useState(null);
+  const [minutesSavedToday, setMinutesSavedToday] = useState(0);
+  const [selectedHour,      setSelectedHour]      = useState(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -108,7 +108,11 @@ export default function HomeScreen({ navigation }) {
         setMostUsed(deriveMostUsedApps(events, settings.appUsageEstimates ?? {}, todayStr));
         setEstimates(settings.appUsageEstimates ?? {});
         setGoalMinutes(settings.screentimeGoalMinutes ?? 120);
-        setStreak(computeStreak(events));
+        // [POST-MAC #20] minutesSavedToday uses estimated avg session × walk-aways/rage-quits.
+        // Replace with (real yesterday avg screen time − real today screen time) once
+        // screenTimePermissionGranted = true and DeviceActivityReport data is available.
+        const todayEvts = events.filter((e) => e.date === todayStr);
+        setMinutesSavedToday(deriveMinutesSaved(todayEvts, settings.appUsageEstimates ?? {}));
         setLoading(false);
       }
       load();
@@ -195,9 +199,16 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* Stat chips */}
+        {/* [POST-MAC #20] "vs avg" chip: once screenTimePermissionGranted, replace minutesSavedToday
+            with (historical pre-app daily average − today's real screen time) for a true before/after. */}
         <View style={styles.chipsRow}>
           <StatChip emoji="🫳" value={today.intercepted} label="pickups" />
-          <StatChip emoji="🔥" value={streak.current}   label={streak.current === 1 ? 'day streak' : 'day streak'} />
+          <StatChip
+            emoji="⬇️"
+            value={hasEstimates && minutesSavedToday > 0 ? `−${fmtMin(minutesSavedToday)}` : '—'}
+            label="vs avg"
+            dim={!hasEstimates || minutesSavedToday === 0}
+          />
           <StatChip emoji="🔔" value="—" label="notifications" dim />
         </View>
 
