@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated, Modal } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Animated, Modal, AppState } from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
 import Button from '../../components/Button';
@@ -18,8 +18,9 @@ import {
   recordEvent,
 } from '../../utils/storage';
 import { isInFreeZone } from '../../utils/location';
-import { ALL_APPS } from '../../utils/storage';
+import { ALL_APPS, APP_BUNDLE_IDS, getSettings } from '../../utils/storage';
 import { scheduleTimeConstraintNotifications } from '../../utils/notifications';
+import FrictionMaxxingNative from '../../native/FrictionMaxxingNative';
 import { colors, spacing, radius } from '../../theme';
 
 // Game flow states
@@ -52,7 +53,7 @@ function formatDuration(seconds) {
   return `${Number.isInteger(mins) ? mins : mins.toFixed(1)} min`;
 }
 
-const INTERCEPT_DURATIONS = { easy: 10000, medium: 20000, hard: 30000 };
+const INTERCEPT_DURATIONS = { easy: 30000, medium: 45000, hard: 60000 };
 function getInterceptDuration(diff) {
   return INTERCEPT_DURATIONS[diff] ?? 20000;
 }
@@ -112,11 +113,18 @@ export default function GameScreen({ navigation, route }) {
   const appLabel = decodeURIComponent(rawLabel);
   const appEmoji = ALL_APPS.find((a) => a.id === appId)?.emoji ?? '📱';
   const timeCapExhausted = route?.params?.timeCapExhausted === 'true';
+  // lockout=true means the user arrived via a ShieldAction tap (lockout mode).
+  // After winning the game, we unblock all gated apps for the lockout window,
+  // then re-block them. No "open anyway" option in lockout mode.
+  const isLockoutMode = route?.params?.lockout === 'true';
 
   const [gameState, setGameState] = useState(STATE.LOADING);
   const [selectedGame, setSelectedGame] = useState(null);
   const [difficulty, setDifficulty]     = useState('medium');
   const [milestone, setMilestone] = useState(null);
+
+  // Daily open limit — walk away is the only option once the cap is reached
+  const [openLimitExhausted, setOpenLimitExhausted] = useState(false);
 
   // Quota tracking
   const [quotaRequired, setQuotaRequired]   = useState(0);
@@ -178,6 +186,17 @@ export default function GameScreen({ navigation, route }) {
 
       setDifficulty(s.difficulty ?? 'medium');
       setTimeConstraintEnabled(s.timeConstraint?.enabled ?? true);
+
+      // Check daily open limit — count successful opens for this app today
+      if (s.dailyOpenLimit?.enabled) {
+        const opensToday = events.filter(
+          (e) => e.appId === appId && e.date === getToday() && e.gameCompleted && !e.walkedAway
+        ).length;
+        if (opensToday >= (s.dailyOpenLimit.limit ?? 3)) {
+          setOpenLimitExhausted(true);
+        }
+      }
+
       const game = pickRandomGame(s.enabledGames);
       setSelectedGame(game);
 
@@ -224,43 +243,80 @@ export default function GameScreen({ navigation, route }) {
     init();
   }, []);
 
-  // Intercept screen: animate progress bar and auto-advance after INTERCEPT_DURATION
+  // Intercept screen: animate progress bar and auto-advance after INTERCEPT_DURATION.
+  // Resets on background — you can't leave and come back to skip the wait.
   useEffect(() => {
     if (gameState !== STATE.INTERCEPT) return;
 
-    progressAnim.setValue(0);
-    const anim = Animated.timing(progressAnim, {
-      toValue: 1,
-      duration: getInterceptDuration(difficulty),
-      useNativeDriver: false,
-    });
-    anim.start(({ finished }) => {
-      if (finished) setGameState(STATE.PLAYING);
+    let currentAnim = null;
+
+    function startAnim() {
+      progressAnim.setValue(0);
+      currentAnim = Animated.timing(progressAnim, {
+        toValue: 1,
+        duration: getInterceptDuration(difficulty),
+        useNativeDriver: false,
+      });
+      currentAnim.start(({ finished }) => {
+        if (finished) setGameState(STATE.PLAYING);
+      });
+    }
+
+    startAnim();
+
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') {
+        currentAnim?.stop();
+      } else {
+        // Returned to foreground — reset and restart the full countdown
+        startAnim();
+      }
     });
 
-    return () => anim.stop();
+    return () => {
+      currentAnim?.stop();
+      sub.remove();
+    };
   }, [gameState, difficulty]);
 
-  // Reentry wait — mandatory loading screen after picking a time constraint duration
+  // Reentry wait — mandatory loading screen after picking a time constraint duration.
+  // Resets on background — you can't leave and come back to skip the wait.
   useEffect(() => {
     if (gameState !== STATE.REENTRY_WAIT) return;
 
-    reentryProgressAnim.setValue(0);
-    const anim = Animated.timing(reentryProgressAnim, {
-      toValue: 1,
-      duration: getInterceptDuration(difficulty),
-      useNativeDriver: false,
-    });
+    let currentAnim = null;
     const duration = selectedDurationRef.current;
-    anim.start(async ({ finished }) => {
-      if (!finished) return;
-      eventRecorded.current = true;
-      await recordEvent({ appId, appLabel, appEmoji, gameCompleted: true, walkedAway: false });
-      await scheduleTimeConstraintNotifications(appLabel, duration);
-      navigation.goBack();
+
+    function startAnim() {
+      reentryProgressAnim.setValue(0);
+      currentAnim = Animated.timing(reentryProgressAnim, {
+        toValue: 1,
+        duration: getInterceptDuration(difficulty),
+        useNativeDriver: false,
+      });
+      currentAnim.start(async ({ finished }) => {
+        if (!finished) return;
+        eventRecorded.current = true;
+        await recordEvent({ appId, appLabel, appEmoji, gameCompleted: true, walkedAway: false });
+        await scheduleTimeConstraintNotifications(appLabel, duration);
+        navigation.goBack();
+      });
+    }
+
+    startAnim();
+
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') {
+        currentAnim?.stop();
+      } else {
+        startAnim();
+      }
     });
 
-    return () => anim.stop();
+    return () => {
+      currentAnim?.stop();
+      sub.remove();
+    };
   }, [gameState]);
 
   // Long-session nudge — show "put the phone down" modal after threshold
@@ -316,7 +372,34 @@ export default function GameScreen({ navigation, route }) {
       }
       return;
     }
+    if (isLockoutMode) {
+      // Lockout mode: no "open anyway" decision screen — just unblock and close.
+      // Unblock all gated apps for the lockout window, then re-lock automatically.
+      await handleLockoutWin();
+      return;
+    }
     setGameState(STATE.DECISION);
+  }
+
+  async function handleLockoutWin() {
+    eventRecorded.current = true;
+    await recordEvent({ appId, appLabel, appEmoji, gameCompleted: true, walkedAway: false });
+    const s = await getSettings();
+    const windowMinutes = s.lockoutWindowMinutes ?? 1;
+    // Unblock all gated apps — user can now open the app they were trying to reach.
+    // The native module re-locks everything after windowMinutes automatically.
+    FrictionMaxxingNative.unblockAll();
+    setTimeout(async () => {
+      const fresh = await getSettings();
+      const hiddenIds = fresh.hiddenAppIds ?? [];
+      const bundleIds = ALL_APPS
+        .map((a) => a.id)
+        .filter((id) => !hiddenIds.includes(id))
+        .map((id) => APP_BUNDLE_IDS[id])
+        .filter(Boolean);
+      if (bundleIds.length > 0) FrictionMaxxingNative.blockApps(bundleIds);
+    }, windowMinutes * 60 * 1000);
+    navigation.goBack();
   }
 
   async function handleWalkAway() {
@@ -532,10 +615,12 @@ export default function GameScreen({ navigation, route }) {
         <View style={styles.centered}>
           <AppText variant="xxl" style={styles.winEmoji}>🎉</AppText>
           <AppText variant="xxl" style={styles.decisionTitle}>you beat it.</AppText>
-          {timeCapExhausted ? (
+          {(timeCapExhausted || openLimitExhausted) ? (
             <>
               <AppText variant="caption" style={styles.decisionSub}>
-                that's your lot for {appLabel} today. the limit is the limit.
+                {openLimitExhausted
+                  ? `you've hit your daily open limit for ${appLabel}. you set the rule — stick to it.`
+                  : `that's your lot for ${appLabel} today. the limit is the limit.`}
               </AppText>
               <View style={styles.decisionButtons}>
                 <Button label="walk away 💪" variant="primary" onPress={handleWalkAway} />

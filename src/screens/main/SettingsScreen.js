@@ -10,6 +10,7 @@ import {
   clearAllData,
   DEFAULT_ENABLED_GAMES,
 } from '../../utils/storage';
+import { initNative } from '../../native/startup';
 import { GAMES } from '../../games/registry';
 import { colors, spacing, radius } from '../../theme';
 
@@ -22,6 +23,7 @@ export default function SettingsScreen({ navigation }) {
   const [timeConstraint, setTimeConstraint] = useState({ enabled: true });
   const [dailyUsageTimer, setDailyUsageTimer] = useState({ enabled: false, minutes: 30 });
   const [dailyQuota, setDailyQuota] = useState({ enabled: false });
+  const [dailyOpenLimit, setDailyOpenLimit] = useState({ enabled: false, limit: 3 });
   const [groupTimeCap, setGroupTimeCap]     = useState({ enabled: false });
 
   useFocusEffect(
@@ -35,6 +37,7 @@ export default function SettingsScreen({ navigation }) {
         setTimeConstraint(s.timeConstraint ?? { enabled: true });
         setDailyUsageTimer(s.dailyUsageTimer ?? { enabled: false, minutes: 30 });
         setDailyQuota(s.dailyQuota ?? { enabled: false });
+        setDailyOpenLimit(s.dailyOpenLimit ?? { enabled: false, limit: 3 });
         setGroupTimeCap(s.groupTimeCap ?? { enabled: false });
         setLoading(false);
       });
@@ -64,6 +67,23 @@ export default function SettingsScreen({ navigation }) {
     await saveSettings({ dailyQuota: next });
   }
 
+  const OPEN_LIMIT_STEPS = [1, 2, 3, 5, 7, 10, 15, 20];
+
+  async function toggleDailyOpenLimit() {
+    const next = { ...dailyOpenLimit, enabled: !dailyOpenLimit.enabled };
+    setDailyOpenLimit(next);
+    await saveSettings({ dailyOpenLimit: next });
+  }
+
+  async function adjustOpenLimit(delta) {
+    const idx = OPEN_LIMIT_STEPS.indexOf(dailyOpenLimit.limit);
+    const currentIdx = idx === -1 ? 2 : idx;
+    const nextIdx = Math.min(OPEN_LIMIT_STEPS.length - 1, Math.max(0, currentIdx + delta));
+    const next = { ...dailyOpenLimit, limit: OPEN_LIMIT_STEPS[nextIdx] };
+    setDailyOpenLimit(next);
+    await saveSettings({ dailyOpenLimit: next });
+  }
+
   async function toggleGroupTimeCap() {
     const next = { ...groupTimeCap, enabled: !groupTimeCap.enabled };
     setGroupTimeCap(next);
@@ -74,6 +94,7 @@ export default function SettingsScreen({ navigation }) {
     const next = { ...dailyUsageTimer, enabled: !dailyUsageTimer.enabled };
     setDailyUsageTimer(next);
     await saveSettings({ dailyUsageTimer: next });
+    initNative(); // re-sync native monitoring state
   }
 
   const DAILY_LIMIT_STEPS = [1, 2, 5, 10, 15, 20, 30, 45, 60, 90, 120];
@@ -85,6 +106,7 @@ export default function SettingsScreen({ navigation }) {
     const next = { ...dailyUsageTimer, minutes: DAILY_LIMIT_STEPS[nextIdx] };
     setDailyUsageTimer(next);
     await saveSettings({ dailyUsageTimer: next });
+    initNative(); // re-sync monitoring threshold
   }
 
   async function toggleGame(id) {
@@ -251,6 +273,45 @@ export default function SettingsScreen({ navigation }) {
               <AppText variant="caption" style={styles.lockoutNote}>
                 easy: 5 games · hard: 10 games{'\n'}
                 each app open plays 1 game then closes — accumulate across apps
+              </AppText>
+            </View>
+          )}
+        </Section>
+
+        {/* Daily open limit */}
+        <Section
+          title="🔒  daily open limit"
+          subtitle="lock an app to N opens per day — after that, walk away is the only option"
+          toggle={{ value: dailyOpenLimit.enabled, onToggle: toggleDailyOpenLimit }}
+        >
+          {dailyOpenLimit.enabled && (
+            <View style={styles.lockoutRow}>
+              <AppText variant="caption" style={styles.lockoutLabel}>max opens per app per day</AppText>
+              <View style={styles.lockoutControls}>
+                <TouchableOpacity
+                  onPress={() => adjustOpenLimit(-1)}
+                  style={[styles.lockoutArrow, dailyOpenLimit.limit <= 1 && styles.lockoutArrowDisabled]}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  disabled={dailyOpenLimit.limit <= 1}
+                >
+                  <AppText style={styles.lockoutArrowText}>‹</AppText>
+                </TouchableOpacity>
+                <View style={styles.lockoutValue}>
+                  <AppText variant="subheading" style={styles.lockoutValueText}>
+                    {dailyOpenLimit.limit}x
+                  </AppText>
+                </View>
+                <TouchableOpacity
+                  onPress={() => adjustOpenLimit(1)}
+                  style={[styles.lockoutArrow, dailyOpenLimit.limit >= 20 && styles.lockoutArrowDisabled]}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  disabled={dailyOpenLimit.limit >= 20}
+                >
+                  <AppText style={styles.lockoutArrowText}>›</AppText>
+                </TouchableOpacity>
+              </View>
+              <AppText variant="caption" style={styles.lockoutNote}>
+                applies to all gated apps — same limit for each
               </AppText>
             </View>
           )}

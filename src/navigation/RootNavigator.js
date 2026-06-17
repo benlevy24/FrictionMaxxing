@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { initNative } from '../native/startup';
 import OnboardingNavigator from './OnboardingNavigator';
 import MainTabNavigator from './MainTabNavigator';
 import GameScreen from '../screens/games/GameScreen';
@@ -24,6 +26,8 @@ const linking = {
 };
 
 export default function RootNavigator() {
+  useEffect(() => { initNative(); }, []);
+
   return (
     <NavigationContainer linking={linking}>
       <Stack.Navigator initialRouteName="Onboarding" screenOptions={{ headerShown: false }}>

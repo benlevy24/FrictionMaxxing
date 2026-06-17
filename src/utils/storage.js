@@ -19,6 +19,22 @@ export const ALL_APPS = [
   { id: 'pinterest', label: 'Pinterest',   emoji: '📌' },
 ];
 
+// iOS bundle IDs for each app — used by the native module to block/monitor apps.
+// Custom apps added by the user won't have entries here; native blocking won't apply to them.
+export const APP_BUNDLE_IDS = {
+  instagram: 'com.burbn.instagram',
+  tiktok:    'com.zhiliaoapp.musically',
+  youtube:   'com.google.ios.youtube',
+  x:         'com.atebits.Tweetie2',
+  facebook:  'com.facebook.Facebook',
+  snapchat:  'com.toyopagroup.picaboo',
+  reddit:    'com.reddit.Reddit',
+  chatgpt:   'com.openai.chat',
+  threads:   'com.burbn.barcelona',
+  linkedin:  'com.linkedin.LinkedIn',
+  pinterest: 'com.pinterest',
+};
+
 export const DEFAULT_ENABLED_GAMES = [
   'tictactoe', 'maze', 'hangman', 'math', 'stroop', 'pong', 'snake', 'checkers', 'chess', 'gwam',
 ];
@@ -75,6 +91,7 @@ const DEFAULT_SETTINGS = {
   groupBudgets:       [],                 // [{ id, name, limitMinutes, appIds: string[] }]
   groupTimeCap:       { enabled: false }, // once a group's daily budget runs out, walk away is the only option (no friction game — just blocked)
   dailyUsageTimer:    { enabled: false, minutes: 30 }, // start intercepting after X min of use today (per-app); enforcement needs DeviceActivityMonitor (#20)
+  dailyOpenLimit:     { enabled: false, limit: 3 }, // hard cap on opens per app per day; after N opens, walk away is the only option
   dailyQuota:         { enabled: false }, // must beat N games today before any gated app opens (N = 5/7/10 by difficulty); each app open plays 1 game then closes
   screentimeGoalMinutes: 120,             // daily screen time goal shown as ring on home screen (default 2 hours)
 

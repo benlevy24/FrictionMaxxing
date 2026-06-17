@@ -6,6 +6,7 @@ import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
 import Card from '../../components/Card';
 import { getSettings, saveSettings } from '../../utils/storage';
+import { syncShieldedApps } from '../../native/startup';
 import { APPS_BY_CATEGORY } from '../../utils/appCategories';
 import { colors, spacing, radius } from '../../theme';
 
@@ -78,6 +79,7 @@ export default function GroupEditScreen({ route, navigation }) {
       : [...current, entry];
 
     await saveSettings({ groupBudgets: next });
+    await syncShieldedApps();
     setSaving(false);
     navigation.goBack();
   }
@@ -95,6 +97,7 @@ export default function GroupEditScreen({ route, navigation }) {
             const settings = await getSettings();
             const next = (settings.groupBudgets ?? []).filter((g) => g.id !== existing.id);
             await saveSettings({ groupBudgets: next });
+            await syncShieldedApps();
             navigation.goBack();
           },
         },
