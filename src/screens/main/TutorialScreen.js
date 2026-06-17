@@ -21,7 +21,7 @@ const FRICTION_STEPS = [
   {
     number: 3,
     title: 'select the app to add friction to',
-    body: 'choose the app (e.g. Instagram). set Run Immediately, then tap Next.\n\nImportant: one automation per app — repeat these steps for each gated app.',
+    body: 'choose the app (e.g. Instagram). set Run Immediately, then tap Next.\n\nImportant: one automation per app — repeat these steps for each friction app.',
     visual: <RunImmediatelyVisual />,
   },
   {
@@ -55,7 +55,7 @@ export default function TutorialScreen({ navigation }) {
           </TouchableOpacity>
           <AppText variant="xxl">setup guide</AppText>
           <AppText variant="base" style={styles.subtitle}>
-            FrictionMaxxing works through iOS Shortcuts automations — one per gated app.
+            FrictionMaxxing works through iOS Shortcuts automations — one per friction app.
             follow these steps to wire it up.
           </AppText>
         </View>

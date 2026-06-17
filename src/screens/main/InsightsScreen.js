@@ -417,7 +417,7 @@ function AllTimeView({ allEvents, installDate, weekly, streak }) {
       {/* Share */}
       <Button label="share my stats 📤" variant="secondary" onPress={() => setShowShareCard(true)} />
       <AppText variant="caption" style={s.shareWarning}>
-        ⚠️ sharing to a gated app counts as opening it. your high score is at stake. worth it?
+        ⚠️ sharing to a friction app counts as opening it. your high score is at stake. worth it?
       </AppText>
 
       <ShareCardModal

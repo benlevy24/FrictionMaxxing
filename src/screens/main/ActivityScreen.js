@@ -311,7 +311,7 @@ export default function ActivityScreen() {
         <Card>
           <AppText variant="subheading" style={styles.sectionTitle}>intercepts by hour</AppText>
           <AppText variant="caption" style={styles.chartSub}>
-            {isToday ? 'when you reached for a gated app today' : 'when you reached for a gated app'}
+            {isToday ? 'when you reached for a friction app today' : 'when you reached for a friction app'}
           </AppText>
 
           {dayStats.intercepted === 0 ? (

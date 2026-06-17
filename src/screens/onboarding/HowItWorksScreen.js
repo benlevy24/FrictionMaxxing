@@ -7,7 +7,7 @@ import { colors, spacing } from '../../theme';
 const STEPS = [
   {
     emoji: '📱',
-    title: 'open a gated app',
+    title: 'open a friction app',
     body: 'set up a Shortcuts automation for any app you want to slow down. after that, every time you open it, iOS redirects you here automatically. no manual list — apps show up as you use them.',
   },
   {

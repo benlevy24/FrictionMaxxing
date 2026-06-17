@@ -264,7 +264,7 @@ export default function StatsScreen({ navigation }) {
         {/* Share */}
         <Button label="share my stats 📤" variant="secondary" onPress={handleShare} />
         <AppText variant="caption" style={styles.shareWarning}>
-          ⚠️ sharing to a gated app counts as opening it. your streak is at stake. worth it?
+          ⚠️ sharing to a friction app counts as opening it. your streak is at stake. worth it?
         </AppText>
 
       </ScrollView>

@@ -7,7 +7,7 @@ import { colors, spacing, radius } from '../../theme';
 const HOW_IT_WORKS = [
   {
     emoji: '📱',
-    text: 'when you open Instagram (or any gated app), Shortcuts redirects you here automatically.',
+    text: 'when you open Instagram (or any friction app), Shortcuts redirects you here automatically.',
   },
   {
     emoji: '🎮',

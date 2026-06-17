@@ -18,7 +18,7 @@ import {
   recordEvent,
 } from '../../utils/storage';
 import { isInFreeZone } from '../../utils/location';
-import { ALL_APPS, APP_BUNDLE_IDS, getSettings } from '../../utils/storage';
+import { ALL_APPS, APP_BUNDLE_IDS } from '../../utils/storage';
 import { scheduleTimeConstraintNotifications } from '../../utils/notifications';
 import FrictionMaxxingNative from '../../native/FrictionMaxxingNative';
 import { colors, spacing, radius } from '../../theme';

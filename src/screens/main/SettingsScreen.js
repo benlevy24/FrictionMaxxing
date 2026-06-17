@@ -188,7 +188,7 @@ export default function SettingsScreen({ navigation }) {
           {frictionMode === 'always' && (
             <View style={styles.lockoutRow}>
               <AppText variant="caption" style={styles.lockoutNote}>
-                friction fires every time you open a gated app — no exceptions
+                friction fires every time you open a friction app — no exceptions
               </AppText>
             </View>
           )}
@@ -220,7 +220,7 @@ export default function SettingsScreen({ navigation }) {
                 </TouchableOpacity>
               </View>
               <AppText variant="caption" style={styles.lockoutNote}>
-                once you've spent {dailyUsageTimer.minutes} min in any gated app today, friction fires every time you try to reopen it. the same limit applies to all gated apps — per-app customization coming later.{'\n\n'}enforcement requires DeviceActivityMonitor (mac build task #20). this setting is saved but not yet active.
+                once you've spent {dailyUsageTimer.minutes} min in any friction app today, friction fires every time you try to reopen it. the same limit applies to all friction apps — per-app customization coming later.{'\n\n'}enforcement requires DeviceActivityMonitor (mac build task #20). this setting is saved but not yet active.
               </AppText>
             </View>
           )}
@@ -311,7 +311,7 @@ export default function SettingsScreen({ navigation }) {
                 </TouchableOpacity>
               </View>
               <AppText variant="caption" style={styles.lockoutNote}>
-                applies to all gated apps — same limit for each
+                applies to all friction apps — same limit for each
               </AppText>
             </View>
           )}
