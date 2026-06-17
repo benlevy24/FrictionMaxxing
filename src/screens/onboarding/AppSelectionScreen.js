@@ -44,7 +44,7 @@ export default function AppSelectionScreen({ navigation }) {
       <View style={styles.header}>
         <AppText variant="xxl" style={styles.title}>pick your apps</AppText>
         <AppText variant="caption">
-          these are the ones that'll get gated. be honest with yourself.
+          these are the ones that'll get friction. be honest with yourself.
         </AppText>
       </View>
 
