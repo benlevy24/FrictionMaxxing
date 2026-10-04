@@ -251,6 +251,12 @@ export default function ChessGame({ onComplete, difficulty = 'medium' }) {
   const [status, setStatus] = useState('playing');
   const [taunt, setTaunt]   = useState(() =>
     cfg.modeLabel ? `${cfg.modeLabel}. good luck.` : 'your move.');
+  const GIVE_UP_DELAYS = { easy: 10000, medium: 20000, hard: 30000 };
+  const [giveUpUnlocked, setGiveUpUnlocked] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setGiveUpUnlocked(true), GIVE_UP_DELAYS[difficulty] ?? 20000);
+    return () => clearTimeout(t);
+  }, []);
 
   // Refs so async timeouts always read latest state
   const bRef   = useRef(board);
@@ -411,7 +417,7 @@ export default function ChessGame({ onComplete, difficulty = 'medium' }) {
       </AppText>
 
       <View style={styles.actions}>
-        {!isDone && <Button label="give up" variant="ghost" onPress={onComplete} />}
+        {!isDone && giveUpUnlocked && <Button label="give up" variant="ghost" onPress={onComplete} />}
         {isDone && (
           <Button
             label={playerWon ? 'escape' : 'just let me through'}

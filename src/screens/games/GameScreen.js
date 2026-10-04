@@ -43,6 +43,7 @@ const TIME_CONSTRAINT_PRESETS = [
   { label: '90 sec',  seconds: 90  },
   { label: '2.5 min', seconds: 150 },
   { label: '5 min',   seconds: 300 },
+  { label: '10 min',  seconds: 600 },
 ];
 
 function formatDuration(seconds) {
@@ -142,10 +143,13 @@ export default function GameScreen({ navigation, route }) {
 
 
   // Intercept screen state
-  const [count24h, setCount24h]             = useState(0);
-  const [lastAttemptMs, setLastAttemptMs]   = useState(null); // ms since last event for this app
-  const [avgDailyMinutes, setAvgDailyMinutes] = useState(null); // null = no estimate on file
-  const [interceptMessage, setInterceptMessage] = useState('');
+  const [attemptsToday, setAttemptsToday]         = useState(0);
+  const [walkedAwayToday, setWalkedAwayToday]     = useState(0);
+  const [openedAnywayToday, setOpenedAnywayToday] = useState(0);
+  const [avgDailyMinutes, setAvgDailyMinutes]     = useState(null); // null = no estimate on file
+  const [interceptMessage, setInterceptMessage]   = useState('');
+  const [interceptSecondsLeft, setInterceptSecondsLeft] = useState(null);
+  const [reentrySecondsLeft, setReentrySecondsLeft]     = useState(null);
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   // Track whether a final event has already been recorded this session.
@@ -200,16 +204,16 @@ export default function GameScreen({ navigation, route }) {
       const game = pickRandomGame(s.enabledGames);
       setSelectedGame(game);
 
-      // Compute 24h stats for the intercept screen
-      const now = Date.now();
-      const cutoff = now - 24 * 60 * 60 * 1000;
+      // Compute stats for the intercept screen
       const appEvents = events.filter((e) => e.appId === appId);
-      const recent = appEvents.filter((e) => e.timestamp > cutoff);
-      const lastEvent = appEvents.sort((a, b) => b.timestamp - a.timestamp)[0];
+      const appEventsToday = appEvents.filter((e) => e.date === getToday());
+      const walkedAway = appEventsToday.filter((e) => e.walkedAway).length;
+      const openedAnyway = appEventsToday.filter((e) => e.gameCompleted && !e.walkedAway).length;
 
-      setCount24h(recent.length);
-      setLastAttemptMs(lastEvent ? now - lastEvent.timestamp : null);
-      setInterceptMessage(pickInterceptMessage(recent.length));
+      setAttemptsToday(appEventsToday.length);
+      setWalkedAwayToday(walkedAway);
+      setOpenedAnywayToday(openedAnyway);
+      setInterceptMessage(pickInterceptMessage(appEventsToday.length));
 
       // Daily screen time estimate for this app (weeklyMinutes / 7).
       // [POST-MAC #20] replace with real per-app daily average from DeviceActivityReport.
@@ -243,18 +247,32 @@ export default function GameScreen({ navigation, route }) {
     init();
   }, []);
 
-  // Intercept screen: animate progress bar and auto-advance after INTERCEPT_DURATION.
+  // Intercept screen: animate progress bar + countdown and auto-advance after INTERCEPT_DURATION.
   // Resets on background — you can't leave and come back to skip the wait.
   useEffect(() => {
     if (gameState !== STATE.INTERCEPT) return;
 
     let currentAnim = null;
+    let countdownInterval = null;
 
     function startAnim() {
+      const durationMs  = getInterceptDuration(difficulty);
+      const durationSec = Math.round(durationMs / 1000);
+
       progressAnim.setValue(0);
+      setInterceptSecondsLeft(durationSec);
+
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        setInterceptSecondsLeft((prev) => {
+          if (prev <= 1) { clearInterval(countdownInterval); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+
       currentAnim = Animated.timing(progressAnim, {
         toValue: 1,
-        duration: getInterceptDuration(difficulty),
+        duration: durationMs,
         useNativeDriver: false,
       });
       currentAnim.start(({ finished }) => {
@@ -267,6 +285,7 @@ export default function GameScreen({ navigation, route }) {
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState !== 'active') {
         currentAnim?.stop();
+        if (countdownInterval) clearInterval(countdownInterval);
       } else {
         // Returned to foreground — reset and restart the full countdown
         startAnim();
@@ -275,6 +294,7 @@ export default function GameScreen({ navigation, route }) {
 
     return () => {
       currentAnim?.stop();
+      if (countdownInterval) clearInterval(countdownInterval);
       sub.remove();
     };
   }, [gameState, difficulty]);
@@ -285,13 +305,27 @@ export default function GameScreen({ navigation, route }) {
     if (gameState !== STATE.REENTRY_WAIT) return;
 
     let currentAnim = null;
+    let countdownInterval = null;
     const duration = selectedDurationRef.current;
 
     function startAnim() {
+      const durationMs  = getInterceptDuration(difficulty);
+      const durationSec = Math.round(durationMs / 1000);
+
       reentryProgressAnim.setValue(0);
+      setReentrySecondsLeft(durationSec);
+
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        setReentrySecondsLeft((prev) => {
+          if (prev <= 1) { clearInterval(countdownInterval); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+
       currentAnim = Animated.timing(reentryProgressAnim, {
         toValue: 1,
-        duration: getInterceptDuration(difficulty),
+        duration: durationMs,
         useNativeDriver: false,
       });
       currentAnim.start(async ({ finished }) => {
@@ -308,6 +342,7 @@ export default function GameScreen({ navigation, route }) {
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState !== 'active') {
         currentAnim?.stop();
+        if (countdownInterval) clearInterval(countdownInterval);
       } else {
         startAnim();
       }
@@ -315,6 +350,7 @@ export default function GameScreen({ navigation, route }) {
 
     return () => {
       currentAnim?.stop();
+      if (countdownInterval) clearInterval(countdownInterval);
       sub.remove();
     };
   }, [gameState]);
@@ -511,7 +547,10 @@ export default function GameScreen({ navigation, route }) {
             </AppText>
           </View>
 
-          {/* Progress bar */}
+          {/* Countdown + progress bar */}
+          {interceptSecondsLeft !== null && (
+            <AppText style={styles.interceptCountdown}>{interceptSecondsLeft}s</AppText>
+          )}
           <View style={styles.progressTrack}>
             <Animated.View
               style={[
@@ -529,21 +568,19 @@ export default function GameScreen({ navigation, route }) {
           {/* Stats */}
           <View style={styles.interceptStats}>
             <View style={styles.statRow}>
-              <AppText style={styles.statNumber}>{count24h}</AppText>
+              <AppText style={styles.statNumber}>{attemptsToday}</AppText>
               <AppText variant="caption" style={styles.statLabel}>
-                {count24h === 1 ? 'attempt' : 'attempts'} in the last 24 hours
+                {attemptsToday === 1 ? 'attempt' : 'attempts'} today
               </AppText>
             </View>
-            {lastAttemptMs !== null && (
-              <View style={styles.statRow}>
-                <AppText variant="caption" style={styles.statLast}>
-                  last attempt:{' '}
-                  <AppText variant="caption" style={styles.statLastHighlight}>
-                    {formatTimeAgo(lastAttemptMs)}
-                  </AppText>
-                </AppText>
-              </View>
-            )}
+            <View style={styles.statRow}>
+              <AppText variant="caption" style={styles.statLast}>
+                walked away:{' '}
+                <AppText variant="caption" style={styles.statLastHighlight}>{walkedAwayToday}</AppText>
+                {'   '}opened anyway:{' '}
+                <AppText variant="caption" style={styles.statLastHighlight}>{openedAnywayToday}</AppText>
+              </AppText>
+            </View>
             <View style={styles.statRow}>
               <AppText variant="caption" style={styles.statLast}>
                 avg daily screen time:{' '}
@@ -552,7 +589,7 @@ export default function GameScreen({ navigation, route }) {
                     ? (avgDailyMinutes >= 60
                         ? `${Math.floor(avgDailyMinutes / 60)}h ${avgDailyMinutes % 60}m`
                         : `${avgDailyMinutes}m`)
-                    : 'not set — add in Usage Estimates · real-time after Screen Time permission'}
+                    : 'not set — add in Usage Estimates'}
                 </AppText>
               </AppText>
             </View>
@@ -687,6 +724,9 @@ export default function GameScreen({ navigation, route }) {
             </AppText>
           </View>
 
+          {reentrySecondsLeft !== null && (
+            <AppText style={styles.interceptCountdown}>{reentrySecondsLeft}s</AppText>
+          )}
           <View style={styles.progressTrack}>
             <Animated.View
               style={[
@@ -875,6 +915,14 @@ const styles = StyleSheet.create({
     color: colors.textSub,
     textAlign: 'center',
     letterSpacing: 1,
+  },
+  interceptCountdown: {
+    fontSize: 52,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+    lineHeight: 58,
+    marginBottom: spacing.xs,
   },
   progressTrack: {
     width: '100%',

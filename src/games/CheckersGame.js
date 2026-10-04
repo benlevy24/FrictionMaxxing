@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import AppText from '../components/AppText';
 import Button from '../components/Button';
@@ -163,6 +163,12 @@ export default function CheckersGame({ onComplete, difficulty = 'medium' }) {
   const [forceFrom, setForceFrom] = useState(null);    // [r,c] — mid-multiCapture
   const [turn, setTurn] = useState('player');           // 'player' | 'ai' | 'done'
   const [taunt, setTaunt] = useState('your move.');
+  const GIVE_UP_DELAYS = { easy: 10000, medium: 20000, hard: 30000 };
+  const [giveUpUnlocked, setGiveUpUnlocked] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setGiveUpUnlocked(true), GIVE_UP_DELAYS[difficulty] ?? 20000);
+    return () => clearTimeout(t);
+  }, []);
 
   // Keep boardRef in sync
   function updateBoard(b) { boardRef.current = b; setBoard(b); }
@@ -338,7 +344,7 @@ export default function CheckersGame({ onComplete, difficulty = 'medium' }) {
       </AppText>
 
       <View style={styles.actions}>
-        {!isDone && (
+        {!isDone && giveUpUnlocked && (
           <Button label="give up" variant="ghost" onPress={onComplete} />
         )}
         {isDone && (
