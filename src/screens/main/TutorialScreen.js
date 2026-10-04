@@ -1,4 +1,5 @@
-import { View, ScrollView, TouchableOpacity, Linking, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Linking, StyleSheet, Clipboard } from 'react-native';
+import { useState } from 'react';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
 import { ALL_APPS } from '../../utils/storage';
@@ -72,18 +73,7 @@ export default function TutorialScreen({ navigation }) {
           </AppText>
           {ALL_APPS.map((app) => {
             const url = `frictionmaxxing://game?appId=${app.id}&label=${encodeURIComponent(app.label)}`;
-            return (
-              <View key={app.id} style={styles.urlRow}>
-                <AppText variant="base" style={styles.urlAppLabel}>{app.emoji}  {app.label}</AppText>
-                <TouchableOpacity
-                  style={styles.urlBox}
-                  onLongPress={() => Linking.openURL(url)}
-                  activeOpacity={0.7}
-                >
-                  <AppText variant="caption" style={styles.urlText} numberOfLines={1}>{url}</AppText>
-                </TouchableOpacity>
-              </View>
-            );
+            return <UrlRow key={app.id} app={app} url={url} />;
           })}
           <AppText variant="caption" style={styles.urlNote}>
             don't see your app? go to Settings → Usage Estimates → add custom app, then use:{'\n'}
@@ -102,6 +92,32 @@ export default function TutorialScreen({ navigation }) {
 
       </ScrollView>
     </ScreenWrapper>
+  );
+}
+
+function UrlRow({ app, url }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    Clipboard.setString(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <View style={styles.urlRow}>
+      <AppText variant="base" style={styles.urlAppLabel}>{app.emoji}  {app.label}</AppText>
+      <TouchableOpacity
+        style={[styles.urlBox, copied && styles.urlBoxCopied]}
+        onPress={handleCopy}
+        activeOpacity={0.7}
+      >
+        {copied
+          ? <AppText variant="caption" style={styles.urlCopiedText}>copied!</AppText>
+          : <AppText variant="caption" style={styles.urlText} numberOfLines={1}>{url}</AppText>
+        }
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -411,5 +427,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   urlText:      { color: colors.primary, fontFamily: 'monospace' },
+  urlBoxCopied: { backgroundColor: colors.primaryMuted, borderColor: colors.primary },
+  urlCopiedText: { color: colors.primary, fontWeight: '600', textAlign: 'center' },
   urlNote:      { color: colors.textDisabled, lineHeight: 20, marginTop: spacing.xs },
 });
