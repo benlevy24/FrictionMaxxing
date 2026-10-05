@@ -390,10 +390,17 @@ export default function SettingsScreen({ navigation }) {
 
         {/* Setup */}
         <Section title="setup">
-          <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate('Tutorial')}>
-            <AppText variant="base" style={styles.linkLabel}>📋  setup guide</AppText>
+          <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate('FrictionApps')}>
+            <AppText variant="base" style={styles.linkLabel}>🛑  friction apps</AppText>
             <AppText variant="caption" style={styles.linkSub}>
-              connect via Shortcuts — one automation per app
+              choose which apps get intercepted
+            </AppText>
+            <AppText variant="base" style={styles.linkChevron}>›</AppText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate('Tutorial')}>
+            <AppText variant="base" style={styles.linkLabel}>📋  shortcuts guide</AppText>
+            <AppText variant="caption" style={styles.linkSub}>
+              step-by-step: connect apps via iOS Shortcuts
             </AppText>
             <AppText variant="base" style={styles.linkChevron}>›</AppText>
           </TouchableOpacity>

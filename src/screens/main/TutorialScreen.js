@@ -1,75 +1,51 @@
-import { View, ScrollView, TouchableOpacity, TextInput, StyleSheet, Linking, Clipboard } from 'react-native';
-import { useState, useEffect } from 'react';
+import { View, ScrollView, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
-import { ALL_APPS, getSettings, saveSettings } from '../../utils/storage';
 import { colors, spacing, radius } from '../../theme';
 
-const FRICTION_STEPS = [
+const STEPS = [
   {
     number: 1,
-    title: 'open the Shortcuts app',
-    body: 'tap the + button at the bottom, then tap Automation.',
-    action: { label: 'Open Shortcuts', url: 'shortcuts://' },
+    title: 'open Shortcuts and tap +',
+    body: 'open the Shortcuts app and tap the + button in the top-right corner.',
+    action: { label: 'open Shortcuts', url: 'shortcuts://' },
   },
   {
     number: 2,
-    title: 'tap Apps',
-    body: 'scroll down in the list and tap Apps. you\'ll see:\n\n"When [app] is [opened]"\n\ntap [app] and choose the app you want to add friction to.',
+    title: 'tap Automation → App',
+    body: 'tap "Automation" from the list of categories.\n\nscroll down to the "Apps" section and tap "App".',
   },
   {
     number: 3,
-    title: 'set Automation: On, Notify: Off',
-    body: 'under the app selector, set Automation to On (no confirmation prompt) and Notify to Off. then tap Next or Done.',
-    visual: <AutomationSettingsVisual />,
+    title: 'pick your app',
+    body: 'tap the blue "[App]" — you\'ll see every app on your phone. pick the one you want to add friction to.\n\nleave it set to "is opened".',
   },
   {
     number: 4,
-    title: 'add a URL action',
-    body: 'tap Add Action, then search "URL" and select it. paste your app\'s URL from the list below into the URL field.',
-    visual: <URLActionVisual />,
+    title: 'set Automation ON, Notify OFF',
+    body: 'turn "Automation" ON and "Notify" OFF. this makes it fire instantly when you open the app — no confirmation popup.\n\ntap Done.',
+    visual: <AskBeforeRunningVisual />,
   },
   {
     number: 5,
-    title: 'add an Open URLs action',
-    body: 'tap + to add another action. search "Open URLs" and select it. make sure it appears after the URL action.',
-    visual: <OpenURLsVisual />,
+    title: 'add a URL action',
+    body: 'tap "New Blank Automation", then tap "Add Action".\n\nsearch "URL" and select it (the plain URL action — not Open URLs). paste your app\'s deep link from Settings → Friction Apps into the URL field.',
+    visual: <URLActionVisual />,
   },
   {
     number: 6,
+    title: 'add an Open URLs action',
+    body: 'tap the + that appears below the URL action. search "Open URLs" and select it.\n\nit must sit below the URL action — that order matters.',
+    visual: <OpenURLsVisual />,
+  },
+  {
+    number: 7,
     title: 'tap Done',
-    body: 'tap Done to save. repeat steps 1–6 for each app you want to add friction to.',
+    body: 'tap Done to save the automation.\n\nrepeat steps 1–7 for each app in your friction list. one automation per app.',
   },
 ];
 
 export default function TutorialScreen({ navigation }) {
-  const [customApps, setCustomApps] = useState([]);
-  const [newAppName, setNewAppName] = useState('');
-
-  useEffect(() => {
-    getSettings().then((s) => setCustomApps(s.customApps ?? []));
-  }, []);
-
-  async function handleAddApp() {
-    const name = newAppName.trim();
-    if (!name) return;
-    const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (!id) return;
-    const newApp = { id, label: name, emoji: '📱' };
-    const updated = [...customApps, newApp];
-    setCustomApps(updated);
-    setNewAppName('');
-    await saveSettings({ customApps: updated });
-  }
-
-  async function handleRemoveApp(id) {
-    const updated = customApps.filter((a) => a.id !== id);
-    setCustomApps(updated);
-    await saveSettings({ customApps: updated });
-  }
-
-  const allApps = [...ALL_APPS, ...customApps];
-
   return (
     <ScreenWrapper>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -78,66 +54,25 @@ export default function TutorialScreen({ navigation }) {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <AppText variant="base" style={styles.backText}>← back</AppText>
           </TouchableOpacity>
-          <AppText variant="xxl">setup guide</AppText>
+          <AppText variant="xxl">shortcuts guide</AppText>
           <AppText variant="base" style={styles.subtitle}>
-            FrictionMaxxing works through iOS Shortcuts automations — one per app.
-            follow these steps to wire it up.
+            FrictionMaxxing intercepts apps via iOS Shortcuts automations. follow these steps once per app.
           </AppText>
+          <TouchableOpacity
+            style={styles.appsLink}
+            onPress={() => navigation.navigate('FrictionApps')}
+          >
+            <AppText variant="base" style={styles.appsLinkText}>
+              → first, add your apps in Friction Apps
+            </AppText>
+          </TouchableOpacity>
         </View>
 
-        {FRICTION_STEPS.map((step) => (
+        {STEPS.map((step) => (
           <StepCard key={step.number} step={step} />
         ))}
 
-        {/* URL reference list */}
-        <View style={styles.urlSection}>
-          <AppText variant="subheading" style={styles.urlTitle}>your app URLs</AppText>
-          <AppText variant="base" style={styles.urlSubtitle}>
-            tap any URL to copy it, then paste into the URL action in step 4.
-          </AppText>
-
-          {allApps.map((app) => {
-            const url = `frictionmaxxing://game?appId=${app.id}&label=${encodeURIComponent(app.label)}`;
-            return (
-              <UrlRow
-                key={app.id}
-                app={app}
-                url={url}
-                isCustom={customApps.some((c) => c.id === app.id)}
-                onRemove={() => handleRemoveApp(app.id)}
-              />
-            );
-          })}
-
-          {/* Add custom app */}
-          <View style={styles.addAppSection}>
-            <AppText variant="base" style={styles.addAppTitle}>don't see your app? add it:</AppText>
-            <View style={styles.addAppRow}>
-              <TextInput
-                style={styles.addAppInput}
-                placeholder="app name (e.g. Duolingo)"
-                placeholderTextColor={colors.textDisabled}
-                value={newAppName}
-                onChangeText={setNewAppName}
-                onSubmitEditing={handleAddApp}
-                returnKeyType="done"
-              />
-              <TouchableOpacity
-                style={[styles.addAppBtn, !newAppName.trim() && styles.addAppBtnDisabled]}
-                onPress={handleAddApp}
-                disabled={!newAppName.trim()}
-                activeOpacity={0.7}
-              >
-                <AppText variant="base" style={styles.addAppBtnText}>add</AppText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
         <View style={styles.footer}>
-          <AppText variant="base" style={styles.footerText}>
-            repeat steps 1–6 for each app you want to gate. that's it.
-          </AppText>
           <AppText variant="caption" style={styles.footerNote}>
             coming soon: one-tap setup with no URLs required.
           </AppText>
@@ -145,39 +80,6 @@ export default function TutorialScreen({ navigation }) {
 
       </ScrollView>
     </ScreenWrapper>
-  );
-}
-
-function UrlRow({ app, url, isCustom, onRemove }) {
-  const [copied, setCopied] = useState(false);
-
-  function handleCopy() {
-    Clipboard.setString(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  return (
-    <View style={styles.urlRow}>
-      <View style={styles.urlRowTop}>
-        <AppText variant="base" style={styles.urlAppLabel}>{app.emoji}  {app.label}</AppText>
-        {isCustom && (
-          <TouchableOpacity onPress={onRemove} activeOpacity={0.6}>
-            <AppText variant="caption" style={styles.removeText}>remove</AppText>
-          </TouchableOpacity>
-        )}
-      </View>
-      <TouchableOpacity
-        style={[styles.urlBox, copied && styles.urlBoxCopied]}
-        onPress={handleCopy}
-        activeOpacity={0.7}
-      >
-        {copied
-          ? <AppText variant="caption" style={styles.urlCopiedText}>copied!</AppText>
-          : <AppText variant="caption" style={styles.urlText} numberOfLines={1}>{url}</AppText>
-        }
-      </TouchableOpacity>
-    </View>
   );
 }
 
@@ -206,7 +108,7 @@ function StepCard({ step }) {
 
 // ── Mini diagrams ─────────────────────────────────────────────────────────────
 
-function AutomationSettingsVisual() {
+function AskBeforeRunningVisual() {
   return (
     <View style={styles.visual}>
       <View style={styles.listBox}>
@@ -261,11 +163,17 @@ function OpenURLsVisual() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  scroll:       { paddingBottom: spacing.xxl, gap: spacing.lg },
+  scroll:       { paddingBottom: 60, gap: spacing.lg },
   header:       { marginTop: spacing.xl, gap: spacing.sm },
   backBtn:      { alignSelf: 'flex-start' },
   backText:     { color: colors.primary },
   subtitle:     { color: colors.textSub, lineHeight: 22 },
+
+  appsLink: {
+    marginTop: spacing.xs,
+    paddingVertical: spacing.xs,
+  },
+  appsLinkText: { color: colors.primary },
 
   card: {
     backgroundColor: colors.surface,
@@ -332,49 +240,6 @@ const styles = StyleSheet.create({
   },
   searchText:   { color: colors.textSub },
 
-  footer:       { alignItems: 'center', paddingTop: spacing.sm, gap: spacing.xs },
-  footerText:   { color: colors.textDisabled, textAlign: 'center' },
+  footer:       { alignItems: 'center', paddingTop: spacing.sm },
   footerNote:   { color: colors.textDisabled, textAlign: 'center', fontStyle: 'italic' },
-
-  urlSection:   { gap: spacing.md },
-  urlTitle:     { color: colors.text },
-  urlSubtitle:  { color: colors.textSub, lineHeight: 22 },
-  urlRow:       { gap: spacing.xs },
-  urlRowTop:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  urlAppLabel:  { color: colors.text },
-  removeText:   { color: colors.textDisabled },
-  urlBox: {
-    backgroundColor: colors.surfaceRaised,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  urlBoxCopied: { backgroundColor: colors.primaryMuted, borderColor: colors.primary },
-  urlText:      { color: colors.primary, fontFamily: 'monospace' },
-  urlCopiedText: { color: colors.primary, fontWeight: '600', textAlign: 'center' },
-
-  addAppSection: { gap: spacing.sm, marginTop: spacing.sm },
-  addAppTitle:  { color: colors.textSub },
-  addAppRow:    { flexDirection: 'row', gap: spacing.sm },
-  addAppInput: {
-    flex: 1,
-    backgroundColor: colors.surfaceRaised,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    color: colors.text,
-  },
-  addAppBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-    justifyContent: 'center',
-  },
-  addAppBtnDisabled: { opacity: 0.4 },
-  addAppBtnText: { color: '#fff', fontWeight: '600' },
 });

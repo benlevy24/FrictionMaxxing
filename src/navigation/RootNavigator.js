@@ -6,6 +6,7 @@ import OnboardingNavigator from './OnboardingNavigator';
 import MainTabNavigator from './MainTabNavigator';
 import GameScreen from '../screens/games/GameScreen';
 import TutorialScreen from '../screens/main/TutorialScreen';
+import FrictionAppsScreen from '../screens/main/FrictionAppsScreen';
 import GeoBlockingScreen from '../screens/main/GeoBlockingScreen';
 import UsageEstimatesScreen from '../screens/main/UsageEstimatesScreen';
 import ScheduleScreen from '../screens/main/ScheduleScreen';
@@ -39,6 +40,7 @@ export default function RootNavigator() {
           options={{ presentation: 'fullScreenModal' }}
         />
         <Stack.Screen name="Tutorial" component={TutorialScreen} />
+        <Stack.Screen name="FrictionApps" component={FrictionAppsScreen} />
         <Stack.Screen name="GeoBlocking" component={GeoBlockingScreen} />
         <Stack.Screen name="UsageEstimates" component={UsageEstimatesScreen} />
         <Stack.Screen name="Schedule" component={ScheduleScreen} />

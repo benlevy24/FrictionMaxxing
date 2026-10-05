@@ -86,6 +86,7 @@ const DEFAULT_SETTINGS = {
   onboardingDone:     false,
   appUsageEstimates:  {},       // { [appId]: { weeklyMinutes: number, weeklyPickups: number } } — manual stopgap; replaced by real data once screenTimePermissionGranted = true
   customApps:         [],       // [{ id, label, emoji }] — user-added apps beyond the defaults
+  gatedAppIds:        [],       // app IDs the user has chosen to gate; empty = none active yet
   hiddenAppIds:       [],       // apps manually removed from the gated apps display
   timeConstraint:     { enabled: true },  // caps each session; user picks a duration before opening an app
   groupBudgets:       [],                 // [{ id, name, limitMinutes, appIds: string[] }]
