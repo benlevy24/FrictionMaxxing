@@ -37,7 +37,8 @@ export default function SettingsScreen({ navigation }) {
         setTimeConstraint(s.timeConstraint ?? { enabled: true });
         setDailyUsageTimer(s.dailyUsageTimer ?? { enabled: false, minutes: 30 });
         setDailyQuota(s.dailyQuota ?? { enabled: false });
-        setDailyOpenLimit(s.dailyOpenLimit ?? { enabled: false, limit: 3 });
+        const rawLimit = s.dailyOpenLimit?.limit ?? 3;
+        setDailyOpenLimit({ ...(s.dailyOpenLimit ?? { enabled: false }), limit: rawLimit === 999 ? Infinity : rawLimit });
         setGroupTimeCap(s.groupTimeCap ?? { enabled: false });
         setLoading(false);
       });
@@ -67,7 +68,7 @@ export default function SettingsScreen({ navigation }) {
     await saveSettings({ dailyQuota: next });
   }
 
-  const OPEN_LIMIT_STEPS = [1, 2, 3, 5, 7, 10, 15, 20];
+  const OPEN_LIMIT_STEPS = [1, 2, 3, 5, 7, 10, 15, 20, Infinity];
 
   async function toggleDailyOpenLimit() {
     const next = { ...dailyOpenLimit, enabled: !dailyOpenLimit.enabled };
@@ -79,8 +80,10 @@ export default function SettingsScreen({ navigation }) {
     const idx = OPEN_LIMIT_STEPS.indexOf(dailyOpenLimit.limit);
     const currentIdx = idx === -1 ? 2 : idx;
     const nextIdx = Math.min(OPEN_LIMIT_STEPS.length - 1, Math.max(0, currentIdx + delta));
-    const next = { ...dailyOpenLimit, limit: OPEN_LIMIT_STEPS[nextIdx] };
-    setDailyOpenLimit(next);
+    const rawLimit = OPEN_LIMIT_STEPS[nextIdx];
+    // JSON.stringify turns Infinity into null — store 999 as a sentinel for "unlimited"
+    const next = { ...dailyOpenLimit, limit: rawLimit === Infinity ? 999 : rawLimit };
+    setDailyOpenLimit({ ...next, limit: rawLimit }); // keep Infinity in local state for display
     await saveSettings({ dailyOpenLimit: next });
   }
 
@@ -293,22 +296,22 @@ export default function SettingsScreen({ navigation }) {
               <View style={styles.lockoutControls}>
                 <TouchableOpacity
                   onPress={() => adjustOpenLimit(-1)}
-                  style={[styles.lockoutArrow, dailyOpenLimit.limit <= 1 && styles.lockoutArrowDisabled]}
+                  style={[styles.lockoutArrow, dailyOpenLimit.limit <= OPEN_LIMIT_STEPS[0] && styles.lockoutArrowDisabled]}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  disabled={dailyOpenLimit.limit <= 1}
+                  disabled={dailyOpenLimit.limit <= OPEN_LIMIT_STEPS[0]}
                 >
                   <AppText style={styles.lockoutArrowText}>‹</AppText>
                 </TouchableOpacity>
                 <View style={styles.lockoutValue}>
                   <AppText variant="subheading" style={styles.lockoutValueText}>
-                    {dailyOpenLimit.limit}x
+                    {dailyOpenLimit.limit === Infinity ? '∞' : `${dailyOpenLimit.limit}x`}
                   </AppText>
                 </View>
                 <TouchableOpacity
                   onPress={() => adjustOpenLimit(1)}
-                  style={[styles.lockoutArrow, dailyOpenLimit.limit >= 20 && styles.lockoutArrowDisabled]}
+                  style={[styles.lockoutArrow, dailyOpenLimit.limit === Infinity && styles.lockoutArrowDisabled]}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  disabled={dailyOpenLimit.limit >= 20}
+                  disabled={dailyOpenLimit.limit === Infinity}
                 >
                   <AppText style={styles.lockoutArrowText}>›</AppText>
                 </TouchableOpacity>
