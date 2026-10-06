@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { View, ScrollView, Switch, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, ScrollView, Switch, TouchableOpacity, Alert, Platform, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppText from '../../components/AppText';
@@ -128,24 +128,27 @@ export default function SettingsScreen({ navigation }) {
   }
 
   function handleResetStats() {
-    Alert.alert(
-      'reset all stats?',
-      'this deletes your high score, walk-aways, and all history. cannot be undone.',
-      [
-        { text: 'cancel', style: 'cancel' },
-        {
-          text: 'reset everything',
-          style: 'destructive',
-          onPress: async () => {
-            await clearAllData();
-            // Reload settings to defaults
-            const s = await getSettings();
-            setEnabledGames(s.enabledGames);
-            Alert.alert('done', 'stats wiped. fresh start.');
-          },
-        },
-      ]
-    );
+    const doReset = async () => {
+      await clearAllData();
+      const s = await getSettings();
+      setEnabledGames(s.enabledGames);
+      if (Platform.OS !== 'web') Alert.alert('done', 'stats wiped. fresh start.');
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('reset all stats?\n\nthis deletes your high score, walk-aways, and all history. cannot be undone.')) {
+        doReset();
+      }
+    } else {
+      Alert.alert(
+        'reset all stats?',
+        'this deletes your high score, walk-aways, and all history. cannot be undone.',
+        [
+          { text: 'cancel', style: 'cancel' },
+          { text: 'reset everything', style: 'destructive', onPress: doReset },
+        ]
+      );
+    }
   }
 
   const activeGameCount = enabledGames.length;
@@ -280,8 +283,8 @@ export default function SettingsScreen({ navigation }) {
 
         {/* Daily open limit */}
         <Section
-          title="🔒  daily open limit"
-          subtitle="lock an app to N opens per day — after that, walk away is the only option"
+          title="🔒  max opens per day"
+          subtitle="cap how many times you can open any friction app per day — after that, walk away is your only option"
           toggle={{ value: dailyOpenLimit.enabled, onToggle: toggleDailyOpenLimit }}
         >
           {dailyOpenLimit.enabled && (
