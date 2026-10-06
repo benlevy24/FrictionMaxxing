@@ -405,9 +405,9 @@ export default function SettingsScreen({ navigation }) {
             <AppText variant="base" style={styles.linkChevron}>›</AppText>
           </TouchableOpacity>
           <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate('UsageEstimates')}>
-            <AppText variant="base" style={styles.linkLabel}>⏱  usage estimates</AppText>
+            <AppText variant="base" style={styles.linkLabel}>⏱  screen time</AppText>
             <AppText variant="caption" style={styles.linkSub}>
-              enter your Screen Time averages to track minutes saved
+              daily goal and Screen Time data
             </AppText>
             <AppText variant="base" style={styles.linkChevron}>›</AppText>
           </TouchableOpacity>
