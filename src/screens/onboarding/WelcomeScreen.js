@@ -9,7 +9,7 @@ export default function WelcomeScreen({ navigation }) {
     <ScreenWrapper>
       <View style={styles.content}>
         <AppText variant="xxl" style={styles.emoji}>🧱</AppText>
-        <AppText variant="xxl" style={styles.title}>Friction Maxxing</AppText>
+        <AppText variant="xxl" style={styles.title}>FrictionMaxxing</AppText>
         <AppText variant="caption" style={styles.sub}>
           yes, you need a maze to stop opening instagram
         </AppText>
