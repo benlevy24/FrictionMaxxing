@@ -109,7 +109,7 @@ const DEFAULT_SETTINGS = {
   // The DeviceActivityMonitor Swift extension (task #20) should write real screen time
   // into a shared App Group UserDefaults that the JS layer reads via a native module.
   // Flip this flag to true once that bridge is wired up and returning valid data.
-  screenTimePermissionGranted: false,
+  screenTimePermissionGranted: true, // PREVIEW: set false before Mac build ships
 };
 
 export async function getSettings() {

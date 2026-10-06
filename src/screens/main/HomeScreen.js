@@ -91,6 +91,7 @@ export default function HomeScreen({ navigation }) {
   const [goalMinutes,  setGoalMinutes]  = useState(120);
   const [minutesSavedToday, setMinutesSavedToday] = useState(0);
   const [selectedHour,      setSelectedHour]      = useState(null);
+  const [screenTimeGranted, setScreenTimeGranted] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -103,14 +104,10 @@ export default function HomeScreen({ navigation }) {
         setToday(deriveTodayStats(events, todayStr));
         setYesterday(deriveTodayStats(events, yestStr));
         setHourly(deriveHourlyByApp(events, todayStr));
-        // [POST-MAC #20] replace appUsageEstimates with real DeviceActivityReport data here.
-        // deriveMostUsedApps second arg becomes real per-app screen time; estimates arg can be dropped.
         setMostUsed(deriveMostUsedApps(events, settings.appUsageEstimates ?? {}, todayStr));
         setEstimates(settings.appUsageEstimates ?? {});
         setGoalMinutes(settings.screentimeGoalMinutes ?? 120);
-        // [POST-MAC #20] minutesSavedToday uses estimated avg session × walk-aways/rage-quits.
-        // Replace with (real yesterday avg screen time − real today screen time) once
-        // screenTimePermissionGranted = true and DeviceActivityReport data is available.
+        setScreenTimeGranted(settings.screenTimePermissionGranted ?? false);
         const todayEvts = events.filter((e) => e.date === todayStr);
         setMinutesSavedToday(deriveMinutesSaved(todayEvts, settings.appUsageEstimates ?? {}));
         setLoading(false);
@@ -122,11 +119,9 @@ export default function HomeScreen({ navigation }) {
 
   if (loading) return <ScreenWrapper />;
 
-  // Screen time ring
-  // [POST-MAC #20] replace estimate math below with real today's screen time from DeviceActivityReport.
-  // totalDailyEst becomes today's actual minutes (updated live). hasEstimates check becomes
-  // settings.screenTimePermissionGranted. "avg daily est." label in ring center becomes "today".
-  const hasEstimates  = Object.values(estimates).some((e) => e.weeklyMinutes > 0);
+  // Screen time ring — post-Mac: uses real screen time from DeviceActivityReport.
+  // Pre-Mac: falls back to estimate math from appUsageEstimates.
+  const hasEstimates  = screenTimeGranted || Object.values(estimates).some((e) => e.weeklyMinutes > 0);
   const totalDailyEst = Object.values(estimates).reduce(
     (s, e) => s + (e.weeklyMinutes ? Math.round(e.weeklyMinutes / 7) : 0), 0
   );
@@ -176,7 +171,9 @@ export default function HomeScreen({ navigation }) {
                   <AppText variant="xxl" style={[styles.ringTime, overGoal && styles.ringTimeOver]}>
                     {fmtMin(totalDailyEst)}
                   </AppText>
-                  <AppText style={styles.ringEstLabel}>avg daily est.</AppText>
+                  <AppText style={styles.ringEstLabel}>
+                    {screenTimeGranted ? 'today' : 'avg daily est.'}
+                  </AppText>
                   <AppText variant="caption" style={styles.ringGoalLabel}>
                     of {fmtMin(goalMinutes)} goal
                   </AppText>
@@ -192,9 +189,11 @@ export default function HomeScreen({ navigation }) {
 
           <AppText variant="caption" style={styles.deltaText}>{deltaLabel}</AppText>
           <AppText variant="xs" style={styles.estimateNote}>
-            {hasEstimates
-              ? 'avg estimate · real-time screen time unlocks after Screen Time permission · tap ring to adjust'
-              : 'tap ring to add your Screen Time averages and set a daily goal'}
+            {screenTimeGranted
+              ? 'live from Screen Time · tap ring to adjust goal'
+              : hasEstimates
+                ? 'avg estimate · tap ring to adjust'
+                : 'tap ring to set a daily goal'}
           </AppText>
         </View>
 

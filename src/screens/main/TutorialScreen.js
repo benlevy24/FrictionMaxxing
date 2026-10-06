@@ -28,15 +28,14 @@ const STEPS = [
   },
   {
     number: 5,
-    title: 'add a URL action',
-    body: 'tap "New Blank Automation", then tap "Add Action".\n\nsearch "URL" and select it (the plain URL action — not Open URLs). paste your app\'s deep link from Settings → Friction Apps into the URL field.',
-    visual: <URLActionVisual />,
+    title: 'add the FrictionMaxxing action',
+    body: 'tap "New Blank Automation", then tap "Add Action".\n\nsearch "FrictionMaxxing" — you\'ll see "Activate FrictionMaxxing (when app opens)". tap it.',
+    visual: <AppIntentVisual />,
   },
   {
     number: 6,
-    title: 'add an Open URLs action',
-    body: 'tap the + that appears below the URL action. search "Open URLs" and select it.\n\nit must sit below the URL action — that order matters.',
-    visual: <OpenURLsVisual />,
+    title: 'set the App Name',
+    body: 'tap the "App Name" field in the action and type the name of the app you\'re gating (e.g. Instagram).\n\nthis tells FrictionMaxxing which app triggered the automation so it can track stats per app.',
   },
   {
     number: 7,
@@ -56,7 +55,7 @@ export default function TutorialScreen({ navigation }) {
           </TouchableOpacity>
           <AppText variant="xxl">shortcuts guide</AppText>
           <AppText variant="base" style={styles.subtitle}>
-            FrictionMaxxing intercepts apps via iOS Shortcuts automations. follow these steps once per app.
+            FrictionMaxxing intercepts apps via iOS Shortcuts automations. follow these steps once per app — no URLs, no copy-pasting.
           </AppText>
           <TouchableOpacity
             style={styles.appsLink}
@@ -74,7 +73,7 @@ export default function TutorialScreen({ navigation }) {
 
         <View style={styles.footer}>
           <AppText variant="caption" style={styles.footerNote}>
-            coming soon: one-tap setup with no URLs required.
+            one automation per app. that's it.
           </AppText>
         </View>
 
@@ -125,35 +124,19 @@ function AskBeforeRunningVisual() {
   );
 }
 
-function URLActionVisual() {
+function AppIntentVisual() {
   return (
     <View style={styles.visual}>
       <View style={styles.listBox}>
         <View style={styles.searchBar}>
-          <AppText variant="caption" style={styles.searchText}>🔍  URL</AppText>
+          <AppText variant="caption" style={styles.searchText}>🔍  FrictionMaxxing</AppText>
         </View>
         <View style={[styles.listRow, styles.listRowHighlight]}>
-          <View style={styles.appIcon}><AppText>🔗</AppText></View>
+          <View style={styles.appIcon}><AppText>🧱</AppText></View>
           <View style={{ flex: 1 }}>
-            <AppText variant="base">URL</AppText>
-            <AppText variant="caption" style={styles.listRowSub}>frictionmaxxing://game?appId=...</AppText>
+            <AppText variant="base">Activate FrictionMaxxing (when app opens)</AppText>
+            <AppText variant="caption" style={styles.listRowSub}>FrictionMaxxing</AppText>
           </View>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function OpenURLsVisual() {
-  return (
-    <View style={styles.visual}>
-      <View style={styles.listBox}>
-        <View style={styles.searchBar}>
-          <AppText variant="caption" style={styles.searchText}>🔍  Open URLs</AppText>
-        </View>
-        <View style={[styles.listRow, styles.listRowHighlight]}>
-          <View style={styles.appIcon}><AppText>🌐</AppText></View>
-          <AppText variant="base" style={{ flex: 1 }}>Open URLs</AppText>
         </View>
       </View>
     </View>

@@ -44,18 +44,6 @@ export default function LockoutTutorialScreen({ navigation }) {
           </AppText>
         </View>
 
-        {/* Coming soon banner */}
-        <View style={styles.banner}>
-          <AppText style={styles.bannerEmoji}>🔧</AppText>
-          <View style={styles.bannerText}>
-            <AppText variant="base" style={styles.bannerTitle}>requires app update</AppText>
-            <AppText variant="caption" style={styles.bannerSub}>
-              lockout mode needs a future update with native iOS integration.
-              these steps will be actionable when that update ships.
-            </AppText>
-          </View>
-        </View>
-
         {STEPS.map((step) => (
           <View key={step.number} style={styles.card}>
             <View style={styles.stepHeader}>
@@ -91,7 +79,7 @@ export default function LockoutTutorialScreen({ navigation }) {
               <AppText variant="caption" style={styles.compareBody}>app is hard-blocked at OS level</AppText>
               <AppText variant="caption" style={styles.compareBody}>beat it → walk away or get N min, then re-locks</AppText>
               <AppText variant="caption" style={styles.compareBody}>set up via Screen Time permission</AppText>
-              <AppText variant="caption" style={[styles.compareBody, styles.compareComingSoon]}>coming soon</AppText>
+              <AppText variant="caption" style={[styles.compareBody, styles.compareAvailable]}>✓ available</AppText>
             </View>
           </View>
         </View>
@@ -167,4 +155,5 @@ const styles = StyleSheet.create({
   compareHeader:  { marginBottom: spacing.xs },
   compareBody:    { color: colors.textSub, lineHeight: 18 },
   compareComingSoon: { color: colors.primary, fontStyle: 'italic' },
+  compareAvailable:  { color: colors.primary },
 });
