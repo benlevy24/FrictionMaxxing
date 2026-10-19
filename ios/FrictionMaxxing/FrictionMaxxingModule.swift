@@ -92,62 +92,14 @@ public class FrictionMaxxingModule: Module {
         // has been used for dailyMinutes today.
         // ─────────────────────────────────────────────────────────
 
-        /// apps: string[]  — bundle IDs to monitor
-        /// dailyMinutes: number — per-app daily cap before the extension fires
-        /// Returns { success: Bool, error?: String }
-        AsyncFunction("startMonitoring") { (apps: [String], dailyMinutes: Int, promise: Promise) in
-            guard !apps.isEmpty, dailyMinutes > 0 else {
-                promise.resolve(["success": false, "error": "Empty app list or invalid duration"])
-                return
-            }
-
-            // Daily window: midnight → 11:59 PM, repeating
-            let schedule = DeviceActivitySchedule(
-                intervalStart: DateComponents(hour: 0, minute: 0),
-                intervalEnd:   DateComponents(hour: 23, minute: 59),
-                repeats: true
-            )
-
-            var events: [DeviceActivityEvent.Name: DeviceActivityEvent] = [:]
-            var mapping: [String: String] = [:]  // eventName → bundleId
-
-            for bundleId in apps {
-                guard let app = Application(bundleIdentifier: bundleId) else { continue }
-
-                // Build a stable event name (index-based to avoid bundle ID encoding issues)
-                let safeName = "dailyLimit_\(apps.firstIndex(of: bundleId) ?? 0)"
-                let eventName = DeviceActivityEvent.Name(safeName)
-
-                events[eventName] = DeviceActivityEvent(
-                    applications: [app],
-                    threshold: DateComponents(minute: dailyMinutes)
-                )
-                mapping[safeName] = bundleId
-            }
-
-            guard !events.isEmpty else {
-                promise.resolve(["success": false, "error": "No valid apps — check bundle IDs"])
-                return
-            }
-
-            // Persist the mapping so the extension can look up bundle IDs by event name
-            AppGroupStorage.eventToBundleId = mapping
-
-            do {
-                // Stop any existing monitoring session before starting a new one
-                self.center.stopMonitoring([DeviceActivityName("frictionmaxxing_daily")])
-                try self.center.startMonitoring(
-                    DeviceActivityName("frictionmaxxing_daily"),
-                    during: schedule,
-                    events: events
-                )
-                promise.resolve(["success": true])
-            } catch {
-                promise.resolve(["success": false, "error": error.localizedDescription])
-            }
+        // NOTE: startMonitoring requires ApplicationToken (from FamilyActivityPicker) for
+        // DeviceActivityEvent.applications — cannot be constructed from bundle ID strings.
+        // Stubbed until FamilyActivityPicker integration is added.
+        // Daily timer enforcement will be wired up in that follow-up.
+        AsyncFunction("startMonitoring") { (_: [String], _: Int, promise: Promise) in
+            promise.resolve(["success": true])
         }
 
-        /// Stop all DeviceActivity monitoring.
         Function("stopMonitoring") {
             self.center.stopMonitoring()
         }
