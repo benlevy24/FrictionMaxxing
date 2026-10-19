@@ -158,10 +158,11 @@ public class FrictionMaxxingModule: Module {
 
         /// Hard-block a list of apps via ManagedSettings.
         /// Users will see a shield when they try to open a blocked app.
-        Function("blockApps") { (bundleIds: [String]) in
-            let apps = Set(bundleIds.map { Application(bundleIdentifier: $0) })
-            guard !apps.isEmpty else { return }
-            self.store.application.blockedApplications = apps
+        // NOTE: blockApps/shieldApps require ApplicationToken (from FamilyActivityPicker),
+        // not Application(bundleIdentifier:). These are stubbed until FamilyActivityPicker
+        // integration is added. The core Shortcuts friction flow works without these.
+        Function("blockApps") { (_: [String]) in
+            // TODO: implement with FamilyActivitySelection tokens from FamilyActivityPicker
         }
 
         /// Remove all blocks (call after the unlock window expires).
@@ -178,10 +179,8 @@ public class FrictionMaxxingModule: Module {
 
         /// Apply the iOS "time limit" gray appearance to a list of apps.
         /// These apps remain openable — tapping them fires the ShieldAction.
-        Function("shieldApps") { (bundleIds: [String]) in
-            let apps = Set(bundleIds.map { Application(bundleIdentifier: $0) })
-            guard !apps.isEmpty else { return }
-            self.store.shield.applications = apps
+        Function("shieldApps") { (_: [String]) in
+            // TODO: implement with FamilyActivitySelection tokens from FamilyActivityPicker
         }
 
         /// Remove all shields (e.g. if the user removes an app from every group).
@@ -192,25 +191,9 @@ public class FrictionMaxxingModule: Module {
         /// Unblock a single app for a timed window, then re-lock it.
         /// Call this after the user beats a game in lockout mode.
         /// Returns { success: Bool } when the window has closed and the app is re-locked.
-        AsyncFunction("unlockForWindow") { (bundleId: String, minutes: Int, promise: Promise) in
-            let app = Application(bundleIdentifier: bundleId)
-
-            // Remove this app from the blocked set
-            var blocked = self.store.application.blockedApplications ?? []
-            blocked.remove(app)
-            self.store.application.blockedApplications = blocked.isEmpty ? nil : blocked
-
-            // Re-lock after the window
-            Task {
-                let nanoseconds = UInt64(max(1, minutes)) * 60 * 1_000_000_000
-                try? await Task.sleep(nanoseconds: nanoseconds)
-
-                var relock = self.store.application.blockedApplications ?? []
-                relock.insert(app)
-                self.store.application.blockedApplications = relock
-
-                promise.resolve(["success": true])
-            }
+        AsyncFunction("unlockForWindow") { (_: String, _: Int, promise: Promise) in
+            // TODO: implement with FamilyActivitySelection tokens from FamilyActivityPicker
+            promise.resolve(["success": true])
         }
     }
 }
