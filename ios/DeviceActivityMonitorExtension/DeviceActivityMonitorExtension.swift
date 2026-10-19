@@ -35,11 +35,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         guard AppGroupStorage.gatedApps.contains(bundleId) else { return }
 
         // Lock the app via ManagedSettings
-        if let app = Application(bundleIdentifier: bundleId) {
-            var blocked = store.application.blockedApplications ?? []
-            blocked.insert(app)
-            store.application.blockedApplications = blocked
-        }
+        let app = Application(bundleIdentifier: bundleId)
+        var blocked = store.application.blockedApplications ?? []
+        blocked.insert(app)
+        store.application.blockedApplications = blocked
 
         // Post a local notification so the user knows why the app is blocked
         scheduleNotification(for: bundleId)

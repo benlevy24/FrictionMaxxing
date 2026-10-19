@@ -159,7 +159,7 @@ public class FrictionMaxxingModule: Module {
         /// Hard-block a list of apps via ManagedSettings.
         /// Users will see a shield when they try to open a blocked app.
         Function("blockApps") { (bundleIds: [String]) in
-            let apps = Set(bundleIds.compactMap { Application(bundleIdentifier: $0) })
+            let apps = Set(bundleIds.map { Application(bundleIdentifier: $0) })
             guard !apps.isEmpty else { return }
             self.store.application.blockedApplications = apps
         }
@@ -179,7 +179,7 @@ public class FrictionMaxxingModule: Module {
         /// Apply the iOS "time limit" gray appearance to a list of apps.
         /// These apps remain openable — tapping them fires the ShieldAction.
         Function("shieldApps") { (bundleIds: [String]) in
-            let apps = Set(bundleIds.compactMap { Application(bundleIdentifier: $0) })
+            let apps = Set(bundleIds.map { Application(bundleIdentifier: $0) })
             guard !apps.isEmpty else { return }
             self.store.shield.applications = apps
         }
@@ -193,10 +193,7 @@ public class FrictionMaxxingModule: Module {
         /// Call this after the user beats a game in lockout mode.
         /// Returns { success: Bool } when the window has closed and the app is re-locked.
         AsyncFunction("unlockForWindow") { (bundleId: String, minutes: Int, promise: Promise) in
-            guard let app = Application(bundleIdentifier: bundleId) else {
-                promise.resolve(["success": false, "error": "Invalid bundle ID"])
-                return
-            }
+            let app = Application(bundleIdentifier: bundleId)
 
             // Remove this app from the blocked set
             var blocked = self.store.application.blockedApplications ?? []
