@@ -567,23 +567,31 @@ export default function GameScreen({ navigation, route }) {
 
           {/* Stats */}
           <View style={styles.interceptStats}>
-            <View style={styles.statRow}>
-              <AppText style={styles.statNumber}>{attemptsToday}</AppText>
-              <AppText variant="caption" style={styles.statLabel}>
-                {attemptsToday === 1 ? 'attempt' : 'attempts'} today
-              </AppText>
+            <View style={styles.statRowHoriz}>
+              <View style={styles.statItem}>
+                <AppText style={styles.statNumber}>{attemptsToday}</AppText>
+                <AppText variant="caption" style={styles.statLabel}>
+                  {attemptsToday === 1 ? 'attempt' : 'attempts'} today
+                </AppText>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <AppText style={styles.statNumber}>{openedAnywayToday}</AppText>
+                <AppText variant="caption" style={styles.statLabel}>
+                  {openedAnywayToday === 1 ? 'unlock' : 'unlocks'} today
+                </AppText>
+              </View>
             </View>
             <View style={styles.statRow}>
               <AppText variant="caption" style={styles.statLast}>
-                walked away:{' '}
+                walked away today:{' '}
                 <AppText variant="caption" style={styles.statLastHighlight}>{walkedAwayToday}</AppText>
-                {'   '}opened anyway:{' '}
-                <AppText variant="caption" style={styles.statLastHighlight}>{openedAnywayToday}</AppText>
               </AppText>
             </View>
             <View style={styles.statRow}>
               <AppText variant="caption" style={styles.statLast}>
                 avg daily screen time:{' '}
+                {/* [POST-MAC #20] replace avgDailyMinutes with real today's screen time from DeviceActivityReport */}
                 <AppText variant="caption" style={avgDailyMinutes !== null ? styles.statLastHighlight : styles.statPlaceholder}>
                   {avgDailyMinutes !== null
                     ? (avgDailyMinutes >= 60
@@ -939,6 +947,20 @@ const styles = StyleSheet.create({
   interceptStats: {
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  statRowHoriz: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xl,
+  },
+  statItem: {
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: colors.border,
   },
   statRow: {
     alignItems: 'center',
